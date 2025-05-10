@@ -188,7 +188,7 @@ const Index = () => {
               onClick={handleDelayedStart}
               className={`${themeClasses} text-lg px-8 py-6`}
             >
-              {isFirstTimePlay ? "Let's Go!" : "Start Game"}
+              Start Game
             </Button>
           </div>
         )}
