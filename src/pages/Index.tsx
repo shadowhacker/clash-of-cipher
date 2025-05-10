@@ -1,4 +1,3 @@
-
 import React from 'react';
 import GameGrid from '../components/GameGrid';
 import GameStatus from '../components/GameStatus';
@@ -55,19 +54,19 @@ const Index = () => {
       />
       
       <div className="w-full max-w-md">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-center text-indigo-800">🔮 Cipher Clash</h1>
-          <div className="flex items-center space-x-2">
-            <Leaderboard personalBest={personalBest} />
-            <button 
-              onClick={() => setShowGuide(true)}
-              className="p-2 rounded-full bg-indigo-100 hover:bg-indigo-200 text-indigo-800"
-              aria-label="How to Play"
-            >
-              <HelpCircle className="w-5 h-5" />
-            </button>
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-3xl font-bold text-center text-indigo-800">🔮 Cipher Clash</h1>
+            <div className="flex items-center space-x-2">
+              <Leaderboard personalBest={personalBest} />
+              <button 
+                onClick={() => setShowGuide(true)}
+                className="p-2 rounded-full bg-indigo-100 hover:bg-indigo-200 text-indigo-800"
+                aria-label="How to Play"
+              >
+                <HelpCircle className="w-5 h-5" />
+              </button>
+            </div>
           </div>
-        </div>
 
         {/* Life Warning */}
         <LifeWarning 

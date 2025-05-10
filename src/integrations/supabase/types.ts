@@ -69,6 +69,33 @@ export type Database = {
         }
         Relationships: []
       }
+      leaderboard: {
+        Row: {
+          best: number
+          created_at: string | null
+          device_id: string
+          id: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          best?: number
+          created_at?: string | null
+          device_id: string
+          id?: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          best?: number
+          created_at?: string | null
+          device_id?: string
+          id?: string
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

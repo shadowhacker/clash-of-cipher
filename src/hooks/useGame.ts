@@ -258,7 +258,7 @@ export const useGame = () => {
 
   // Copy "share my best" text to clipboard
   const shareScore = useCallback(() => {
-    const text = `I just hit Round ${personalBest} on Cipher Clash!\nThink you can beat me? Play → https://cipherclash.com`;
+    const text = `I just hit Round ${personalBest} on Cipher Clash!\nThink you can beat me? Play → https://symbol-grid-sparkle-showdown.lovable.app/`;
     navigator.clipboard.writeText(text);
     return text;
   }, [personalBest]);
