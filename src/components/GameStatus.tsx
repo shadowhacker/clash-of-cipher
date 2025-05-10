@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, Medal } from 'lucide-react';
 
 interface GameStatusProps {
   gameState: 'idle' | 'showCode' | 'input' | 'result';
@@ -13,6 +13,8 @@ interface GameStatusProps {
   resetGame: () => void;
   currentTheme: string;
   nextMilestone: number;
+  totalScore: number;
+  onOpenLeaderboard?: () => void;
 }
 
 const GameStatus: React.FC<GameStatusProps> = ({ 
@@ -24,7 +26,8 @@ const GameStatus: React.FC<GameStatusProps> = ({
   startGame,
   resetGame,
   currentTheme,
-  nextMilestone,
+  totalScore,
+  onOpenLeaderboard,
 }) => {
   const themeClasses = {
     'bg-amber-500': 'bg-amber-600 hover:bg-amber-700',
@@ -38,6 +41,15 @@ const GameStatus: React.FC<GameStatusProps> = ({
 
   return (
     <div className="flex flex-col space-y-1 max-w-[320px] mx-auto">
+      <div className="mb-2">
+        <div className="flex items-center justify-between">
+          <h1 className="text-xl font-bold text-indigo-800">🔮 Cipher Clash</h1>
+          <div className="text-sm text-indigo-600 font-medium">
+            🏆 Lifetime Best: {personalBest}
+          </div>
+        </div>
+      </div>
+      
       <div className="h-[48px] flex items-center justify-between mb-2 bg-indigo-50 rounded-md p-2 transition-colors">
         {gameState === 'idle' ? (
           <div className="flex w-full justify-center">
@@ -51,17 +63,26 @@ const GameStatus: React.FC<GameStatusProps> = ({
         ) : (
           <>
             <div className="flex items-center space-x-2">
-              <span className="text-indigo-800 font-medium">Level {level}</span>
+              <span className="text-indigo-800 font-medium">Round {level}</span>
               <span className="text-indigo-800">·</span>
-              <span className="text-indigo-800 font-medium">Lifetime Best: {personalBest}</span>
+              <span className="text-indigo-800 font-medium">Score {totalScore}</span>
             </div>
             
-            <div className="flex items-center space-x-2">
-              <span className="text-indigo-800 font-medium">❤️{lives}</span>
+            <div className="flex items-center space-x-3">
+              <span className="text-indigo-800 font-medium">❤️ {lives}</span>
               <span className="text-indigo-800">·</span>
               <span className={`text-indigo-800 font-medium ${isTimeCritical ? 'animate-bounce' : ''}`}>
-                ⏱{timeLeft}s
+                ⏱ {timeLeft}s
               </span>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={onOpenLeaderboard} 
+                className="p-1"
+                title="Hall of Heroes"
+              >
+                <Medal className="h-4 w-4" />
+              </Button>
             </div>
             
             <Button 
@@ -75,12 +96,6 @@ const GameStatus: React.FC<GameStatusProps> = ({
           </>
         )}
       </div>
-      
-      {gameState !== 'idle' && (
-        <div className="text-center text-sm text-indigo-600 font-medium">
-          Next gem unlock at Level {nextMilestone}
-        </div>
-      )}
     </div>
   );
 };

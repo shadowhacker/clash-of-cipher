@@ -1,4 +1,5 @@
-import React from 'react';
+
+import React, { useState, useEffect } from 'react';
 import GameGrid from '../components/GameGrid';
 import GameStatus from '../components/GameStatus';
 import GameOverModal from '../components/GameOverModal';
@@ -9,11 +10,15 @@ import ThemeManager from '../components/ThemeManager';
 import LifeWarning from '../components/LifeWarning';
 import AudioInitializer from '../components/AudioInitializer';
 import Leaderboard from '../components/Leaderboard';
+import PlayerNameDialog from '../components/PlayerNameDialog';
 import { useGame } from '../hooks/useGame';
 import { HelpCircle } from 'lucide-react';
+import { getPlayerName, savePlayerName } from '../utils/deviceStorage';
 
 const Index = () => {
   const [showGuide, setShowGuide] = React.useState(false);
+  const [showLeaderboard, setShowLeaderboard] = React.useState(false);
+  const [showPlayerNameDialog, setShowPlayerNameDialog] = React.useState(false);
   
   const { 
     gameState,
@@ -36,10 +41,45 @@ const Index = () => {
     showStartScreen,
     dismissStartScreen,
     nextMilestone,
+    // New scoring system
+    totalScore,
+    currentStreak,
+    showWrongTaps
   } = useGame();
 
+  // Check for existing player name
+  useEffect(() => {
+    const playerName = getPlayerName();
+    if (!playerName && !showStartScreen) {
+      setShowPlayerNameDialog(true);
+    }
+  }, [showStartScreen]);
+
+  // Handle player name submission
+  const handlePlayerNameSubmit = (name: string) => {
+    savePlayerName(name);
+    setShowPlayerNameDialog(false);
+    startGame();
+  };
+
+  // Handle start screen dismissal
+  const handleDismissStartScreen = () => {
+    dismissStartScreen();
+    const playerName = getPlayerName();
+    if (!playerName) {
+      setShowPlayerNameDialog(true);
+    } else {
+      startGame();
+    }
+  };
+
+  // Handle game over modal close
+  const handleGameOverClose = () => {
+    resetGame();
+  };
+
   if (showStartScreen) {
-    return <StartScreen onStart={dismissStartScreen} />;
+    return <StartScreen onStart={handleDismissStartScreen} />;
   }
 
   return (
@@ -51,6 +91,13 @@ const Index = () => {
       <SoundEffects 
         gameState={gameState} 
         isPlayerWinner={isPlayerWinner} 
+      />
+      
+      {/* Player Name Dialog */}
+      <PlayerNameDialog 
+        open={showPlayerNameDialog} 
+        onSubmit={handlePlayerNameSubmit}
+        onClose={() => {}} // Can't close manually
       />
       
       <div className="w-full max-w-md">
@@ -85,6 +132,8 @@ const Index = () => {
           resetGame={resetGame}
           currentTheme={currentTheme}
           nextMilestone={nextMilestone}
+          totalScore={totalScore}
+          onOpenLeaderboard={() => setShowLeaderboard(true)}
         />
         
         <AudioInitializer onSymbolClick={handleSymbolClick}>
@@ -97,6 +146,7 @@ const Index = () => {
             currentSymbolPack={currentSymbolPack}
             gridSymbols={gridSymbols}
             progressPct={progressPct}
+            showWrongTaps={showWrongTaps}
           />
         </AudioInitializer>
         
@@ -106,6 +156,8 @@ const Index = () => {
           open={showGameOverModal}
           onRestart={startGame}
           onShare={shareScore}
+          totalScore={totalScore}
+          onClose={handleGameOverClose}
         />
         
         <HowToPlayGuide 

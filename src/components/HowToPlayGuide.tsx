@@ -19,7 +19,7 @@ const HowToPlayGuide: React.FC<HowToPlayGuideProps> = ({ open, onClose }) => {
         <h3 className="font-semibold text-lg mb-2">How to Play</h3>
         <ul className="space-y-3 list-disc pl-5">
           <li>
-            <span className="font-medium">Memorize the pattern</span>
+            <span className="font-medium">Memorise the symbols</span>
             <p className="text-sm text-muted-foreground">Symbols flash for 1 second. Remember their order!</p>
           </li>
           <li>
@@ -27,16 +27,24 @@ const HowToPlayGuide: React.FC<HowToPlayGuideProps> = ({ open, onClose }) => {
             <p className="text-sm text-muted-foreground">Tap the symbols in the same order within 10 seconds.</p>
           </li>
           <li>
-            <span className="font-medium">Level up</span>
-            <p className="text-sm text-muted-foreground">Each level adds more symbols. Every 10 levels changes the color theme.</p>
+            <span className="font-medium">Earn points each round</span>
+            <p className="text-sm text-muted-foreground">
+              – Higher rounds = bigger base points<br />
+              – Finish faster = x1–x2 speed bonus<br />
+              – Keep a perfect streak = +25% per flawless round
+            </p>
           </li>
           <li>
             <span className="font-medium">Watch your lives</span>
             <p className="text-sm text-muted-foreground">You get 2 lives. A mistake or timeout costs one life.</p>
           </li>
           <li>
+            <span className="font-medium">Collect gems</span>
+            <p className="text-sm text-muted-foreground">Gems drop every 10 rounds. Jackpot every 20!</p>
+          </li>
+          <li>
             <span className="font-medium">Set records</span>
-            <p className="text-sm text-muted-foreground">Beat your personal best and share your score!</p>
+            <p className="text-sm text-muted-foreground">Share your score and climb the Hall of Heroes.</p>
           </li>
         </ul>
       </div>

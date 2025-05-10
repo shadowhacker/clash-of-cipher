@@ -1,5 +1,6 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { toast } from "sonner";
 
 // Array of all available symbols
 const MASTER_SYMBOLS = ['▲', '●', '◆', '★', '☆', '■', '✦', '✿', '♣', '♥', '☀', '☂'];
@@ -14,7 +15,7 @@ const THEMES = ['bg-amber-500', 'bg-emerald-500', 'bg-sky-500', 'bg-fuchsia-500'
 export const useGame = () => {
   // Game state
   const [gameState, setGameState] = useState<GameState>('idle');
-  const [level, setLevel] = useState(1);
+  const [level, setLevel] = useState(1); // Keep for compatibility, represents round now
   const [personalBest, setPersonalBest] = useState(() => {
     const saved = localStorage.getItem('cipher-clash-best');
     return saved ? parseInt(saved) : 0;
@@ -28,6 +29,12 @@ export const useGame = () => {
   const [gridSymbols, setGridSymbols] = useState<string[]>([]);
   const [progressPct, setProgressPct] = useState(10); // Progress percentage (10-100)
   const [showStartScreen, setShowStartScreen] = useState(true);
+  
+  // New scoring system state
+  const [totalScore, setTotalScore] = useState(0);
+  const [currentStreak, setCurrentStreak] = useState(0);
+  const [gems, setGems] = useState(0);
+  const [showWrongTaps, setShowWrongTaps] = useState(false);
   
   // Timer reference to track and clear intervals
   const timerRef = useRef<number | null>(null);
@@ -58,6 +65,32 @@ export const useGame = () => {
     const length = 2 + Math.floor((currentLevel - 1) / 4);
     return Math.min(length, 20); // Cap at 20 symbols
   }, []);
+
+  // Calculate round score based on new formula
+  const calculateRoundScore = useCallback((round: number, codeLen: number, secondsRemaining: number, streak: number) => {
+    // Base points: (roundNumber ** 2) * codeLength
+    const basePts = Math.pow(round, 2) * codeLen;
+    
+    // Speed multiplier: 1 + (secondsLeft / 10) - ranges from 1.0 to 2.0
+    const speedMult = 1 + (secondsRemaining / 10);
+    
+    // Flawless multiplier: 1.25 ** currentStreak
+    const flawlessMult = Math.pow(1.25, streak);
+    
+    // Calculate round score
+    let roundScore = Math.floor(basePts * speedMult * flawlessMult);
+    
+    // Jackpot round: every 20th round adds 1000 bonus points
+    if (round % 20 === 0) {
+      roundScore += 1000;
+    }
+    
+    return {
+      roundScore,
+      speedMult,
+      flawlessMult
+    };
+  }, []);
   
   // Game over function
   const gameOver = useCallback(() => {
@@ -65,21 +98,25 @@ export const useGame = () => {
     setIsPlayerWinner(false);
     setGameState('result');
     
-    // Update personal best before showing modal
-    const currentLevel = level;
-    if (currentLevel - 1 > personalBest) {
-      setPersonalBest(currentLevel - 1);
-      localStorage.setItem('cipher-clash-best', (currentLevel - 1).toString());
+    // Update personal best if total score is higher
+    if (totalScore > personalBest) {
+      setPersonalBest(totalScore);
+      localStorage.setItem('cipher-clash-best', totalScore.toString());
     }
     
     setTimeout(() => {
       setShowGameOverModal(true);
-    }, 1000);
-  }, [level, personalBest, clearGameTimer]);
+    }, showWrongTaps ? 2500 : 1000); // Longer delay if showing wrong taps
+    
+  }, [totalScore, personalBest, clearGameTimer, showWrongTaps]);
   
   // Lose a life handler - define before any functions that use it
   const loseLife = useCallback(() => {
     clearGameTimer(); // Clear any existing timer first
+    
+    // Reset streak when losing a life
+    setCurrentStreak(0);
+    setShowWrongTaps(true);
     
     setLives(prevLives => {
       const newLives = Math.max(prevLives - 1, 0);
@@ -88,7 +125,10 @@ export const useGame = () => {
         setTimeout(() => gameOver(), 0);
       } else {
         // Only restart if we still have lives left
-        setTimeout(() => restartSameLevel(), 800);
+        setTimeout(() => {
+          setShowWrongTaps(false);
+          restartSameLevel();
+        }, 2500); // Show wrong taps for 2.5 seconds
       }
       return newLives;
     });
@@ -97,7 +137,7 @@ export const useGame = () => {
     setGameState('result');
     setIsPlayerWinner(false);
     setTimeLeft(10); // Reset timer
-  }, [clearGameTimer, gameOver]); // restartSameLevel will be defined later, but circular reference is fine here
+  }, [clearGameTimer, gameOver]); 
   
   // Start input phase (renamed from flash-done callback)
   const startInputPhase = useCallback(() => {
@@ -167,14 +207,6 @@ export const useGame = () => {
     const nextPack = Math.ceil((currentLevel + 1) / 7) * 7;
     return Math.min(nextColor, nextPack);
   }, []);
-  
-  // Update personal best if needed
-  const updatePersonalBest = useCallback((currentLevel: number) => {
-    if (currentLevel - 1 > personalBest) {
-      setPersonalBest(currentLevel - 1);
-      localStorage.setItem('cipher-clash-best', (currentLevel - 1).toString());
-    }
-  }, [personalBest]);
 
   // Start a new game
   const startGame = useCallback(() => {
@@ -192,6 +224,12 @@ export const useGame = () => {
     setProgressPct(10); // Reset progress to 10%
     setGridSymbols(generateGrid(currentPack, newCode));
     setShowStartScreen(false);
+    
+    // Reset score system
+    setTotalScore(0);
+    setCurrentStreak(0);
+    setGems(0);
+    setShowWrongTaps(false);
     
     // Show the code for 1000ms then start input phase
     setTimeout(() => {
@@ -211,8 +249,17 @@ export const useGame = () => {
     setTimeLeft(10);
     
     // Calculate progress percentage based on level (resets every 10 levels)
+    // This is now only visual, not tied to scoring
     const newProgressPct = ((newLevel - 1) % 10 + 1) * 10;
     setProgressPct(newProgressPct);
+    
+    // Check if gem unlocked (every 10 rounds)
+    if (newProgressPct === 10 && newLevel > 1) {
+      setGems(prev => prev + 1);
+      toast("💎 Gem Unlocked!", {
+        duration: 1000
+      });
+    }
     
     // Generate a new grid for this level, ensuring all code symbols are included
     setGridSymbols(generateGrid(currentPack, newCode));
@@ -239,7 +286,23 @@ export const useGame = () => {
       if (isCorrect) {
         // User got it right
         setIsPlayerWinner(true);
-        updatePersonalBest(level + 1);
+        
+        // Increment streak
+        const newStreak = currentStreak + 1;
+        setCurrentStreak(newStreak);
+        
+        // Calculate score for this round
+        const secondsRemaining = timeLeft;
+        const { roundScore, speedMult } = calculateRoundScore(level, code.length, secondsRemaining, newStreak);
+        
+        // Update total score
+        setTotalScore(prev => prev + roundScore);
+        
+        // Show toast with score info
+        toast(
+          `+${roundScore} pts • x${speedMult.toFixed(1)} Speed • Streak ${newStreak}`, 
+          { duration: 1000 }
+        );
         
         // Show success result briefly
         setGameState('result');
@@ -254,14 +317,14 @@ export const useGame = () => {
         loseLife();
       }
     }
-  }, [gameState, userInput, code, level, loseLife, updatePersonalBest, startNextLevel, clearGameTimer]);
+  }, [gameState, userInput, code, level, timeLeft, loseLife, clearGameTimer, currentStreak, calculateRoundScore, startNextLevel]);
 
   // Copy "share my best" text to clipboard
   const shareScore = useCallback(() => {
-    const text = `I just hit Round ${personalBest} on Cipher Clash!\nThink you can beat me? Play → https://symbol-grid-sparkle-showdown.lovable.app/`;
+    const text = `I just scored ${totalScore} points on Round ${level} of Cipher Clash!\nThink you can beat me? Play → https://symbol-grid-sparkle-showdown.lovable.app/`;
     navigator.clipboard.writeText(text);
     return text;
-  }, [personalBest]);
+  }, [totalScore, level]);
 
   // Reset the game
   const resetGame = useCallback(() => {
@@ -274,13 +337,15 @@ export const useGame = () => {
     setShowGameOverModal(false);
     setLives(2);
     setTimeLeft(10);
+    setTotalScore(0);
+    setCurrentStreak(0);
+    setShowWrongTaps(false);
   }, [clearGameTimer]);
   
   // Dismiss start screen
   const dismissStartScreen = useCallback(() => {
     setShowStartScreen(false);
-    startGame();
-  }, [startGame]);
+  }, []);
 
   // Clean up timer on unmount
   useEffect(() => {
@@ -310,5 +375,10 @@ export const useGame = () => {
     showStartScreen,
     dismissStartScreen,
     nextMilestone: getNextMilestone(level),
+    // New scoring system
+    totalScore,
+    currentStreak,
+    gems,
+    showWrongTaps
   };
 };

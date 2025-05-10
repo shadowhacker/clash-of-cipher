@@ -14,9 +14,10 @@ import { Label } from '@/components/ui/label';
 interface PlayerNameDialogProps {
   open: boolean;
   onSubmit: (name: string) => void;
+  onClose: () => void; // Added onClose prop
 }
 
-const PlayerNameDialog: React.FC<PlayerNameDialogProps> = ({ open, onSubmit }) => {
+const PlayerNameDialog: React.FC<PlayerNameDialogProps> = ({ open, onSubmit, onClose }) => {
   const [name, setName] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -27,7 +28,7 @@ const PlayerNameDialog: React.FC<PlayerNameDialogProps> = ({ open, onSubmit }) =
   };
 
   return (
-    <Dialog open={open} onOpenChange={() => {}}>
+    <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-center text-xl">Enter Your Name</DialogTitle>

@@ -11,6 +11,7 @@ interface GameGridProps {
   currentSymbolPack: string[];
   gridSymbols: string[];
   progressPct: number;
+  showWrongTaps?: boolean;
 }
 
 const GameGrid: React.FC<GameGridProps> = ({ 
@@ -21,6 +22,7 @@ const GameGrid: React.FC<GameGridProps> = ({
   isPlayerWinner,
   gridSymbols,
   progressPct,
+  showWrongTaps = false,
 }) => {
   const [showLevelUp, setShowLevelUp] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState<number | null>(null);
@@ -73,13 +75,13 @@ const GameGrid: React.FC<GameGridProps> = ({
       {gameState !== 'idle' && (
         <>
           <div className="mb-1 text-center text-xs text-indigo-600 font-medium">
-            Level Progress (10 rounds)
+            Gem Progress (10 rounds)
           </div>
           <div className="mb-3 relative">
             <Progress value={progressPct} className="h-1 bg-red-300" />
             {showLevelUp && (
               <div className="absolute inset-0 flex items-center justify-center bg-green-500/80 rounded-md text-white font-bold">
-                Level Up!
+                Gem Unlocked!
               </div>
             )}
           </div>
@@ -107,22 +109,32 @@ const GameGrid: React.FC<GameGridProps> = ({
       )}
       
       <div className="grid grid-cols-4 gap-2 max-w-[320px] mx-auto">
-        {gridSymbols.map((symbol, index) => (
-          <button
-            key={index}
-            className={`w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center rounded-md shadow-md text-2xl transition-colors ${
-              isWrongInput(symbol, index) ? 'bg-red-500/70 text-white' : 
-              isCorrectCode(symbol) && gameState === 'result' && !isPlayerWinner ? 'bg-green-500/70 text-white' :
-              highlightedIndex === index ? 'bg-green-400 text-indigo-800' : 
-              'bg-indigo-100 hover:bg-indigo-200 text-indigo-800'
-            }`}
-            onClick={() => handleButtonClick(symbol, index)}
-            disabled={gameState !== 'input'}
-            aria-label={`Symbol ${index + 1}`}
-          >
-            {symbol}
-          </button>
-        ))}
+        {gridSymbols.map((symbol, index) => {
+          // Determine cell color logic for wrong taps visualization
+          let cellClassName = "w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center rounded-md shadow-md text-2xl transition-colors ";
+          
+          if (showWrongTaps && isWrongInput(symbol, index)) {
+            cellClassName += "bg-red-500 text-white";
+          } else if (showWrongTaps && isCorrectCode(symbol)) {
+            cellClassName += "bg-green-500/70 text-white";
+          } else if (highlightedIndex === index) {
+            cellClassName += "bg-green-400 text-indigo-800";
+          } else {
+            cellClassName += "bg-indigo-100 hover:bg-indigo-200 text-indigo-800";
+          }
+          
+          return (
+            <button
+              key={index}
+              className={cellClassName}
+              onClick={() => handleButtonClick(symbol, index)}
+              disabled={gameState !== 'input'}
+              aria-label={`Symbol ${index + 1}`}
+            >
+              {symbol}
+            </button>
+          );
+        })}
       </div>
       
       {gameState === 'input' && (
