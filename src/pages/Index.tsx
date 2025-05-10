@@ -13,11 +13,15 @@ import PlayerNameDialog from '../components/PlayerNameDialog';
 import { useGame } from '../hooks/useGame';
 import { HelpCircle } from 'lucide-react';
 import { getPlayerName, savePlayerName, getDeviceId } from '../utils/deviceStorage';
+import { Button } from '../components/ui/button';
 
 const Index = () => {
   const [showGuide, setShowGuide] = React.useState(false);
   const [showLeaderboard, setShowLeaderboard] = React.useState(false);
   const [showPlayerNameDialog, setShowPlayerNameDialog] = React.useState(false);
+  const [isFirstTimePlay, setIsFirstTimePlay] = React.useState(() => {
+    return !localStorage.getItem('cipher-clash-first-play');
+  });
   
   const { 
     gameState,
@@ -43,6 +47,15 @@ const Index = () => {
     currentStreak,
     showWrongTaps
   } = useGame();
+
+  // Theme classes for buttons
+  const themeClasses = {
+    'bg-amber-500': 'bg-amber-600 hover:bg-amber-700',
+    'bg-emerald-500': 'bg-emerald-600 hover:bg-emerald-700',
+    'bg-sky-500': 'bg-sky-600 hover:bg-sky-700',
+    'bg-fuchsia-500': 'bg-fuchsia-600 hover:bg-fuchsia-700',
+    'bg-rose-500': 'bg-rose-600 hover:bg-rose-700',
+  }[currentTheme] || 'bg-indigo-600 hover:bg-indigo-700';
 
   // Check for existing player name whenever the component mounts
   useEffect(() => {
@@ -78,6 +91,19 @@ const Index = () => {
   // Handle game over modal close
   const handleGameOverClose = () => {
     resetGame();
+  };
+
+  // Handle delayed start for first-time players
+  const handleDelayedStart = () => {
+    if (isFirstTimePlay) {
+      localStorage.setItem('cipher-clash-first-play', 'true');
+      setIsFirstTimePlay(false);
+      setTimeout(() => {
+        startGame();
+      }, 2500); // 2.5 second delay
+    } else {
+      startGame();
+    }
   };
 
   if (showStartScreen) {
@@ -139,6 +165,8 @@ const Index = () => {
           nextMilestone={nextMilestone}
           totalScore={totalScore}
           onOpenLeaderboard={() => setShowLeaderboard(true)}
+          onOpenGuide={() => setShowGuide(true)}
+          playerName={getPlayerName()}
         />
         
         <AudioInitializer onSymbolClick={handleSymbolClick}>
@@ -153,6 +181,17 @@ const Index = () => {
             showWrongTaps={showWrongTaps}
           />
         </AudioInitializer>
+
+        {gameState === 'idle' && (
+          <div className="mt-6 flex justify-center">
+            <Button 
+              onClick={handleDelayedStart}
+              className={`${themeClasses} text-lg px-8 py-6`}
+            >
+              {isFirstTimePlay ? "Let's Go!" : "Start Game"}
+            </Button>
+          </div>
+        )}
         
         <GameOverModal
           level={level}

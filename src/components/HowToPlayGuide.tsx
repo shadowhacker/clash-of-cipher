@@ -1,7 +1,6 @@
-
 import React from 'react';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose } from '@/components/ui/sheet';
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerClose } from '@/components/ui/drawer';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import { X } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -62,9 +61,6 @@ const HowToPlayGuide: React.FC<HowToPlayGuideProps> = ({ open, onClose }) => {
         <DrawerContent>
           <DrawerHeader>
             <DrawerTitle>How to Play</DrawerTitle>
-            <DrawerClose onClick={onClose} className="absolute right-4 top-4">
-              <X className="h-4 w-4" />
-            </DrawerClose>
           </DrawerHeader>
           {content}
         </DrawerContent>
@@ -77,9 +73,6 @@ const HowToPlayGuide: React.FC<HowToPlayGuideProps> = ({ open, onClose }) => {
       <SheetContent side="right" className="w-[280px]">
         <SheetHeader>
           <SheetTitle>How to Play</SheetTitle>
-          <SheetClose onClick={onClose} className="absolute right-4 top-4">
-            <X className="h-4 w-4" />
-          </SheetClose>
         </SheetHeader>
         {content}
       </SheetContent>

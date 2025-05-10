@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, Medal } from 'lucide-react';
+import { RefreshCw, Medal, HelpCircle } from 'lucide-react';
 
 interface GameStatusProps {
   gameState: 'idle' | 'showCode' | 'input' | 'result';
@@ -14,6 +14,8 @@ interface GameStatusProps {
   nextMilestone: number;
   totalScore: number;
   onOpenLeaderboard?: () => void;
+  onOpenGuide?: () => void;
+  playerName?: string;
 }
 
 const GameStatus: React.FC<GameStatusProps> = ({ 
@@ -27,6 +29,8 @@ const GameStatus: React.FC<GameStatusProps> = ({
   currentTheme,
   totalScore,
   onOpenLeaderboard,
+  onOpenGuide,
+  playerName
 }) => {
   const themeClasses = {
     'bg-amber-500': 'bg-amber-600 hover:bg-amber-700',
@@ -42,8 +46,15 @@ const GameStatus: React.FC<GameStatusProps> = ({
     <div className="flex flex-col space-y-1 max-w-[320px] mx-auto">
       <div className="mb-2">
         <div className="flex items-center justify-between">
-          <div className="text-sm text-indigo-600 font-medium">
-            🏆 Lifetime Best: {personalBest}
+          <div className="text-sm text-indigo-600 font-medium text-center w-full">
+            {gameState === 'idle' && playerName ? (
+              <div className="space-y-1">
+                <div>Welcome back, {playerName}!</div>
+                <div>🏆 Lifetime Best: {personalBest}</div>
+              </div>
+            ) : (
+              <div>🏆 Lifetime Best: {personalBest}</div>
+            )}
           </div>
         </div>
       </div>
@@ -51,12 +62,7 @@ const GameStatus: React.FC<GameStatusProps> = ({
       <div className="h-[48px] flex items-center justify-between mb-2 bg-indigo-50 rounded-md p-2 transition-colors">
         {gameState === 'idle' ? (
           <div className="flex w-full justify-center">
-            <Button 
-              onClick={startGame}
-              className={themeClasses}
-            >
-              Start Game
-            </Button>
+            {/* Empty div to maintain layout */}
           </div>
         ) : (
           <>
@@ -71,15 +77,6 @@ const GameStatus: React.FC<GameStatusProps> = ({
               <span className="text-indigo-800 font-medium ${isTimeCritical ? 'animate-bounce' : ''}">
                 ⏱ {timeLeft}s
               </span>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={onOpenLeaderboard} 
-                className="p-1 ml-1"
-                title="Hall of Heroes"
-              >
-                <Medal className="h-4 w-4" />
-              </Button>
               <Button 
                 variant="ghost" 
                 size="sm" 
