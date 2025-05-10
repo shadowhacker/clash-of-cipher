@@ -1,11 +1,10 @@
-
 import React, { useEffect, useMemo } from 'react';
 import GameGrid from '../components/GameGrid';
 import GameStatus from '../components/GameStatus';
 import GameOverModal from '../components/GameOverModal';
 import HowToPlayGuide from '../components/HowToPlayGuide';
 import { useGame } from '../hooks/useGame';
-import { Help } from 'lucide-react';
+import { HelpCircle } from 'lucide-react';
 import { useState } from 'react';
 
 const Index = () => {
@@ -65,7 +64,7 @@ const Index = () => {
             className="p-2 rounded-full bg-indigo-100 hover:bg-indigo-200 text-indigo-800"
             aria-label="How to Play"
           >
-            <Help className="w-5 h-5" />
+            <HelpCircle className="w-5 h-5" />
           </button>
         </div>
 

@@ -3,7 +3,7 @@ import React from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose } from '@/components/ui/sheet';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerClose } from '@/components/ui/drawer';
 import { X } from 'lucide-react';
-import { useMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface HowToPlayGuideProps {
   open: boolean;
@@ -11,7 +11,7 @@ interface HowToPlayGuideProps {
 }
 
 const HowToPlayGuide: React.FC<HowToPlayGuideProps> = ({ open, onClose }) => {
-  const isMobile = useMobile();
+  const isMobile = useIsMobile();
   
   const content = (
     <div className="space-y-6 py-4">
