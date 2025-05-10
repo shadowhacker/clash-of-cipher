@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { toast } from "sonner";
 
@@ -15,7 +14,7 @@ const THEMES = ['bg-amber-500', 'bg-emerald-500', 'bg-sky-500', 'bg-fuchsia-500'
 export const useGame = () => {
   // Game state
   const [gameState, setGameState] = useState<GameState>('idle');
-  const [level, setLevel] = useState(1); // Keep for compatibility, represents round now
+  const [level, setLevel] = useState(1);
   const [personalBest, setPersonalBest] = useState(() => {
     const saved = localStorage.getItem('cipher-clash-best');
     return saved ? parseInt(saved) : 0;
@@ -24,10 +23,9 @@ export const useGame = () => {
   const [userInput, setUserInput] = useState<string[]>([]);
   const [isPlayerWinner, setIsPlayerWinner] = useState<boolean | null>(null);
   const [showGameOverModal, setShowGameOverModal] = useState(false);
-  const [lives, setLives] = useState(2); // Two lives
+  const [lives, setLives] = useState(2);
   const [timeLeft, setTimeLeft] = useState(10);
   const [gridSymbols, setGridSymbols] = useState<string[]>([]);
-  const [progressPct, setProgressPct] = useState(10); // Progress percentage (10-100)
   const [showStartScreen, setShowStartScreen] = useState(true);
   
   // New scoring system state
@@ -219,9 +217,8 @@ export const useGame = () => {
     setLevel(initialLevel);
     setGameState('showCode');
     setShowGameOverModal(false);
-    setLives(2); // Reset lives only on fresh game
+    setLives(2);
     setTimeLeft(10);
-    setProgressPct(10); // Reset progress to 10%
     setGridSymbols(generateGrid(currentPack, newCode));
     setShowStartScreen(false);
     
@@ -247,19 +244,6 @@ export const useGame = () => {
     setLevel(newLevel);
     setGameState('showCode');
     setTimeLeft(10);
-    
-    // Calculate progress percentage based on level (resets every 10 levels)
-    // This is now only visual, not tied to scoring
-    const newProgressPct = ((newLevel - 1) % 10 + 1) * 10;
-    setProgressPct(newProgressPct);
-    
-    // Check if gem unlocked (every 10 rounds)
-    if (newProgressPct === 10 && newLevel > 1) {
-      setGems(prev => prev + 1);
-      toast("💎 Gem Unlocked!", {
-        duration: 1000
-      });
-    }
     
     // Generate a new grid for this level, ensuring all code symbols are included
     setGridSymbols(generateGrid(currentPack, newCode));
@@ -367,7 +351,6 @@ export const useGame = () => {
     currentSymbolPack: getCurrentSymbolPack(level),
     currentTheme: getCurrentTheme(level),
     gridSymbols,
-    progressPct,
     startGame,
     handleSymbolClick,
     resetGame,
@@ -375,7 +358,6 @@ export const useGame = () => {
     showStartScreen,
     dismissStartScreen,
     nextMilestone: getNextMilestone(level),
-    // New scoring system
     totalScore,
     currentStreak,
     gems,

@@ -1,6 +1,4 @@
-
 import React, { useState, useEffect } from 'react';
-import { Progress } from '@/components/ui/progress';
 
 interface GameGridProps {
   onButtonClick: (symbol: string) => void;
@@ -10,7 +8,6 @@ interface GameGridProps {
   isPlayerWinner: boolean | null;
   currentSymbolPack: string[];
   gridSymbols: string[];
-  progressPct: number;
   showWrongTaps?: boolean;
 }
 
@@ -21,22 +18,9 @@ const GameGrid: React.FC<GameGridProps> = ({
   userInput,
   isPlayerWinner,
   gridSymbols,
-  progressPct,
   showWrongTaps = false,
 }) => {
-  const [showLevelUp, setShowLevelUp] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState<number | null>(null);
-
-  // Show level up message when progress reaches 100%
-  useEffect(() => {
-    if (progressPct === 100) {
-      setShowLevelUp(true);
-      const timer = setTimeout(() => {
-        setShowLevelUp(false);
-      }, 800);
-      return () => clearTimeout(timer);
-    }
-  }, [progressPct]);
 
   // Handle button click with visual feedback
   const handleButtonClick = (symbol: string, index: number) => {
@@ -72,22 +56,6 @@ const GameGrid: React.FC<GameGridProps> = ({
 
   return (
     <div className="relative">
-      {gameState !== 'idle' && (
-        <>
-          <div className="mb-1 text-center text-xs text-indigo-600 font-medium">
-            Gem Progress (10 rounds)
-          </div>
-          <div className="mb-3 relative">
-            <Progress value={progressPct} className="h-1 bg-red-300" />
-            {showLevelUp && (
-              <div className="absolute inset-0 flex items-center justify-center bg-green-500/80 rounded-md text-white font-bold">
-                Gem Unlocked!
-              </div>
-            )}
-          </div>
-        </>
-      )}
-      
       {gameState === 'showCode' && (
         <div className="absolute inset-0 flex items-center justify-center z-10 bg-black rounded-md pointer-events-none">
           <div className="flex flex-wrap gap-4 max-w-xs justify-center shadow-2xl rounded-lg px-6 py-4 text-4xl font-bold text-white">
