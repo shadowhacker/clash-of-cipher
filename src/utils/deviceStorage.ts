@@ -1,12 +1,10 @@
 
-import { v4 as uuidv4 } from 'uuid';
-
 // Generate or retrieve device ID from local storage
 export const getDeviceId = (): string => {
   let deviceId = localStorage.getItem('cipher-clash-device-id');
   
   if (!deviceId) {
-    deviceId = uuidv4();
+    deviceId = crypto.randomUUID();
     localStorage.setItem('cipher-clash-device-id', deviceId);
   }
   
