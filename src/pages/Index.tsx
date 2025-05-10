@@ -1,16 +1,19 @@
 
-import React, { useEffect, useRef, useState } from 'react';
+import React from 'react';
 import GameGrid from '../components/GameGrid';
 import GameStatus from '../components/GameStatus';
 import GameOverModal from '../components/GameOverModal';
 import HowToPlayGuide from '../components/HowToPlayGuide';
 import StartScreen from '../components/StartScreen';
+import SoundEffects from '../components/SoundEffects';
+import ThemeManager from '../components/ThemeManager';
+import LifeWarning from '../components/LifeWarning';
+import AudioInitializer from '../components/AudioInitializer';
 import { useGame } from '../hooks/useGame';
 import { HelpCircle } from 'lucide-react';
 
 const Index = () => {
-  const [showGuide, setShowGuide] = useState(false);
-  const [showLifeWarning, setShowLifeWarning] = useState(false);
+  const [showGuide, setShowGuide] = React.useState(false);
   
   const { 
     gameState,
@@ -35,75 +38,21 @@ const Index = () => {
     nextMilestone,
   } = useGame();
 
-  // Sound effects using useRef for better performance
-  const sfxSuccess = useRef<HTMLAudioElement | null>(null);
-  const sfxFail = useRef<HTMLAudioElement | null>(null);
-  const audioInitialized = useRef<boolean>(false);
-
-  // Initialize sound effects
-  useEffect(() => {
-    sfxSuccess.current = new Audio('/snd/success.mp3');
-    sfxFail.current = new Audio('/snd/fail.mp3');
-  }, []);
-
-  // Play sound effects based on game state changes
-  useEffect(() => {
-    if (gameState === 'result') {
-      try {
-        if (isPlayerWinner && sfxSuccess.current) {
-          sfxSuccess.current.play().catch(err => console.error("Error playing success sound:", err));
-        } else if (!isPlayerWinner && sfxFail.current) {
-          sfxFail.current.play().catch(err => console.error("Error playing fail sound:", err));
-        }
-      } catch (e) {
-        console.error("Audio playback error:", e);
-      }
-    }
-  }, [gameState, isPlayerWinner]);
-
-  // Apply theme to body background
-  useEffect(() => {
-    document.body.className = `min-h-screen transition-colors duration-1000 ${currentTheme.replace('bg-', 'bg-')}`;
-    
-    return () => {
-      document.body.className = '';
-    };
-  }, [currentTheme]);
-
-  // Handle life warning display
-  useEffect(() => {
-    if (lives === 1 && gameState === 'result' && !isPlayerWinner) {
-      setShowLifeWarning(true);
-      const timer = setTimeout(() => {
-        setShowLifeWarning(false);
-      }, 800);
-      return () => clearTimeout(timer);
-    }
-  }, [lives, gameState, isPlayerWinner]);
-
-  // Wrapper for symbol click to handle audio initialization
-  const handleSymbolClickWithTimer = (symbol: string) => {
-    // Initialize audio context on first user interaction
-    if (!audioInitialized.current) {
-      try {
-        const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-        audioContext.resume().catch(e => console.error("Audio context resume error:", e));
-        audioInitialized.current = true;
-      } catch (err) {
-        console.error("Audio context creation error:", err);
-      }
-    }
-    
-    // Call original handler
-    handleSymbolClick(symbol);
-  };
-
   if (showStartScreen) {
     return <StartScreen onStart={dismissStartScreen} />;
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-indigo-50 to-purple-50 flex flex-col items-center justify-center p-4">
+      {/* Theme Manager (handles body background) */}
+      <ThemeManager currentTheme={currentTheme} />
+      
+      {/* Sound Effects */}
+      <SoundEffects 
+        gameState={gameState} 
+        isPlayerWinner={isPlayerWinner} 
+      />
+      
       <div className="w-full max-w-md">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-center text-indigo-800">🔮 Cipher Clash</h1>
@@ -116,11 +65,12 @@ const Index = () => {
           </button>
         </div>
 
-        {showLifeWarning && lives === 1 && (
-          <div className="mb-4 p-2 bg-yellow-500/80 text-white text-center rounded-md font-bold animate-pulse">
-            ⚠️ 1 life left – focus!
-          </div>
-        )}
+        {/* Life Warning */}
+        <LifeWarning 
+          lives={lives} 
+          gameState={gameState} 
+          isPlayerWinner={isPlayerWinner} 
+        />
 
         <GameStatus 
           gameState={gameState}
@@ -133,16 +83,20 @@ const Index = () => {
           currentTheme={currentTheme}
           nextMilestone={nextMilestone}
         />
-        <GameGrid 
-          onButtonClick={handleSymbolClickWithTimer}
-          gameState={gameState}
-          code={code}
-          userInput={userInput}
-          isPlayerWinner={isPlayerWinner}
-          currentSymbolPack={currentSymbolPack}
-          gridSymbols={gridSymbols}
-          progressPct={progressPct}
-        />
+        
+        <AudioInitializer onSymbolClick={handleSymbolClick}>
+          <GameGrid 
+            onButtonClick={handleSymbolClick}
+            gameState={gameState}
+            code={code}
+            userInput={userInput}
+            isPlayerWinner={isPlayerWinner}
+            currentSymbolPack={currentSymbolPack}
+            gridSymbols={gridSymbols}
+            progressPct={progressPct}
+          />
+        </AudioInitializer>
+        
         <GameOverModal
           level={level}
           personalBest={personalBest}
@@ -150,6 +104,7 @@ const Index = () => {
           onRestart={startGame}
           onShare={shareScore}
         />
+        
         <HowToPlayGuide 
           open={showGuide} 
           onClose={() => setShowGuide(false)} 

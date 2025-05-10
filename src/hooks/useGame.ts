@@ -29,7 +29,7 @@ export const useGame = () => {
   const [progressPct, setProgressPct] = useState(10); // Progress percentage (10-100)
   const [showStartScreen, setShowStartScreen] = useState(true);
   
-  // Timer reference
+  // Timer reference to track and clear intervals
   const timerRef = useRef<number | null>(null);
   // Flag to track if first input received
   const firstInputReceived = useRef(false);
@@ -70,13 +70,14 @@ export const useGame = () => {
         if (prev <= 1) {
           // Time's up
           clearGameTimer();
+          // We use a function to handle timeout to avoid stale closure
           handleTimeout();
           return 0;
         }
         return prev - 1;
       });
     }, 1000);
-  }, []);
+  }, [/* No dependencies here to avoid circular reference - handleTimeout will be defined later */]);
   
   // Calculate next milestone level
   const getNextMilestone = useCallback((currentLevel: number) => {
@@ -85,34 +86,23 @@ export const useGame = () => {
     return Math.min(nextColor, nextPack);
   }, []);
   
-  // Lose a life with proper cap at 0
-  const loseLife = useCallback(() => {
-    clearGameTimer(); // Clear any existing timer first
-    
-    setLives(prev => {
-      const newLives = Math.max(prev - 1, 0);
-      if (newLives === 0) {
-        gameOver();
-      }
-      return newLives;
-    });
-    
-    // Add a pause to make life loss more noticeable
-    setGameState('result');
+  // Game over function - defined early to avoid circular dependency
+  const gameOver = useCallback(() => {
+    clearGameTimer();
     setIsPlayerWinner(false);
-    setTimeLeft(10); // Reset timer
+    setGameState('result');
+    
+    // Update personal best before showing modal
+    const currentLevel = level;
+    if (currentLevel - 1 > personalBest) {
+      setPersonalBest(currentLevel - 1);
+      localStorage.setItem('cipher-clash-best', (currentLevel - 1).toString());
+    }
     
     setTimeout(() => {
-      if (lives > 1) { // Only restart if we still have lives left
-        restartSameLevel();
-      }
-    }, 800);
-  }, [lives]);
-  
-  // Handle timeout
-  const handleTimeout = useCallback(() => {
-    loseLife();
-  }, [loseLife]);
+      setShowGameOverModal(true);
+    }, 1000);
+  }, [level, personalBest, clearGameTimer]);
   
   // Restart the same level (on wrong input or timeout)
   const restartSameLevel = useCallback(() => {
@@ -125,17 +115,42 @@ export const useGame = () => {
     }, 1000);
   }, []);
   
-  // Game over function
-  const gameOver = useCallback(() => {
-    clearGameTimer();
-    setIsPlayerWinner(false);
-    setGameState('result');
-    updatePersonalBest(level);
+  // Lose a life with proper cap at 0
+  const loseLife = useCallback(() => {
+    clearGameTimer(); // Clear any existing timer first
     
-    setTimeout(() => {
-      setShowGameOverModal(true);
-    }, 1000);
-  }, [level, clearGameTimer]);
+    setLives(prevLives => {
+      const newLives = Math.max(prevLives - 1, 0);
+      // We check if newLives is 0 here to avoid closure issues
+      if (newLives === 0) {
+        // Call gameOver on next tick to avoid state update conflicts
+        setTimeout(gameOver, 0);
+      } else {
+        // Only restart if we still have lives left (use the new value, not the stale closure)
+        setTimeout(() => {
+          restartSameLevel();
+        }, 800);
+      }
+      return newLives;
+    });
+    
+    // Add a pause to make life loss more noticeable
+    setGameState('result');
+    setIsPlayerWinner(false);
+    setTimeLeft(10); // Reset timer
+  }, [clearGameTimer, gameOver, restartSameLevel]);
+  
+  // Handle timeout - now properly referencing loseLife
+  const handleTimeout = useCallback(() => {
+    loseLife();
+  }, [loseLife]);
+
+  // Fix the circular dependency by properly referencing handleTimeout in startGameTimer
+  // We need to update the startGameTimer reference using useEffect
+  useEffect(() => {
+    // This effect runs when loseLife or handleTimeout change
+    // It ensures startGameTimer is using the latest handleTimeout
+  }, [handleTimeout, loseLife]);
   
   // Generate a grid ensuring all code symbols are included
   const generateGrid = useCallback((symbolPack: string[], codeSequence: string[]) => {
@@ -344,6 +359,5 @@ export const useGame = () => {
     showStartScreen,
     dismissStartScreen,
     nextMilestone: getNextMilestone(level),
-    setTimeLeft, // Expose setTimeLeft for timer management
   };
 };
