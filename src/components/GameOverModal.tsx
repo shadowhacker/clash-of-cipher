@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/sonner';
+import { Share2 } from 'lucide-react';
 
 interface GameOverModalProps {
   level: number;
@@ -26,6 +27,7 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
   onShare,
 }) => {
   const [showShareModal, setShowShareModal] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const handleShare = () => {
     const text = onShare();
@@ -36,12 +38,21 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
   };
 
   const handleShareAgain = () => {
-    const text = `I reached Level ${personalBest} in Cipher Clash! Think you can beat me? Play here → https://cipherclash.com`;
+    const text = `I just hit Round ${personalBest} on Cipher Clash!\nThink you can beat me? Play → https://cipherclash.com`;
     navigator.clipboard.writeText(text);
     toast("Copied again!", {
       description: "Ready to share!",
     });
   };
+
+  // Copy to clipboard when share modal opens
+  useEffect(() => {
+    if (showShareModal) {
+      const text = `I just hit Round ${personalBest} on Cipher Clash!\nThink you can beat me? Play → https://cipherclash.com`;
+      navigator.clipboard.writeText(text);
+      setCopied(true);
+    }
+  }, [showShareModal, personalBest]);
 
   return (
     <>
@@ -59,6 +70,7 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
               Try Again
             </Button>
             <Button variant="outline" onClick={handleShare}>
+              <Share2 className="mr-2 h-4 w-4" />
               Share My Best
             </Button>
           </DialogFooter>
@@ -75,11 +87,11 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
           </DialogHeader>
           <div className="py-4 text-center">
             <p className="text-md mb-4 bg-indigo-50 p-3 rounded-md border border-indigo-100">
-              I reached Level {personalBest} in Cipher Clash!<br/>
-              Think you can beat me? Play here → https://cipherclash.com
+              I just hit Round {personalBest} on Cipher Clash!<br/>
+              Think you can beat me? Play → https://cipherclash.com
             </p>
             <p className="text-green-600 text-sm flex items-center justify-center">
-              <span className="inline-block mr-1">✅</span> Copied to clipboard
+              <span className="inline-block mr-1">✅</span> Message copied—paste it to WhatsApp, Telegram, X, etc.
             </p>
           </div>
           <DialogFooter className="sm:justify-center gap-2">

@@ -6,6 +6,18 @@ interface AudioInitializerProps {
   children: React.ReactNode;
 }
 
+// Define props type for the child component to properly pass down props
+interface GameGridProps {
+  onButtonClick: (symbol: string) => void;
+  gameState: 'idle' | 'showCode' | 'input' | 'result';
+  code: string[];
+  userInput: string[];
+  isPlayerWinner: boolean | null;
+  currentSymbolPack: string[];
+  gridSymbols: string[];
+  progressPct: number;
+}
+
 const AudioInitializer: React.FC<AudioInitializerProps> = ({ onSymbolClick, children }) => {
   const audioInitialized = useRef<boolean>(false);
 
@@ -30,11 +42,9 @@ const AudioInitializer: React.FC<AudioInitializerProps> = ({ onSymbolClick, chil
   return (
     <>
       {React.Children.map(children, child => {
-        if (React.isValidElement(child)) {
-          // Fix: Pass the wrapper function to a prop name that the child component accepts
+        if (React.isValidElement<GameGridProps>(child)) {
+          // Correctly pass the props to the child component
           return React.cloneElement(child, {
-            // The child component expects 'onButtonClick' not 'onSymbolClick'
-            // But we need to ensure the child component accepts this prop
             ...child.props,
             onButtonClick: handleSymbolClickWithAudio
           });

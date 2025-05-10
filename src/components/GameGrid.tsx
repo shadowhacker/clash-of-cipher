@@ -87,8 +87,8 @@ const GameGrid: React.FC<GameGridProps> = ({
       )}
       
       {gameState === 'showCode' && (
-        <div className="absolute inset-0 flex items-center justify-center z-10 bg-indigo-800/80 rounded-md">
-          <div className="flex flex-wrap gap-4 max-w-xs justify-center">
+        <div className="absolute inset-0 flex items-center justify-center z-10 bg-black rounded-md pointer-events-none">
+          <div className="flex flex-wrap gap-4 max-w-xs justify-center shadow-2xl rounded-lg px-6 py-4 text-4xl font-bold text-white">
             {code.map((symbol, idx) => (
               <span key={idx} className="text-4xl text-white">{symbol}</span>
             ))}

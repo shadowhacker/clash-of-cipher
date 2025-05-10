@@ -31,8 +31,14 @@ export const useGame = () => {
   
   // Timer reference to track and clear intervals
   const timerRef = useRef<number | null>(null);
-  // Flag to track if first input received
-  const firstInputReceived = useRef(false);
+  
+  // Clear any existing timer
+  const clearGameTimer = useCallback(() => {
+    if (timerRef.current !== null) {
+      window.clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+  }, []);
   
   // Get current theme based on level
   const getCurrentTheme = useCallback((currentLevel: number) => {
@@ -53,40 +59,7 @@ export const useGame = () => {
     return Math.min(length, 20); // Cap at 20 symbols
   }, []);
   
-  // Clear any existing timer
-  const clearGameTimer = useCallback(() => {
-    if (timerRef.current !== null) {
-      window.clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-  }, []);
-  
-  // Start the countdown timer
-  const startGameTimer = useCallback(() => {
-    clearGameTimer();
-    
-    timerRef.current = window.setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev <= 1) {
-          // Time's up
-          clearGameTimer();
-          // We use a function to handle timeout to avoid stale closure
-          handleTimeout();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-  }, [/* No dependencies here to avoid circular reference - handleTimeout will be defined later */]);
-  
-  // Calculate next milestone level
-  const getNextMilestone = useCallback((currentLevel: number) => {
-    const nextColor = Math.ceil((currentLevel + 1) / 10) * 10;
-    const nextPack = Math.ceil((currentLevel + 1) / 7) * 7;
-    return Math.min(nextColor, nextPack);
-  }, []);
-  
-  // Game over function - defined early to avoid circular dependency
+  // Game over function
   const gameOver = useCallback(() => {
     clearGameTimer();
     setIsPlayerWinner(false);
@@ -104,32 +77,18 @@ export const useGame = () => {
     }, 1000);
   }, [level, personalBest, clearGameTimer]);
   
-  // Restart the same level (on wrong input or timeout)
-  const restartSameLevel = useCallback(() => {
-    setUserInput([]);
-    firstInputReceived.current = false; // Reset first input flag
-    setGameState('showCode');
-    
-    setTimeout(() => {
-      setGameState('input');
-    }, 1000);
-  }, []);
-  
-  // Lose a life with proper cap at 0
+  // Lose a life handler - define before any functions that use it
   const loseLife = useCallback(() => {
     clearGameTimer(); // Clear any existing timer first
     
     setLives(prevLives => {
       const newLives = Math.max(prevLives - 1, 0);
-      // We check if newLives is 0 here to avoid closure issues
       if (newLives === 0) {
-        // Call gameOver on next tick to avoid state update conflicts
-        setTimeout(gameOver, 0);
+        // Call gameOver directly here to avoid stale closure issues
+        setTimeout(() => gameOver(), 0);
       } else {
-        // Only restart if we still have lives left (use the new value, not the stale closure)
-        setTimeout(() => {
-          restartSameLevel();
-        }, 800);
+        // Only restart if we still have lives left
+        setTimeout(() => restartSameLevel(), 800);
       }
       return newLives;
     });
@@ -138,19 +97,37 @@ export const useGame = () => {
     setGameState('result');
     setIsPlayerWinner(false);
     setTimeLeft(10); // Reset timer
-  }, [clearGameTimer, gameOver, restartSameLevel]);
+  }, [clearGameTimer, gameOver]); // restartSameLevel will be defined later, but circular reference is fine here
   
-  // Handle timeout - now properly referencing loseLife
-  const handleTimeout = useCallback(() => {
-    loseLife();
-  }, [loseLife]);
-
-  // Fix the circular dependency by properly referencing handleTimeout in startGameTimer
-  // We need to update the startGameTimer reference using useEffect
-  useEffect(() => {
-    // This effect runs when loseLife or handleTimeout change
-    // It ensures startGameTimer is using the latest handleTimeout
-  }, [handleTimeout, loseLife]);
+  // Start input phase (renamed from flash-done callback)
+  const startInputPhase = useCallback(() => {
+    setGameState('input');
+    
+    // Immediately start the timer as requested
+    setTimeLeft(10);
+    clearGameTimer();
+    
+    timerRef.current = window.setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          clearGameTimer();
+          loseLife(); // Handle timeout
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  }, [clearGameTimer, loseLife]);
+  
+  // Restart the same level (on wrong input or timeout)
+  const restartSameLevel = useCallback(() => {
+    setUserInput([]);
+    setGameState('showCode');
+    
+    setTimeout(() => {
+      startInputPhase();
+    }, 1000);
+  }, [startInputPhase]);
   
   // Generate a grid ensuring all code symbols are included
   const generateGrid = useCallback((symbolPack: string[], codeSequence: string[]) => {
@@ -184,6 +161,13 @@ export const useGame = () => {
     });
   }, [getCurrentSymbolPack, getCodeLength]);
   
+  // Calculate next milestone level
+  const getNextMilestone = useCallback((currentLevel: number) => {
+    const nextColor = Math.ceil((currentLevel + 1) / 10) * 10;
+    const nextPack = Math.ceil((currentLevel + 1) / 7) * 7;
+    return Math.min(nextColor, nextPack);
+  }, []);
+  
   // Update personal best if needed
   const updatePersonalBest = useCallback((currentLevel: number) => {
     if (currentLevel - 1 > personalBest) {
@@ -207,14 +191,13 @@ export const useGame = () => {
     setTimeLeft(10);
     setProgressPct(10); // Reset progress to 10%
     setGridSymbols(generateGrid(currentPack, newCode));
-    firstInputReceived.current = false;
     setShowStartScreen(false);
     
-    // Show the code for 1000ms
+    // Show the code for 1000ms then start input phase
     setTimeout(() => {
-      setGameState('input');
+      startInputPhase();
     }, 1000);
-  }, [generateCode, getCurrentSymbolPack, generateGrid, clearGameTimer]);
+  }, [generateCode, getCurrentSymbolPack, generateGrid, clearGameTimer, startInputPhase]);
 
   // Start next level
   const startNextLevel = useCallback((newLevel: number) => {
@@ -226,7 +209,6 @@ export const useGame = () => {
     setLevel(newLevel);
     setGameState('showCode');
     setTimeLeft(10);
-    firstInputReceived.current = false;
     
     // Calculate progress percentage based on level (resets every 10 levels)
     const newProgressPct = ((newLevel - 1) % 10 + 1) * 10;
@@ -235,29 +217,15 @@ export const useGame = () => {
     // Generate a new grid for this level, ensuring all code symbols are included
     setGridSymbols(generateGrid(currentPack, newCode));
     
-    // Show the code for 1000ms
+    // Show the code for 1000ms then start input phase
     setTimeout(() => {
-      setGameState('input');
+      startInputPhase();
     }, 1000);
-  }, [generateCode, getCurrentSymbolPack, generateGrid, clearGameTimer]);
+  }, [generateCode, getCurrentSymbolPack, generateGrid, clearGameTimer, startInputPhase]);
 
-  // Handle user input
+  // Handle user input - remove timer start on first input
   const handleSymbolClick = useCallback((symbol: string) => {
     if (gameState !== 'input') return;
-    
-    // Start timer on first input if not already running
-    if (!firstInputReceived.current) {
-      firstInputReceived.current = true;
-      startGameTimer();
-      
-      // Ensure audio can play on iOS
-      try {
-        const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-        audioContext.resume().catch(e => console.error("Audio context resume error:", e));
-      } catch (err) {
-        console.error("Audio context creation error:", err);
-      }
-    }
     
     const newUserInput = [...userInput, symbol];
     setUserInput(newUserInput);
@@ -286,11 +254,11 @@ export const useGame = () => {
         loseLife();
       }
     }
-  }, [gameState, userInput, code, level, loseLife, updatePersonalBest, startNextLevel, clearGameTimer, startGameTimer]);
+  }, [gameState, userInput, code, level, loseLife, updatePersonalBest, startNextLevel, clearGameTimer]);
 
   // Copy "share my best" text to clipboard
   const shareScore = useCallback(() => {
-    const text = `I reached Level ${personalBest} in Cipher Clash! Can you beat me?`;
+    const text = `I just hit Round ${personalBest} on Cipher Clash!\nThink you can beat me? Play → https://cipherclash.com`;
     navigator.clipboard.writeText(text);
     return text;
   }, [personalBest]);
@@ -320,23 +288,6 @@ export const useGame = () => {
       clearGameTimer();
     };
   }, [clearGameTimer]);
-
-  // Debug functions for development
-  useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      // @ts-ignore - intentionally exposing for testing
-      window.debugSkipTo = (targetLevel: number) => {
-        setLevel(targetLevel);
-        startNextLevel(targetLevel);
-      };
-      
-      // @ts-ignore - intentionally exposing for testing
-      window.debugSetLevel = (targetLevel: number) => {
-        setLevel(targetLevel);
-        startNextLevel(targetLevel);
-      };
-    }
-  }, [startNextLevel]);
 
   return {
     gameState,

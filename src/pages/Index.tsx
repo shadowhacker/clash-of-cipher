@@ -9,6 +9,7 @@ import SoundEffects from '../components/SoundEffects';
 import ThemeManager from '../components/ThemeManager';
 import LifeWarning from '../components/LifeWarning';
 import AudioInitializer from '../components/AudioInitializer';
+import Leaderboard from '../components/Leaderboard';
 import { useGame } from '../hooks/useGame';
 import { HelpCircle } from 'lucide-react';
 
@@ -56,13 +57,16 @@ const Index = () => {
       <div className="w-full max-w-md">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-center text-indigo-800">🔮 Cipher Clash</h1>
-          <button 
-            onClick={() => setShowGuide(true)}
-            className="p-2 rounded-full bg-indigo-100 hover:bg-indigo-200 text-indigo-800"
-            aria-label="How to Play"
-          >
-            <HelpCircle className="w-5 h-5" />
-          </button>
+          <div className="flex items-center space-x-2">
+            <Leaderboard personalBest={personalBest} />
+            <button 
+              onClick={() => setShowGuide(true)}
+              className="p-2 rounded-full bg-indigo-100 hover:bg-indigo-200 text-indigo-800"
+              aria-label="How to Play"
+            >
+              <HelpCircle className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* Life Warning */}
