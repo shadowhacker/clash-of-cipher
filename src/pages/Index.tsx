@@ -13,7 +13,7 @@ import Leaderboard from '../components/Leaderboard';
 import PlayerNameDialog from '../components/PlayerNameDialog';
 import { useGame } from '../hooks/useGame';
 import { HelpCircle } from 'lucide-react';
-import { getPlayerName, savePlayerName } from '../utils/deviceStorage';
+import { getPlayerName, savePlayerName, getDeviceId } from '../utils/deviceStorage';
 
 const Index = () => {
   const [showGuide, setShowGuide] = React.useState(false);
@@ -47,19 +47,24 @@ const Index = () => {
     showWrongTaps
   } = useGame();
 
-  // Check for existing player name
+  // Check for existing player name whenever the component mounts
   useEffect(() => {
     const playerName = getPlayerName();
-    if (!playerName && !showStartScreen) {
-      setShowPlayerNameDialog(true);
+    if (!playerName) {
+      // Only show dialog if not on start screen (to avoid two modals)
+      if (!showStartScreen) {
+        setShowPlayerNameDialog(true);
+      }
     }
-  }, [showStartScreen]);
+  }, []);
 
   // Handle player name submission
   const handlePlayerNameSubmit = (name: string) => {
     savePlayerName(name);
     setShowPlayerNameDialog(false);
-    startGame();
+    if (gameState === 'idle') {
+      startGame();
+    }
   };
 
   // Handle start screen dismissal
@@ -97,7 +102,10 @@ const Index = () => {
       <PlayerNameDialog 
         open={showPlayerNameDialog} 
         onSubmit={handlePlayerNameSubmit}
-        onClose={() => {}} // Can't close manually
+        onClose={() => {
+          // If they dismiss without entering a name, we'll show it again later
+          setShowPlayerNameDialog(false);
+        }}
       />
       
       <div className="w-full max-w-md">

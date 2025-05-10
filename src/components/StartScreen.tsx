@@ -12,20 +12,22 @@ const StartScreen: React.FC<StartScreenProps> = ({ onStart }) => {
       <div className="w-full max-w-sm p-6 text-center">
         <h1 className="text-3xl font-bold mb-6 text-white">🧠 How to Play</h1>
         <ul className="mb-8 text-white space-y-3 text-lg">
-          <li>• Watch symbols flash (1 second)</li>
+          <li>• Memorise the symbols (flash 1s)</li>
           <li>• Tap them in order within 10 seconds</li>
-          <li>• Survive 10 rounds to level-up</li>
+          <li>• Earn points based on round, speed, and streak</li>
+          <li>• Higher rounds = more base points</li>
+          <li>• Finish faster = x1-x2 speed bonus</li>
+          <li>• Perfect streak = +25% per flawless round</li>
           <li>• You have 2 lives. Good luck!</li>
         </ul>
-        <div className="border-t border-indigo-300 pt-4 mb-6">
-          <p className="text-indigo-200">Built by ShadowHacker</p>
+        <div className="border-t border-indigo-300 pt-6 mt-6">
+          <Button 
+            onClick={onStart}
+            className="w-full bg-indigo-500 hover:bg-indigo-600 text-lg py-6"
+          >
+            Let's Go!
+          </Button>
         </div>
-        <Button 
-          onClick={onStart}
-          className="w-full bg-indigo-500 hover:bg-indigo-600 text-lg py-6"
-        >
-          Lesss Go
-        </Button>
       </div>
     </div>
   );

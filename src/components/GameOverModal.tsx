@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { toast } from "sonner";
-import { Share2, X } from 'lucide-react';
+import { Share2, X, Trophy, RefreshCw } from 'lucide-react';
 
 interface GameOverModalProps {
   level: number;
@@ -56,7 +56,7 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
 
   const handleTryAgain = () => {
     onClose(); // First close the modal
-    onRestart(); // Then restart the game
+    onRestart(); // Then restart the game to initial state
   };
 
   // Copy to clipboard when share modal opens
@@ -70,15 +70,11 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
   return (
     <>
       <Dialog open={open} onOpenChange={handleCloseModal}>
-        <DialogContent className="sm:max-w-md" onPointerDownOutside={handleCloseModal}>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-center text-xl">Game Over</DialogTitle>
-            <DialogClose 
-              onClick={handleCloseModal} 
-              className="absolute right-4 top-4 opacity-70 hover:opacity-100"
-            >
-              <X className="h-4 w-4" />
-            </DialogClose>
+            <DialogTitle className="text-center text-xl flex items-center justify-center gap-2">
+              <Trophy className="h-5 w-5" /> Game Over
+            </DialogTitle>
           </DialogHeader>
           <div className="py-4 text-center">
             <p className="text-lg mb-2">
@@ -91,7 +87,7 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
           </div>
           <DialogFooter className="sm:justify-center gap-2">
             <Button onClick={handleTryAgain}>
-              Try Again
+              <RefreshCw className="mr-2 h-4 w-4" /> Try Again
             </Button>
             <Button variant="outline" onClick={handleShare}>
               <Share2 className="mr-2 h-4 w-4" />
@@ -108,12 +104,6 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
               <span className="block text-3xl mb-2">🎉</span>
               Challenge your friends!
             </DialogTitle>
-            <DialogClose 
-              onClick={() => setShowShareModal(false)} 
-              className="absolute right-4 top-4 opacity-70 hover:opacity-100"
-            >
-              <X className="h-4 w-4" />
-            </DialogClose>
           </DialogHeader>
           <div className="py-4 text-center">
             <p className="text-md mb-4 bg-indigo-50 p-3 rounded-md border border-indigo-100">

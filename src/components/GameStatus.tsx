@@ -43,7 +43,6 @@ const GameStatus: React.FC<GameStatusProps> = ({
     <div className="flex flex-col space-y-1 max-w-[320px] mx-auto">
       <div className="mb-2">
         <div className="flex items-center justify-between">
-          <h1 className="text-xl font-bold text-indigo-800">🔮 Cipher Clash</h1>
           <div className="text-sm text-indigo-600 font-medium">
             🏆 Lifetime Best: {personalBest}
           </div>
@@ -68,31 +67,29 @@ const GameStatus: React.FC<GameStatusProps> = ({
               <span className="text-indigo-800 font-medium">Score {totalScore}</span>
             </div>
             
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-4">
               <span className="text-indigo-800 font-medium">❤️ {lives}</span>
-              <span className="text-indigo-800">·</span>
-              <span className={`text-indigo-800 font-medium ${isTimeCritical ? 'animate-bounce' : ''}`}>
+              <span className="text-indigo-800 font-medium ${isTimeCritical ? 'animate-bounce' : ''}">
                 ⏱ {timeLeft}s
               </span>
               <Button 
                 variant="ghost" 
                 size="sm" 
                 onClick={onOpenLeaderboard} 
-                className="p-1"
+                className="p-1 ml-1"
                 title="Hall of Heroes"
               >
                 <Medal className="h-4 w-4" />
               </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={resetGame} 
+                className="p-1"
+              >
+                <RefreshCw className="h-4 w-4" />
+              </Button>
             </div>
-            
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={resetGame} 
-              className="p-1"
-            >
-              <RefreshCw className="h-4 w-4" />
-            </Button>
           </>
         )}
       </div>
