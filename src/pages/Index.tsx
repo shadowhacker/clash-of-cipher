@@ -12,6 +12,7 @@ const Index = () => {
     botWins,
     code,
     userInput,
+    aiInput,
     isPlayerWinner,
     startGame,
     handleSymbolClick,
@@ -37,6 +38,7 @@ const Index = () => {
           gameState={gameState}
           code={code}
           userInput={userInput}
+          aiInput={aiInput}
           isPlayerWinner={isPlayerWinner}
         />
       </div>

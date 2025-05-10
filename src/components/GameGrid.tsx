@@ -9,6 +9,7 @@ interface GameGridProps {
   gameState: 'idle' | 'showCode' | 'input' | 'result';
   code: string[];
   userInput: string[];
+  aiInput?: string[];
   isPlayerWinner: boolean | null;
 }
 
@@ -17,6 +18,7 @@ const GameGrid: React.FC<GameGridProps> = ({
   gameState, 
   code, 
   userInput,
+  aiInput = [],
   isPlayerWinner
 }) => {
   // Function to randomly select symbols for the grid
@@ -46,10 +48,14 @@ const GameGrid: React.FC<GameGridProps> = ({
       
       {gameState === 'result' && (
         <div className={`absolute inset-0 flex items-center justify-center z-10 ${
-          isPlayerWinner ? 'bg-green-500/80' : 'bg-red-500/80'
+          isPlayerWinner === true ? 'bg-green-500/80' : 
+          isPlayerWinner === false ? 'bg-red-500/80' : 
+          'bg-yellow-500/80'
         } rounded-md`}>
           <div className="text-white text-2xl font-bold">
-            {isPlayerWinner ? 'Correct!' : 'Wrong!'}
+            {isPlayerWinner === true ? 'You Win!' : 
+             isPlayerWinner === false ? 'AI Wins!' : 
+             'Tie!'}
           </div>
         </div>
       )}
@@ -69,15 +75,29 @@ const GameGrid: React.FC<GameGridProps> = ({
       </div>
       
       {gameState === 'input' && (
-        <div className="mt-4 flex justify-center gap-2">
-          {[0, 1, 2].map((idx) => (
-            <div 
-              key={idx} 
-              className={`w-6 h-6 rounded-full border-2 border-indigo-800 ${
-                userInput[idx] ? 'bg-indigo-800' : 'bg-transparent'
-              }`}
-            />
-          ))}
+        <div className="mt-4 flex flex-col gap-2 items-center">
+          <div className="flex justify-center gap-2">
+            <div className="text-sm font-medium text-indigo-800">You:</div>
+            {[0, 1, 2].map((idx) => (
+              <div 
+                key={idx} 
+                className={`w-6 h-6 rounded-full border-2 border-indigo-800 ${
+                  userInput[idx] ? 'bg-indigo-800' : 'bg-transparent'
+                }`}
+              />
+            ))}
+          </div>
+          <div className="flex justify-center gap-2">
+            <div className="text-sm font-medium text-indigo-800">AI:</div>
+            {[0, 1, 2].map((idx) => (
+              <div 
+                key={idx} 
+                className={`w-6 h-6 rounded-full border-2 border-red-500 ${
+                  aiInput[idx] ? 'bg-red-500' : 'bg-transparent'
+                }`}
+              />
+            ))}
+          </div>
         </div>
       )}
     </div>
