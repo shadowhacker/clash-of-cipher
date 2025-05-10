@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import {
   Dialog,
@@ -42,7 +41,7 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
   };
 
   const handleShareAgain = () => {
-    const text = `I just scored ${totalScore} points on Round ${level} of Cipher Clash!\nThink you can beat me? Play → https://symbol-grid-sparkle-showdown.lovable.app/`;
+    const text = `I just scored ${totalScore} points on Round ${level} of Cipher Clash!\nThink you can beat me? Play → https://clash-of-cipher.lovable.app/`;
     navigator.clipboard.writeText(text);
     toast("Copied again!", {
       description: "Ready to share!",
@@ -62,7 +61,7 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
   // Copy to clipboard when share modal opens
   useEffect(() => {
     if (showShareModal) {
-      const text = `I just scored ${totalScore} points on Round ${level} of Cipher Clash!\nThink you can beat me? Play → https://symbol-grid-sparkle-showdown.lovable.app/`;
+      const text = `I just scored ${totalScore} points on Round ${level} of Cipher Clash!\nThink you can beat me? Play → https://clash-of-cipher.lovable.app/`;
       navigator.clipboard.writeText(text);
     }
   }, [showShareModal, totalScore, level]);
@@ -108,7 +107,7 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
           <div className="py-4 text-center">
             <p className="text-md mb-4 bg-indigo-50 p-3 rounded-md border border-indigo-100">
               I just scored {totalScore} points on Round {level} of Cipher Clash!<br/>
-              Think you can beat me? Play → https://symbol-grid-sparkle-showdown.lovable.app/
+              Think you can beat me? Play → https://clash-of-cipher.lovable.app/
             </p>
             <p className="text-green-600 text-sm flex items-center justify-center">
               <span className="inline-block mr-1">✅</span> Message copied—paste it to WhatsApp, Telegram, X, etc.
