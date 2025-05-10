@@ -33,13 +33,11 @@ const Index = () => {
     showStartScreen,
     dismissStartScreen,
     nextMilestone,
-    setTimeLeft,
   } = useGame();
 
   // Sound effects using useRef for better performance
   const sfxSuccess = useRef<HTMLAudioElement | null>(null);
   const sfxFail = useRef<HTMLAudioElement | null>(null);
-  const timerRef = useRef<number | null>(null);
   const audioInitialized = useRef<boolean>(false);
 
   // Initialize sound effects
@@ -83,24 +81,7 @@ const Index = () => {
     }
   }, [lives, gameState, isPlayerWinner]);
 
-  // Clear timer on unmount or gameState change
-  useEffect(() => {
-    if (gameState !== 'input') {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
-      }
-    }
-    
-    return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
-      }
-    };
-  }, [gameState]);
-
-  // Wrapper for symbol click to handle timer
+  // Wrapper for symbol click to handle audio initialization
   const handleSymbolClickWithTimer = (symbol: string) => {
     // Initialize audio context on first user interaction
     if (!audioInitialized.current) {
@@ -111,25 +92,6 @@ const Index = () => {
       } catch (err) {
         console.error("Audio context creation error:", err);
       }
-    }
-    
-    // Start timer on first tap if not already running
-    if (!timerRef.current && gameState === 'input') {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-      }
-      
-      timerRef.current = window.setInterval(() => {
-        setTimeLeft(prev => {
-          if (prev <= 1) {
-            // Time's up
-            clearInterval(timerRef.current!);
-            timerRef.current = null;
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
     }
     
     // Call original handler

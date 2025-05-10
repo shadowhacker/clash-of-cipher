@@ -57,7 +57,7 @@ const GameStatus: React.FC<GameStatusProps> = ({
             </div>
             
             <div className="flex items-center space-x-2">
-              <span className={`text-indigo-800 font-medium ${lives === 1 ? 'animate-ping': ''}`}>❤️{lives}</span>
+              <span className="text-indigo-800 font-medium">❤️{lives}</span>
               <span className="text-indigo-800">·</span>
               <span className={`text-indigo-800 font-medium ${isTimeCritical ? 'animate-bounce' : ''}`}>
                 ⏱{timeLeft}s

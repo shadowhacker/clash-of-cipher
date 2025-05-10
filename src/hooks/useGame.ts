@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback, useRef } from 'react';
 
 // Array of all available symbols
@@ -86,6 +87,8 @@ export const useGame = () => {
   
   // Lose a life with proper cap at 0
   const loseLife = useCallback(() => {
+    clearGameTimer(); // Clear any existing timer first
+    
     setLives(prev => {
       const newLives = Math.max(prev - 1, 0);
       if (newLives === 0) {
@@ -97,6 +100,7 @@ export const useGame = () => {
     // Add a pause to make life loss more noticeable
     setGameState('result');
     setIsPlayerWinner(false);
+    setTimeLeft(10); // Reset timer
     
     setTimeout(() => {
       if (lives > 1) { // Only restart if we still have lives left
@@ -113,8 +117,8 @@ export const useGame = () => {
   // Restart the same level (on wrong input or timeout)
   const restartSameLevel = useCallback(() => {
     setUserInput([]);
+    firstInputReceived.current = false; // Reset first input flag
     setGameState('showCode');
-    setTimeLeft(10);
     
     setTimeout(() => {
       setGameState('input');
@@ -265,12 +269,9 @@ export const useGame = () => {
       } else {
         // User got it wrong
         loseLife();
-        if (lives > 1) { // Check against current lives before decrement
-          restartSameLevel();
-        }
       }
     }
-  }, [gameState, userInput, code, level, lives, loseLife, updatePersonalBest, startNextLevel, clearGameTimer, restartSameLevel, startGameTimer]);
+  }, [gameState, userInput, code, level, loseLife, updatePersonalBest, startNextLevel, clearGameTimer, startGameTimer]);
 
   // Copy "share my best" text to clipboard
   const shareScore = useCallback(() => {

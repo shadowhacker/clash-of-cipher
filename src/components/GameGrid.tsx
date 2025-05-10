@@ -111,8 +111,8 @@ const GameGrid: React.FC<GameGridProps> = ({
           <button
             key={index}
             className={`w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center rounded-md shadow-md text-2xl transition-colors ${
-              isWrongInput(symbol, index) ? 'bg-red-500/60 text-white' : 
-              isCorrectCode(symbol) && gameState === 'result' && !isPlayerWinner ? 'bg-green-500/60 text-white' :
+              isWrongInput(symbol, index) ? 'bg-red-500/70 text-white' : 
+              isCorrectCode(symbol) && gameState === 'result' && !isPlayerWinner ? 'bg-green-500/70 text-white' :
               highlightedIndex === index ? 'bg-green-400 text-indigo-800' : 
               'bg-indigo-100 hover:bg-indigo-200 text-indigo-800'
             }`}
