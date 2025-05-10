@@ -23,6 +23,11 @@ export const useGame = () => {
   const [userInput, setUserInput] = useState<string[]>([]);
   const [isPlayerWinner, setIsPlayerWinner] = useState<boolean | null>(null);
   const [showGameOverModal, setShowGameOverModal] = useState(false);
+  const [lives, setLives] = useState(2); // One extra chance
+  const [timeLeft, setTimeLeft] = useState(10);
+  
+  // Timer reference
+  const timerRef = useRef<number | null>(null);
   
   // Get current theme based on level
   const getCurrentTheme = useCallback((currentLevel: number) => {
@@ -37,18 +42,81 @@ export const useGame = () => {
       : MASTER_SYMBOLS.slice(4, 12);
   }, []);
   
+  // Calculate code length based on level
+  const getCodeLength = useCallback((currentLevel: number) => {
+    const length = 2 + Math.floor((currentLevel - 1) / 4);
+    return Math.min(length, 20); // Cap at 20 symbols
+  }, []);
+  
+  // Clear any existing timer
+  const clearGameTimer = useCallback(() => {
+    if (timerRef.current !== null) {
+      window.clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+  }, []);
+  
+  // Start the countdown timer
+  const startGameTimer = useCallback(() => {
+    clearGameTimer();
+    
+    timerRef.current = window.setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          // Time's up
+          clearGameTimer();
+          handleTimeout();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  }, []);
+  
+  // Handle timeout
+  const handleTimeout = useCallback(() => {
+    if (lives > 1) {
+      setLives(prev => prev - 1);
+      restartSameLevel();
+    } else {
+      gameOver();
+    }
+  }, [lives]);
+  
+  // Restart the same level (on wrong input or timeout)
+  const restartSameLevel = useCallback(() => {
+    setUserInput([]);
+    setGameState('showCode');
+    setTimeLeft(10);
+    
+    setTimeout(() => {
+      setGameState('input');
+      startGameTimer();
+    }, 1000);
+  }, [startGameTimer]);
+  
+  // Game over function
+  const gameOver = useCallback(() => {
+    clearGameTimer();
+    setIsPlayerWinner(false);
+    setGameState('result');
+    updatePersonalBest(level);
+    
+    setTimeout(() => {
+      setShowGameOverModal(true);
+    }, 1000);
+  }, [level, clearGameTimer]);
+  
   // Generate a random code of symbols based on current level
   const generateCode = useCallback((currentLevel: number) => {
-    const symbolPack = getCurrentSymbolPack(currentLevel);
-    const newCode: string[] = [];
+    const currentPack = getCurrentSymbolPack(currentLevel);
+    const codeLength = getCodeLength(currentLevel);
     
-    for (let i = 0; i < currentLevel; i++) {
-      const randomIndex = Math.floor(Math.random() * symbolPack.length);
-      newCode.push(symbolPack[randomIndex]);
-    }
-    
-    return newCode;
-  }, [getCurrentSymbolPack]);
+    return Array.from({ length: codeLength }, () => {
+      const randomIndex = Math.floor(Math.random() * currentPack.length);
+      return currentPack[randomIndex];
+    });
+  }, [getCurrentSymbolPack, getCodeLength]);
   
   // Update personal best if needed
   const updatePersonalBest = useCallback((currentLevel: number) => {
@@ -60,6 +128,7 @@ export const useGame = () => {
 
   // Start a new game
   const startGame = useCallback(() => {
+    clearGameTimer();
     const initialLevel = 1;
     const newCode = generateCode(initialLevel);
     setCode(newCode);
@@ -67,26 +136,33 @@ export const useGame = () => {
     setLevel(initialLevel);
     setGameState('showCode');
     setShowGameOverModal(false);
+    setLives(2);
+    setTimeLeft(10);
     
     // Show the code for 1000ms
     setTimeout(() => {
       setGameState('input');
+      startGameTimer();
     }, 1000);
-  }, [generateCode]);
+  }, [generateCode, clearGameTimer, startGameTimer]);
 
   // Start next level
   const startNextLevel = useCallback((newLevel: number) => {
+    clearGameTimer();
     const newCode = generateCode(newLevel);
     setCode(newCode);
     setUserInput([]);
     setLevel(newLevel);
     setGameState('showCode');
+    setLives(2);
+    setTimeLeft(10);
     
     // Show the code for 1000ms
     setTimeout(() => {
       setGameState('input');
+      startGameTimer();
     }, 1000);
-  }, [generateCode]);
+  }, [generateCode, clearGameTimer, startGameTimer]);
 
   // Handle user input
   const handleSymbolClick = useCallback((symbol: string) => {
@@ -97,6 +173,7 @@ export const useGame = () => {
     
     // If user has selected enough symbols, compare with code
     if (newUserInput.length === code.length) {
+      clearGameTimer();
       // Check if input matches the code exactly
       const isCorrect = newUserInput.every((sym, i) => sym === code[i]);
       
@@ -114,18 +191,17 @@ export const useGame = () => {
           startNextLevel(nextLevel);
         }, 1000);
       } else {
-        // User got it wrong - game over
-        setIsPlayerWinner(false);
-        updatePersonalBest(level);
-        setGameState('result');
-        
-        // Show game over modal after brief delay
-        setTimeout(() => {
-          setShowGameOverModal(true);
-        }, 1000);
+        // User got it wrong
+        if (lives > 1) {
+          setLives(prev => prev - 1);
+          restartSameLevel();
+        } else {
+          // Game over
+          gameOver();
+        }
       }
     }
-  }, [gameState, userInput, code, level, updatePersonalBest, startNextLevel]);
+  }, [gameState, userInput, code, level, lives, updatePersonalBest, startNextLevel, clearGameTimer, restartSameLevel, gameOver]);
 
   // Copy "share my best" text to clipboard
   const shareScore = useCallback(() => {
@@ -136,19 +212,35 @@ export const useGame = () => {
 
   // Reset the game
   const resetGame = useCallback(() => {
+    clearGameTimer();
     setGameState('idle');
     setLevel(1);
     setUserInput([]);
     setCode([]);
     setIsPlayerWinner(null);
     setShowGameOverModal(false);
-  }, []);
+    setLives(2);
+    setTimeLeft(10);
+  }, [clearGameTimer]);
 
-  // Debug function to skip to a specific level (only in dev mode)
+  // Clean up timer on unmount
+  useEffect(() => {
+    return () => {
+      clearGameTimer();
+    };
+  }, [clearGameTimer]);
+
+  // Debug functions for development
   useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
       // @ts-ignore - intentionally exposing for testing
       window.debugSkipTo = (targetLevel: number) => {
+        setLevel(targetLevel);
+        startNextLevel(targetLevel);
+      };
+      
+      // @ts-ignore - intentionally exposing for testing
+      window.debugSetLevel = (targetLevel: number) => {
         setLevel(targetLevel);
         startNextLevel(targetLevel);
       };
@@ -163,6 +255,8 @@ export const useGame = () => {
     userInput,
     isPlayerWinner,
     showGameOverModal,
+    lives,
+    timeLeft,
     currentSymbolPack: getCurrentSymbolPack(level),
     currentTheme: getCurrentTheme(level),
     startGame,

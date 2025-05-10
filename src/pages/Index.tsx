@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import GameGrid from '../components/GameGrid';
 import GameStatus from '../components/GameStatus';
 import GameOverModal from '../components/GameOverModal';
@@ -14,6 +14,8 @@ const Index = () => {
     userInput,
     isPlayerWinner,
     showGameOverModal,
+    lives,
+    timeLeft,
     currentSymbolPack,
     currentTheme,
     startGame,
@@ -21,6 +23,21 @@ const Index = () => {
     resetGame,
     shareScore,
   } = useGame();
+
+  // Sound effects
+  const sfxSuccess = useMemo(() => new Audio('/snd/success.mp3'), []);
+  const sfxFail = useMemo(() => new Audio('/snd/fail.mp3'), []);
+
+  // Play sound effects based on game state changes
+  useEffect(() => {
+    if (gameState === 'result') {
+      if (isPlayerWinner) {
+        sfxSuccess.play().catch(err => console.error("Error playing success sound:", err));
+      } else {
+        sfxFail.play().catch(err => console.error("Error playing fail sound:", err));
+      }
+    }
+  }, [gameState, isPlayerWinner, sfxSuccess, sfxFail]);
 
   // Apply theme to body background
   useEffect(() => {
@@ -39,6 +56,8 @@ const Index = () => {
           gameState={gameState}
           level={level}
           personalBest={personalBest}
+          lives={lives}
+          timeLeft={timeLeft}
           startGame={startGame}
           resetGame={resetGame}
           currentTheme={currentTheme}

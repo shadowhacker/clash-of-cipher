@@ -7,6 +7,8 @@ interface GameStatusProps {
   gameState: 'idle' | 'showCode' | 'input' | 'result';
   level: number;
   personalBest: number;
+  lives: number;
+  timeLeft: number;
   startGame: () => void;
   resetGame: () => void;
   currentTheme: string;
@@ -16,6 +18,8 @@ const GameStatus: React.FC<GameStatusProps> = ({
   gameState, 
   level, 
   personalBest,
+  lives,
+  timeLeft,
   startGame,
   resetGame,
   currentTheme,
@@ -27,6 +31,8 @@ const GameStatus: React.FC<GameStatusProps> = ({
     'bg-fuchsia-500': 'bg-fuchsia-600 hover:bg-fuchsia-700',
     'bg-rose-500': 'bg-rose-600 hover:bg-rose-700',
   }[currentTheme] || 'bg-indigo-600 hover:bg-indigo-700';
+
+  const isTimeCritical = timeLeft <= 3 && gameState === 'input';
 
   return (
     <div className="h-[48px] flex items-center justify-between mb-4 bg-indigo-50 rounded-md p-2 max-w-[320px] mx-auto transition-colors">
@@ -41,12 +47,20 @@ const GameStatus: React.FC<GameStatusProps> = ({
         </div>
       ) : (
         <>
-          <div className="text-indigo-800 font-medium">
-            Level {level}
+          <div className="flex items-center space-x-2">
+            <span className="text-indigo-800 font-medium">Level {level}</span>
+            <span className="text-indigo-800">·</span>
+            <span className="text-indigo-800 font-medium">Best: {personalBest}</span>
           </div>
-          <div className="text-indigo-800 font-medium">
-            Best: {personalBest}
+          
+          <div className="flex items-center space-x-2">
+            <span className="text-indigo-800 font-medium">❤️{lives}</span>
+            <span className="text-indigo-800">·</span>
+            <span className={`text-indigo-800 font-medium ${isTimeCritical ? 'animate-bounce' : ''}`}>
+              ⏱{timeLeft}s
+            </span>
           </div>
+          
           <Button 
             variant="ghost" 
             size="sm" 
