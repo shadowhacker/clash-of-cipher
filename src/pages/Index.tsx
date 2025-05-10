@@ -86,7 +86,7 @@ const Index = () => {
         
         <AudioInitializer onSymbolClick={handleSymbolClick}>
           <GameGrid 
-            onButtonClick={handleSymbolClick}
+            onButtonClick={(symbol) => {}} // This prop will be overridden by AudioInitializer
             gameState={gameState}
             code={code}
             userInput={userInput}

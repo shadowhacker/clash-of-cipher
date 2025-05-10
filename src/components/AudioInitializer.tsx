@@ -31,7 +31,11 @@ const AudioInitializer: React.FC<AudioInitializerProps> = ({ onSymbolClick, chil
     <>
       {React.Children.map(children, child => {
         if (React.isValidElement(child)) {
+          // Fix: Pass the wrapper function to a prop name that the child component accepts
           return React.cloneElement(child, {
+            // The child component expects 'onButtonClick' not 'onSymbolClick'
+            // But we need to ensure the child component accepts this prop
+            ...child.props,
             onButtonClick: handleSymbolClickWithAudio
           });
         }
