@@ -3,9 +3,14 @@ import React, { useEffect, useMemo } from 'react';
 import GameGrid from '../components/GameGrid';
 import GameStatus from '../components/GameStatus';
 import GameOverModal from '../components/GameOverModal';
+import HowToPlayGuide from '../components/HowToPlayGuide';
 import { useGame } from '../hooks/useGame';
+import { Help } from 'lucide-react';
+import { useState } from 'react';
 
 const Index = () => {
+  const [showGuide, setShowGuide] = useState(false);
+  
   const { 
     gameState,
     level,
@@ -18,6 +23,8 @@ const Index = () => {
     timeLeft,
     currentSymbolPack,
     currentTheme,
+    gridSymbols,
+    progressPct,
     startGame,
     handleSymbolClick,
     resetGame,
@@ -51,7 +58,17 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-indigo-50 to-purple-50 flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-md">
-        <h1 className="text-3xl font-bold text-center text-indigo-800 mb-6">Cipher Clash</h1>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold text-center text-indigo-800">Cipher Clash</h1>
+          <button 
+            onClick={() => setShowGuide(true)}
+            className="p-2 rounded-full bg-indigo-100 hover:bg-indigo-200 text-indigo-800"
+            aria-label="How to Play"
+          >
+            <Help className="w-5 h-5" />
+          </button>
+        </div>
+
         <GameStatus 
           gameState={gameState}
           level={level}
@@ -69,6 +86,8 @@ const Index = () => {
           userInput={userInput}
           isPlayerWinner={isPlayerWinner}
           currentSymbolPack={currentSymbolPack}
+          gridSymbols={gridSymbols}
+          progressPct={progressPct}
         />
         <GameOverModal
           level={level}
@@ -76,6 +95,10 @@ const Index = () => {
           open={showGameOverModal}
           onRestart={startGame}
           onShare={shareScore}
+        />
+        <HowToPlayGuide 
+          open={showGuide} 
+          onClose={() => setShowGuide(false)} 
         />
       </div>
     </div>

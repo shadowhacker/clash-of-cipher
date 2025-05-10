@@ -25,6 +25,8 @@ export const useGame = () => {
   const [showGameOverModal, setShowGameOverModal] = useState(false);
   const [lives, setLives] = useState(2); // One extra chance
   const [timeLeft, setTimeLeft] = useState(10);
+  const [gridSymbols, setGridSymbols] = useState<string[]>([]);
+  const [progressPct, setProgressPct] = useState(10); // Progress percentage (10-100)
   
   // Timer reference
   const timerRef = useRef<number | null>(null);
@@ -107,6 +109,16 @@ export const useGame = () => {
     }, 1000);
   }, [level, clearGameTimer]);
   
+  // Generate a random grid of symbols
+  const generateGrid = useCallback((symbolPack: string[]) => {
+    const result: string[] = [];
+    for (let i = 0; i < 16; i++) {
+      const randomIndex = Math.floor(Math.random() * symbolPack.length);
+      result.push(symbolPack[randomIndex]);
+    }
+    return result;
+  }, []);
+  
   // Generate a random code of symbols based on current level
   const generateCode = useCallback((currentLevel: number) => {
     const currentPack = getCurrentSymbolPack(currentLevel);
@@ -131,6 +143,7 @@ export const useGame = () => {
     clearGameTimer();
     const initialLevel = 1;
     const newCode = generateCode(initialLevel);
+    const currentPack = getCurrentSymbolPack(initialLevel);
     setCode(newCode);
     setUserInput([]);
     setLevel(initialLevel);
@@ -138,18 +151,20 @@ export const useGame = () => {
     setShowGameOverModal(false);
     setLives(2);
     setTimeLeft(10);
+    setProgressPct(10); // Reset progress to 10%
+    setGridSymbols(generateGrid(currentPack));
     
     // Show the code for 1000ms
     setTimeout(() => {
       setGameState('input');
-      startGameTimer();
     }, 1000);
-  }, [generateCode, clearGameTimer, startGameTimer]);
+  }, [generateCode, getCurrentSymbolPack, generateGrid, clearGameTimer]);
 
   // Start next level
   const startNextLevel = useCallback((newLevel: number) => {
     clearGameTimer();
     const newCode = generateCode(newLevel);
+    const currentPack = getCurrentSymbolPack(newLevel);
     setCode(newCode);
     setUserInput([]);
     setLevel(newLevel);
@@ -157,16 +172,27 @@ export const useGame = () => {
     setLives(2);
     setTimeLeft(10);
     
+    // Calculate progress percentage based on level (resets every 10 levels)
+    const newProgressPct = ((newLevel - 1) % 10 + 1) * 10;
+    setProgressPct(newProgressPct);
+    
+    // Generate a new grid for this level
+    setGridSymbols(generateGrid(currentPack));
+    
     // Show the code for 1000ms
     setTimeout(() => {
       setGameState('input');
-      startGameTimer();
     }, 1000);
-  }, [generateCode, clearGameTimer, startGameTimer]);
+  }, [generateCode, getCurrentSymbolPack, generateGrid, clearGameTimer]);
 
   // Handle user input
   const handleSymbolClick = useCallback((symbol: string) => {
     if (gameState !== 'input') return;
+    
+    // Start timer on first input if not already running
+    if (timerRef.current === null) {
+      startGameTimer();
+    }
     
     const newUserInput = [...userInput, symbol];
     setUserInput(newUserInput);
@@ -201,7 +227,7 @@ export const useGame = () => {
         }
       }
     }
-  }, [gameState, userInput, code, level, lives, updatePersonalBest, startNextLevel, clearGameTimer, restartSameLevel, gameOver]);
+  }, [gameState, userInput, code, level, lives, updatePersonalBest, startNextLevel, clearGameTimer, restartSameLevel, gameOver, startGameTimer]);
 
   // Copy "share my best" text to clipboard
   const shareScore = useCallback(() => {
@@ -259,6 +285,8 @@ export const useGame = () => {
     timeLeft,
     currentSymbolPack: getCurrentSymbolPack(level),
     currentTheme: getCurrentTheme(level),
+    gridSymbols,
+    progressPct,
     startGame,
     handleSymbolClick,
     resetGame,

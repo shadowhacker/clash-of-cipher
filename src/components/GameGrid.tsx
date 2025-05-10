@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Progress } from '@/components/ui/progress';
 
 interface GameGridProps {
   onButtonClick: (symbol: string) => void;
@@ -8,6 +9,8 @@ interface GameGridProps {
   userInput: string[];
   isPlayerWinner: boolean | null;
   currentSymbolPack: string[];
+  gridSymbols: string[];
+  progressPct: number;
 }
 
 const GameGrid: React.FC<GameGridProps> = ({ 
@@ -16,23 +19,17 @@ const GameGrid: React.FC<GameGridProps> = ({
   code, 
   userInput,
   isPlayerWinner,
-  currentSymbolPack,
+  gridSymbols,
+  progressPct,
 }) => {
-  // Function to randomly select symbols for the grid
-  const getRandomSymbols = () => {
-    const result: string[] = [];
-    for (let i = 0; i < 16; i++) {
-      const randomIndex = Math.floor(Math.random() * currentSymbolPack.length);
-      result.push(currentSymbolPack[randomIndex]);
-    }
-    return result;
-  };
-
-  // Generate the grid with random symbols
-  const gridSymbols = getRandomSymbols();
-
   return (
     <div className="relative">
+      {gameState !== 'idle' && (
+        <div className="mb-3">
+          <Progress value={progressPct} className="h-1" />
+        </div>
+      )}
+      
       {gameState === 'showCode' && (
         <div className="absolute inset-0 flex items-center justify-center z-10 bg-indigo-800/80 rounded-md">
           <div className="flex flex-wrap gap-4 max-w-xs justify-center">
