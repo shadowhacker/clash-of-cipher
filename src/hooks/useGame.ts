@@ -1,100 +1,92 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 
-// Array of symbols available for the game
-const SYMBOLS = ['▲', '●', '◆', '★', '☆', '■', '✦', '✿'];
+// Array of all available symbols
+const MASTER_SYMBOLS = ['▲', '●', '◆', '★', '☆', '■', '✦', '✿', '♣', '♥', '☀', '☂'];
 
 // Game states
 type GameState = 'idle' | 'showCode' | 'input' | 'result';
+
+// Color themes for different level milestones
+const THEMES = ['bg-amber-500', 'bg-emerald-500', 'bg-sky-500', 'bg-fuchsia-500', 'bg-rose-500'];
 
 // Hook for managing game state
 export const useGame = () => {
   // Game state
   const [gameState, setGameState] = useState<GameState>('idle');
-  const [round, setRound] = useState(1);
-  const [playerWins, setPlayerWins] = useState(0);
-  const [botWins, setPlayerLosses] = useState(0);
+  const [level, setLevel] = useState(1);
+  const [personalBest, setPersonalBest] = useState(() => {
+    const saved = localStorage.getItem('cipher-clash-best');
+    return saved ? parseInt(saved) : 0;
+  });
   const [code, setCode] = useState<string[]>([]);
   const [userInput, setUserInput] = useState<string[]>([]);
   const [isPlayerWinner, setIsPlayerWinner] = useState<boolean | null>(null);
+  const [showGameOverModal, setShowGameOverModal] = useState(false);
   
-  // AI state
-  const [aiInput, setAiInput] = useState<string[]>([]);
-  const aiTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const aiSymbolIndexRef = useRef<number>(0);
+  // Get current theme based on level
+  const getCurrentTheme = useCallback((currentLevel: number) => {
+    return THEMES[Math.floor((currentLevel - 1) / 10) % THEMES.length];
+  }, []);
   
-  // Generate a random code of 3 symbols
-  const generateCode = useCallback(() => {
+  // Get current symbol pack based on level
+  const getCurrentSymbolPack = useCallback((currentLevel: number) => {
+    const packIndex = Math.floor((currentLevel - 1) / 7) % 2;
+    return packIndex === 0 
+      ? MASTER_SYMBOLS.slice(0, 8) 
+      : MASTER_SYMBOLS.slice(4, 12);
+  }, []);
+  
+  // Generate a random code of symbols based on current level
+  const generateCode = useCallback((currentLevel: number) => {
+    const symbolPack = getCurrentSymbolPack(currentLevel);
     const newCode: string[] = [];
-    for (let i = 0; i < 3; i++) {
-      const randomIndex = Math.floor(Math.random() * SYMBOLS.length);
-      newCode.push(SYMBOLS[randomIndex]);
+    
+    for (let i = 0; i < currentLevel; i++) {
+      const randomIndex = Math.floor(Math.random() * symbolPack.length);
+      newCode.push(symbolPack[randomIndex]);
     }
+    
     return newCode;
-  }, []);
+  }, [getCurrentSymbolPack]);
   
-  // Clear AI timers
-  const clearAiTimers = useCallback(() => {
-    if (aiTimerRef.current) {
-      clearTimeout(aiTimerRef.current);
-      aiTimerRef.current = null;
+  // Update personal best if needed
+  const updatePersonalBest = useCallback((currentLevel: number) => {
+    if (currentLevel - 1 > personalBest) {
+      setPersonalBest(currentLevel - 1);
+      localStorage.setItem('cipher-clash-best', (currentLevel - 1).toString());
     }
-  }, []);
-
-  // Start AI turns
-  const startAiTurn = useCallback(() => {
-    if (gameState !== 'input') return;
-    
-    setAiInput([]);
-    aiSymbolIndexRef.current = 0;
-    
-    const simulateAiTap = () => {
-      if (gameState !== 'input' || aiSymbolIndexRef.current >= 3) return;
-      
-      // Get random grid symbol (simulating AI tapping a random symbol)
-      const gridSymbols = getRandomSymbols();
-      const randomSymbol = gridSymbols[Math.floor(Math.random() * gridSymbols.length)];
-      
-      // Update AI input
-      setAiInput(prev => [...prev, randomSymbol]);
-      aiSymbolIndexRef.current += 1;
-      
-      // Continue if not done
-      if (aiSymbolIndexRef.current < 3) {
-        const randomDelay = Math.floor(Math.random() * 201) + 200; // 200-400ms
-        aiTimerRef.current = setTimeout(simulateAiTap, randomDelay);
-      }
-    };
-    
-    // Start AI after a short delay
-    aiTimerRef.current = setTimeout(simulateAiTap, 500);
-  }, [gameState]);
-  
-  // Function to randomly select symbols for the grid
-  const getRandomSymbols = () => {
-    const result: string[] = [];
-    for (let i = 0; i < 16; i++) {
-      const randomIndex = Math.floor(Math.random() * SYMBOLS.length);
-      result.push(SYMBOLS[randomIndex]);
-    }
-    return result;
-  };
+  }, [personalBest]);
 
   // Start a new game
   const startGame = useCallback(() => {
-    clearAiTimers();
-    const newCode = generateCode();
+    const initialLevel = 1;
+    const newCode = generateCode(initialLevel);
     setCode(newCode);
     setUserInput([]);
-    setAiInput([]);
+    setLevel(initialLevel);
     setGameState('showCode');
+    setShowGameOverModal(false);
     
-    // Show the code for 800ms
+    // Show the code for 1000ms
     setTimeout(() => {
       setGameState('input');
-      startAiTurn();
-    }, 800);
-  }, [generateCode, clearAiTimers, startAiTurn]);
+    }, 1000);
+  }, [generateCode]);
+
+  // Start next level
+  const startNextLevel = useCallback((newLevel: number) => {
+    const newCode = generateCode(newLevel);
+    setCode(newCode);
+    setUserInput([]);
+    setLevel(newLevel);
+    setGameState('showCode');
+    
+    // Show the code for 1000ms
+    setTimeout(() => {
+      setGameState('input');
+    }, 1000);
+  }, [generateCode]);
 
   // Handle user input
   const handleSymbolClick = useCallback((symbol: string) => {
@@ -103,76 +95,79 @@ export const useGame = () => {
     const newUserInput = [...userInput, symbol];
     setUserInput(newUserInput);
     
-    // If user has selected 3 symbols, compare with code
-    if (newUserInput.length === 3) {
-      clearAiTimers();
+    // If user has selected enough symbols, compare with code
+    if (newUserInput.length === code.length) {
+      // Check if input matches the code exactly
+      const isCorrect = newUserInput.every((sym, i) => sym === code[i]);
       
-      // Calculate correct symbols for player and AI
-      const playerCorrect = newUserInput.filter((sym, i) => sym === code[i]).length;
-      const aiCorrect = aiInput.filter((sym, i) => sym === code[i]).length;
-      
-      // Determine winner
-      if (playerCorrect > aiCorrect) {
-        setPlayerWins(prev => prev + 1);
+      if (isCorrect) {
+        // User got it right
         setIsPlayerWinner(true);
-      } else if (aiCorrect > playerCorrect) {
-        setPlayerLosses(prev => prev + 1);
-        setIsPlayerWinner(false);
-      } else {
-        // It's a tie, no one gets points
-        setIsPlayerWinner(null);
-      }
-      
-      setGameState('result');
-      
-      // Auto advance after 1 second
-      setTimeout(() => {
-        const nextRound = round + 1;
-        const gameEnded = playerWins >= 5 || botWins >= 5;
+        updatePersonalBest(level + 1);
         
-        if (gameEnded) {
-          setGameState('idle');
-          setRound(1);
-          setPlayerWins(0);
-          setPlayerLosses(0);
-        } else {
-          setRound(nextRound);
-          startGame();
-        }
-      }, 1000);
+        // Show success result briefly
+        setGameState('result');
+        
+        // Auto advance to next level after 1 second
+        setTimeout(() => {
+          const nextLevel = level + 1;
+          startNextLevel(nextLevel);
+        }, 1000);
+      } else {
+        // User got it wrong - game over
+        setIsPlayerWinner(false);
+        updatePersonalBest(level);
+        setGameState('result');
+        
+        // Show game over modal after brief delay
+        setTimeout(() => {
+          setShowGameOverModal(true);
+        }, 1000);
+      }
     }
-  }, [gameState, userInput, aiInput, code, round, playerWins, botWins, startGame, clearAiTimers]);
+  }, [gameState, userInput, code, level, updatePersonalBest, startNextLevel]);
+
+  // Copy "share my best" text to clipboard
+  const shareScore = useCallback(() => {
+    const text = `I reached Level ${personalBest} in Cipher Clash! Can you beat me?`;
+    navigator.clipboard.writeText(text);
+    return text;
+  }, [personalBest]);
 
   // Reset the game
   const resetGame = useCallback(() => {
-    clearAiTimers();
     setGameState('idle');
-    setRound(1);
-    setPlayerWins(0);
-    setPlayerLosses(0);
-    setCode([]);
+    setLevel(1);
     setUserInput([]);
-    setAiInput([]);
+    setCode([]);
     setIsPlayerWinner(null);
-  }, [clearAiTimers]);
+    setShowGameOverModal(false);
+  }, []);
 
-  // Cleanup effect
+  // Debug function to skip to a specific level (only in dev mode)
   useEffect(() => {
-    return () => clearAiTimers();
-  }, [clearAiTimers]);
+    if (process.env.NODE_ENV === 'development') {
+      // @ts-ignore - intentionally exposing for testing
+      window.debugSkipTo = (targetLevel: number) => {
+        setLevel(targetLevel);
+        startNextLevel(targetLevel);
+      };
+    }
+  }, [startNextLevel]);
 
   return {
     gameState,
-    round,
-    playerWins,
-    botWins,
+    level,
+    personalBest,
     code,
     userInput,
-    aiInput,
     isPlayerWinner,
+    showGameOverModal,
+    currentSymbolPack: getCurrentSymbolPack(level),
+    currentTheme: getCurrentTheme(level),
     startGame,
     handleSymbolClick,
     resetGame,
-    totalRounds: 11
+    shareScore,
   };
 };
