@@ -113,7 +113,8 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ personalBest }) => {
 
       <PlayerNameDialog 
         open={showNamePrompt} 
-        onSubmit={submitPlayerName} 
+        onSubmit={submitPlayerName}
+        onClose={() => setShowNamePrompt(false)} 
       />
     </>
   );
