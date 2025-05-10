@@ -1,8 +1,10 @@
-import React, { useEffect, useMemo } from 'react';
+
+import React, { useEffect, useRef } from 'react';
 import GameGrid from '../components/GameGrid';
 import GameStatus from '../components/GameStatus';
 import GameOverModal from '../components/GameOverModal';
 import HowToPlayGuide from '../components/HowToPlayGuide';
+import StartScreen from '../components/StartScreen';
 import { useGame } from '../hooks/useGame';
 import { HelpCircle } from 'lucide-react';
 import { useState } from 'react';
@@ -28,22 +30,35 @@ const Index = () => {
     handleSymbolClick,
     resetGame,
     shareScore,
+    showStartScreen,
+    dismissStartScreen,
+    nextMilestone,
   } = useGame();
 
-  // Sound effects
-  const sfxSuccess = useMemo(() => new Audio('/snd/success.mp3'), []);
-  const sfxFail = useMemo(() => new Audio('/snd/fail.mp3'), []);
+  // Sound effects using useRef for better performance
+  const sfxSuccess = useRef<HTMLAudioElement | null>(null);
+  const sfxFail = useRef<HTMLAudioElement | null>(null);
+
+  // Initialize sound effects
+  useEffect(() => {
+    sfxSuccess.current = new Audio('/snd/success.mp3');
+    sfxFail.current = new Audio('/snd/fail.mp3');
+  }, []);
 
   // Play sound effects based on game state changes
   useEffect(() => {
     if (gameState === 'result') {
-      if (isPlayerWinner) {
-        sfxSuccess.play().catch(err => console.error("Error playing success sound:", err));
-      } else {
-        sfxFail.play().catch(err => console.error("Error playing fail sound:", err));
+      try {
+        if (isPlayerWinner && sfxSuccess.current) {
+          sfxSuccess.current.play().catch(err => console.error("Error playing success sound:", err));
+        } else if (!isPlayerWinner && sfxFail.current) {
+          sfxFail.current.play().catch(err => console.error("Error playing fail sound:", err));
+        }
+      } catch (e) {
+        console.error("Audio playback error:", e);
       }
     }
-  }, [gameState, isPlayerWinner, sfxSuccess, sfxFail]);
+  }, [gameState, isPlayerWinner]);
 
   // Apply theme to body background
   useEffect(() => {
@@ -53,6 +68,10 @@ const Index = () => {
       document.body.className = '';
     };
   }, [currentTheme]);
+
+  if (showStartScreen) {
+    return <StartScreen onStart={dismissStartScreen} />;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-indigo-50 to-purple-50 flex flex-col items-center justify-center p-4">
@@ -77,6 +96,7 @@ const Index = () => {
           startGame={startGame}
           resetGame={resetGame}
           currentTheme={currentTheme}
+          nextMilestone={nextMilestone}
         />
         <GameGrid 
           onButtonClick={handleSymbolClick}

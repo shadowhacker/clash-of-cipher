@@ -40,7 +40,7 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
         </DialogHeader>
         <div className="py-4 text-center">
           <p className="text-lg mb-2">You reached <span className="font-bold">Level {level}</span>!</p>
-          <p>Your personal best: <span className="font-bold">{personalBest}</span></p>
+          <p>Your lifetime best: <span className="font-bold">{personalBest}</span></p>
         </div>
         <DialogFooter className="sm:justify-center gap-2">
           <Button onClick={onRestart}>

@@ -23,13 +23,16 @@ export const useGame = () => {
   const [userInput, setUserInput] = useState<string[]>([]);
   const [isPlayerWinner, setIsPlayerWinner] = useState<boolean | null>(null);
   const [showGameOverModal, setShowGameOverModal] = useState(false);
-  const [lives, setLives] = useState(2); // One extra chance
+  const [lives, setLives] = useState(2); // Two lives
   const [timeLeft, setTimeLeft] = useState(10);
   const [gridSymbols, setGridSymbols] = useState<string[]>([]);
   const [progressPct, setProgressPct] = useState(10); // Progress percentage (10-100)
+  const [showStartScreen, setShowStartScreen] = useState(true);
   
   // Timer reference
   const timerRef = useRef<number | null>(null);
+  // Flag to track if first input received
+  const firstInputReceived = useRef(false);
   
   // Get current theme based on level
   const getCurrentTheme = useCallback((currentLevel: number) => {
@@ -75,15 +78,28 @@ export const useGame = () => {
     }, 1000);
   }, []);
   
+  // Calculate next milestone level
+  const getNextMilestone = useCallback((currentLevel: number) => {
+    const nextColor = Math.ceil((currentLevel + 1) / 10) * 10;
+    const nextPack = Math.ceil((currentLevel + 1) / 7) * 7;
+    return Math.min(nextColor, nextPack);
+  }, []);
+  
+  // Lose a life with proper cap at 0
+  const loseLife = useCallback(() => {
+    setLives(prev => {
+      const newLives = Math.max(prev - 1, 0);
+      if (newLives === 0) {
+        gameOver();
+      }
+      return newLives;
+    });
+  }, []);
+  
   // Handle timeout
   const handleTimeout = useCallback(() => {
-    if (lives > 1) {
-      setLives(prev => prev - 1);
-      restartSameLevel();
-    } else {
-      gameOver();
-    }
-  }, [lives]);
+    loseLife();
+  }, [loseLife]);
   
   // Restart the same level (on wrong input or timeout)
   const restartSameLevel = useCallback(() => {
@@ -93,9 +109,8 @@ export const useGame = () => {
     
     setTimeout(() => {
       setGameState('input');
-      startGameTimer();
     }, 1000);
-  }, [startGameTimer]);
+  }, []);
   
   // Game over function
   const gameOver = useCallback(() => {
@@ -109,13 +124,24 @@ export const useGame = () => {
     }, 1000);
   }, [level, clearGameTimer]);
   
-  // Generate a random grid of symbols
-  const generateGrid = useCallback((symbolPack: string[]) => {
-    const result: string[] = [];
-    for (let i = 0; i < 16; i++) {
+  // Generate a grid ensuring all code symbols are included
+  const generateGrid = useCallback((symbolPack: string[], codeSequence: string[]) => {
+    // Start with a random grid from the symbol pack
+    const result: string[] = Array.from({ length: 16 }, () => {
       const randomIndex = Math.floor(Math.random() * symbolPack.length);
-      result.push(symbolPack[randomIndex]);
-    }
+      return symbolPack[randomIndex];
+    });
+    
+    // Make sure all code symbols exist in the grid
+    codeSequence.forEach(symbol => {
+      // Check if symbol is already in the grid
+      if (!result.includes(symbol)) {
+        // Replace a random cell with this symbol
+        const randomCellIndex = Math.floor(Math.random() * result.length);
+        result[randomCellIndex] = symbol;
+      }
+    });
+    
     return result;
   }, []);
   
@@ -149,10 +175,12 @@ export const useGame = () => {
     setLevel(initialLevel);
     setGameState('showCode');
     setShowGameOverModal(false);
-    setLives(2);
+    setLives(2); // Reset lives only on fresh game
     setTimeLeft(10);
     setProgressPct(10); // Reset progress to 10%
-    setGridSymbols(generateGrid(currentPack));
+    setGridSymbols(generateGrid(currentPack, newCode));
+    firstInputReceived.current = false;
+    setShowStartScreen(false);
     
     // Show the code for 1000ms
     setTimeout(() => {
@@ -169,15 +197,15 @@ export const useGame = () => {
     setUserInput([]);
     setLevel(newLevel);
     setGameState('showCode');
-    setLives(2);
     setTimeLeft(10);
+    firstInputReceived.current = false;
     
     // Calculate progress percentage based on level (resets every 10 levels)
     const newProgressPct = ((newLevel - 1) % 10 + 1) * 10;
     setProgressPct(newProgressPct);
     
-    // Generate a new grid for this level
-    setGridSymbols(generateGrid(currentPack));
+    // Generate a new grid for this level, ensuring all code symbols are included
+    setGridSymbols(generateGrid(currentPack, newCode));
     
     // Show the code for 1000ms
     setTimeout(() => {
@@ -190,8 +218,17 @@ export const useGame = () => {
     if (gameState !== 'input') return;
     
     // Start timer on first input if not already running
-    if (timerRef.current === null) {
+    if (!firstInputReceived.current) {
+      firstInputReceived.current = true;
       startGameTimer();
+      
+      // Ensure audio can play on iOS
+      try {
+        const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+        audioContext.resume().catch(e => console.error("Audio context resume error:", e));
+      } catch (err) {
+        console.error("Audio context creation error:", err);
+      }
     }
     
     const newUserInput = [...userInput, symbol];
@@ -218,16 +255,13 @@ export const useGame = () => {
         }, 1000);
       } else {
         // User got it wrong
-        if (lives > 1) {
-          setLives(prev => prev - 1);
+        loseLife();
+        if (lives > 1) { // Check against current lives before decrement
           restartSameLevel();
-        } else {
-          // Game over
-          gameOver();
         }
       }
     }
-  }, [gameState, userInput, code, level, lives, updatePersonalBest, startNextLevel, clearGameTimer, restartSameLevel, gameOver, startGameTimer]);
+  }, [gameState, userInput, code, level, lives, loseLife, updatePersonalBest, startNextLevel, clearGameTimer, restartSameLevel, startGameTimer]);
 
   // Copy "share my best" text to clipboard
   const shareScore = useCallback(() => {
@@ -248,6 +282,12 @@ export const useGame = () => {
     setLives(2);
     setTimeLeft(10);
   }, [clearGameTimer]);
+  
+  // Dismiss start screen
+  const dismissStartScreen = useCallback(() => {
+    setShowStartScreen(false);
+    startGame();
+  }, [startGame]);
 
   // Clean up timer on unmount
   useEffect(() => {
@@ -291,5 +331,8 @@ export const useGame = () => {
     handleSymbolClick,
     resetGame,
     shareScore,
+    showStartScreen,
+    dismissStartScreen,
+    nextMilestone: getNextMilestone(level),
   };
 };

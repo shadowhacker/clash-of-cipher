@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Progress } from '@/components/ui/progress';
 
 interface GameGridProps {
@@ -22,12 +22,35 @@ const GameGrid: React.FC<GameGridProps> = ({
   gridSymbols,
   progressPct,
 }) => {
+  const [showLevelUp, setShowLevelUp] = useState(false);
+
+  // Show level up message when progress reaches 100%
+  useEffect(() => {
+    if (progressPct === 100) {
+      setShowLevelUp(true);
+      const timer = setTimeout(() => {
+        setShowLevelUp(false);
+      }, 800);
+      return () => clearTimeout(timer);
+    }
+  }, [progressPct]);
+
   return (
     <div className="relative">
       {gameState !== 'idle' && (
-        <div className="mb-3">
-          <Progress value={progressPct} className="h-1" />
-        </div>
+        <>
+          <div className="mb-1 text-center text-xs text-indigo-600 font-medium">
+            Level Progress (10 rounds)
+          </div>
+          <div className="mb-3 relative">
+            <Progress value={progressPct} className="h-1" />
+            {showLevelUp && (
+              <div className="absolute inset-0 flex items-center justify-center bg-green-500/80 rounded-md text-white font-bold">
+                Level Up!
+              </div>
+            )}
+          </div>
+        </>
       )}
       
       {gameState === 'showCode' && (
