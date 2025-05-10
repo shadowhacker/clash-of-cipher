@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useRef } from 'react';
 
 // Array of all available symbols
@@ -94,7 +93,17 @@ export const useGame = () => {
       }
       return newLives;
     });
-  }, []);
+    
+    // Add a pause to make life loss more noticeable
+    setGameState('result');
+    setIsPlayerWinner(false);
+    
+    setTimeout(() => {
+      if (lives > 1) { // Only restart if we still have lives left
+        restartSameLevel();
+      }
+    }, 800);
+  }, [lives]);
   
   // Handle timeout
   const handleTimeout = useCallback(() => {
@@ -334,5 +343,6 @@ export const useGame = () => {
     showStartScreen,
     dismissStartScreen,
     nextMilestone: getNextMilestone(level),
+    setTimeLeft, // Expose setTimeLeft for timer management
   };
 };
