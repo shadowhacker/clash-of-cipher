@@ -26,7 +26,7 @@ export default defineConfig(({ mode }) => ({
         global: 'globalThis',
       },
     },
-    exclude: ['firebase'],
+    exclude: ['firebase', '@rollup/rollup-linux-x64-gnu'],
   },
   build: {
     sourcemap: mode === 'development',
@@ -35,7 +35,7 @@ export default defineConfig(({ mode }) => ({
       include: [/node_modules/],
     },
     rollupOptions: {
-      external: [],
+      external: ['@rollup/rollup-linux-x64-gnu'],
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom'],
