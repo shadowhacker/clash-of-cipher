@@ -1,4 +1,3 @@
-
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
@@ -26,7 +25,13 @@ export default defineConfig(({ mode }) => ({
         global: 'globalThis',
       },
     },
-    exclude: ['firebase', '@rollup/rollup-linux-x64-gnu'],
+    exclude: [
+      'firebase', 
+      '@rollup/rollup-linux-x64-gnu',
+      '@rollup/rollup-darwin-x64',
+      '@rollup/rollup-linux-x64-musl',
+      '@rollup/rollup-win32-x64-msvc'
+    ],
   },
   build: {
     sourcemap: mode === 'development',
@@ -35,7 +40,12 @@ export default defineConfig(({ mode }) => ({
       include: [/node_modules/],
     },
     rollupOptions: {
-      external: ['@rollup/rollup-linux-x64-gnu'],
+      external: [
+        '@rollup/rollup-linux-x64-gnu',
+        '@rollup/rollup-darwin-x64',
+        '@rollup/rollup-linux-x64-musl',
+        '@rollup/rollup-win32-x64-msvc'
+      ],
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom'],
