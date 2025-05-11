@@ -1,13 +1,12 @@
 import React from 'react';
 
 interface GuideScreenProps {
-  onStartGame: () => void;
   onClose: () => void;
   isFirstTime: boolean;
   open: boolean;
 }
 
-const GuideScreen: React.FC<GuideScreenProps> = ({ onStartGame, onClose, isFirstTime, open }) => {
+const GuideScreen: React.FC<GuideScreenProps> = ({ onClose, isFirstTime, open }) => {
   if (!open) return null;
 
   return (
@@ -54,20 +53,11 @@ const GuideScreen: React.FC<GuideScreenProps> = ({ onStartGame, onClose, isFirst
 
           <div className="flex flex-col gap-3">
             <button
-              onClick={onStartGame}
-              className="w-full py-3 bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-lg transition-colors"
+              onClick={onClose}
+              className="w-full py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-lg transition-colors"
             >
-              Start Game
+              Back
             </button>
-            
-            {!isFirstTime && (
-              <button
-                onClick={onClose}
-                className="w-full py-3 bg-transparent hover:bg-gray-100 text-gray-700 font-semibold rounded-lg transition-colors"
-              >
-                Back
-              </button>
-            )}
           </div>
         </div>
       </div>
