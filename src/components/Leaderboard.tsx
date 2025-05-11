@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -22,7 +21,7 @@ interface LeaderboardProps {
 const Leaderboard: React.FC<LeaderboardProps> = ({ personalBest }) => {
   const [open, setOpen] = useState(false);
   const deviceId = getDeviceId();
-  
+
   const {
     leaderboard,
     loading,
@@ -47,15 +46,15 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ personalBest }) => {
 
   return (
     <>
-      <Button 
-        variant="outline" 
-        size="icon" 
-        onClick={() => setOpen(true)} 
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={() => setOpen(true)}
         className="rounded-full"
       >
         <Trophy className="h-4 w-4" />
       </Button>
-      
+
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -73,11 +72,11 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ personalBest }) => {
                   <div className="font-semibold text-sm">🧑‍🚀 Name</div>
                   <div className="font-semibold text-sm">🎯 Best</div>
                   <div></div>
-                  
+
                   {leaderboard.map((entry, index) => {
                     const isCurrentPlayer = entry.device_id === deviceId;
                     return (
-                      <React.Fragment key={entry.id}>
+                      <div key={entry.id} className="contents">
                         <div className={`py-1 ${isCurrentPlayer ? 'bg-amber-100' : ''}`}>
                           {index + 1}
                         </div>
@@ -89,8 +88,8 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ personalBest }) => {
                         </div>
                         <div className={`py-1 ${isCurrentPlayer ? 'bg-amber-100' : ''}`}>
                           {isCurrentPlayer && (
-                            <Button 
-                              variant="ghost" 
+                            <Button
+                              variant="ghost"
                               size="sm"
                               className="h-6 w-6 p-0"
                               onClick={() => sharePlayerScore(entry.name, index + 1, entry.best)}
@@ -99,17 +98,17 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ personalBest }) => {
                             </Button>
                           )}
                         </div>
-                      </React.Fragment>
+                      </div>
                     );
                   })}
-                  
+
                   {leaderboard.length === 0 && (
                     <div className="col-span-4 text-center py-4 text-gray-500">
                       No scores yet! Be the first to claim your spot.
                     </div>
                   )}
                 </div>
-                
+
                 {/* Your position section - only shown if user has a best score but isn't in top 10 */}
                 {userRank === 0 && userEntry && (
                   <div className="mt-4 pt-4 border-t">
@@ -119,8 +118,8 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ personalBest }) => {
                       <div className="font-medium">{userEntry.name} (You)</div>
                       <div className="font-medium">{userEntry.best}</div>
                       <div>
-                        <Button 
-                          variant="ghost" 
+                        <Button
+                          variant="ghost"
                           size="sm"
                           className="h-6 w-6 p-0"
                           onClick={() => sharePlayerScore(userEntry.name, userRank, userEntry.best)}
@@ -142,10 +141,10 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ personalBest }) => {
         </DialogContent>
       </Dialog>
 
-      <PlayerNameDialog 
-        open={showNamePrompt} 
+      <PlayerNameDialog
+        open={showNamePrompt}
         onSubmit={submitPlayerName}
-        onClose={() => setShowNamePrompt(false)} 
+        onClose={() => setShowNamePrompt(false)}
       />
     </>
   );
