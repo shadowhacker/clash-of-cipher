@@ -58,15 +58,10 @@ const GameGrid: React.FC<GameGridProps> = ({
     <div className="relative">
       {gameState === 'showCode' && (
         <div className="absolute inset-0 flex items-center justify-center z-10 bg-black rounded-md pointer-events-none">
-          <div className="flex flex-col items-center flex-wrap gap-4 max-w-xs justify-center shadow-2xl rounded-lg px-6 py-4 text-4xl font-bold text-white">
-            <p className="text-sm uppercase tracking-wide text-amber-400 mb-2">
-              Memorise these!
-            </p>
-            <div className="flex flex-wrap gap-4 justify-center">
-              {code.map((symbol, idx) => (
-                <span key={idx} className="text-4xl text-white">{symbol}</span>
-              ))}
-            </div>
+          <div className="flex flex-wrap gap-4 max-w-xs justify-center shadow-2xl rounded-lg px-6 py-4 text-4xl font-bold text-white">
+            {code.map((symbol, idx) => (
+              <span key={idx} className="text-4xl text-white">{symbol}</span>
+            ))}
           </div>
         </div>
       )}
@@ -81,26 +76,33 @@ const GameGrid: React.FC<GameGridProps> = ({
         </div>
       )}
       
-      <div className="grid grid-cols-3 gap-2 bg-black p-4 rounded-lg">
-        {gridSymbols.map((symbol, index) => (
-          <button
-            key={index}
-            onClick={() => handleButtonClick(symbol, index)}
-            className={`
-              w-16 h-16 sm:w-20 sm:h-20
-              flex items-center justify-center
-              bg-gray-700 border border-gray-600
-              text-white text-2xl font-bold
-              rounded-md shadow-inner
-              hover:bg-gray-600
-              transition-colors duration-150
-              ${showWrongTaps && userInput[index] === symbol ? 'bg-green-500' : ''}
-              ${showWrongTaps && userInput[index] !== symbol ? 'bg-red-600' : ''}
-            `}
-          >
-            {symbol}
-          </button>
-        ))}
+      <div className="grid grid-cols-4 gap-2 max-w-[320px] mx-auto">
+        {gridSymbols.map((symbol, index) => {
+          // Determine cell color logic for wrong taps visualization
+          let cellClassName = "w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center rounded-md shadow-md text-2xl transition-colors ";
+          
+          if (showWrongTaps && isWrongInput(symbol, index)) {
+            cellClassName += "bg-red-500 text-white";
+          } else if (showWrongTaps && isCorrectCode(symbol)) {
+            cellClassName += "bg-green-500/70 text-white";
+          } else if (highlightedIndex === index) {
+            cellClassName += "bg-green-400 text-indigo-800";
+          } else {
+            cellClassName += "bg-indigo-100 hover:bg-indigo-200 text-indigo-800";
+          }
+          
+          return (
+            <button
+              key={index}
+              className={cellClassName}
+              onClick={() => handleButtonClick(symbol, index)}
+              disabled={gameState !== 'input'}
+              aria-label={`Symbol ${index + 1}`}
+            >
+              {symbol}
+            </button>
+          );
+        })}
       </div>
       
       {gameState === 'input' && (
