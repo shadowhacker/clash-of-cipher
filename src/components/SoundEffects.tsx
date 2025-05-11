@@ -1,5 +1,4 @@
-
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 interface SoundEffectsProps {
   gameState: 'idle' | 'showCode' | 'input' | 'result';
@@ -11,6 +10,10 @@ const SoundEffects: React.FC<SoundEffectsProps> = ({ gameState, isPlayerWinner }
   const sfxSuccess = useRef<HTMLAudioElement | null>(null);
   const sfxFail = useRef<HTMLAudioElement | null>(null);
   const audioInitialized = useRef<boolean>(false);
+  const [isMuted, setIsMuted] = useState(() => {
+    const savedMute = localStorage.getItem('cipher-clash-muted');
+    return savedMute === 'true';
+  });
 
   // Initialize sound effects
   useEffect(() => {
@@ -18,9 +21,22 @@ const SoundEffects: React.FC<SoundEffectsProps> = ({ gameState, isPlayerWinner }
     sfxFail.current = new Audio('/snd/fail.mp3');
   }, []);
 
+  // Listen for mute change events
+  useEffect(() => {
+    const handleMuteChange = (e: CustomEvent) => {
+      setIsMuted(e.detail.muted);
+    };
+
+    window.addEventListener('audio-mute-change', handleMuteChange as EventListener);
+    
+    return () => {
+      window.removeEventListener('audio-mute-change', handleMuteChange as EventListener);
+    };
+  }, []);
+
   // Play sound effects based on game state changes
   useEffect(() => {
-    if (gameState === 'result') {
+    if (gameState === 'result' && !isMuted) {
       try {
         if (isPlayerWinner && sfxSuccess.current) {
           sfxSuccess.current.play().catch(err => console.error("Error playing success sound:", err));
@@ -31,7 +47,7 @@ const SoundEffects: React.FC<SoundEffectsProps> = ({ gameState, isPlayerWinner }
         console.error("Audio playback error:", e);
       }
     }
-  }, [gameState, isPlayerWinner]);
+  }, [gameState, isPlayerWinner, isMuted]);
 
   // Component doesn't render anything, just handles audio
   return null;

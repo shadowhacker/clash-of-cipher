@@ -6,6 +6,7 @@ import GuideScreen from '../components/GuideScreen';
 import GameGrid from '../components/GameGrid';
 import GameStatus from '../components/GameStatus';
 import GameOverModal from '../components/GameOverModal';
+import AudioControls from '../components/AudioControls';
 import { Button } from '../components/ui/button';
 import { HelpCircle } from 'lucide-react';
 import AudioInitializer from '../components/AudioInitializer';
@@ -150,6 +151,7 @@ const Index = () => {
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-center text-indigo-800">🔮 Cipher Clash</h1>
           <div className="flex items-center space-x-2">
+            <AudioControls />
             <Leaderboard personalBest={personalBest} />
             <button 
               onClick={() => setShowGuide(true)}

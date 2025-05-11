@@ -1,5 +1,4 @@
-
-import React, { useRef } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 
 interface AudioInitializerProps {
   onSymbolClick: (symbol: string) => void;
@@ -20,14 +19,41 @@ interface GameGridProps {
 
 const AudioInitializer: React.FC<AudioInitializerProps> = ({ onSymbolClick, children }) => {
   const audioInitialized = useRef<boolean>(false);
+  const audioContext = useRef<AudioContext | null>(null);
+  const [isMuted, setIsMuted] = useState(() => {
+    const savedMute = localStorage.getItem('cipher-clash-muted');
+    return savedMute === 'true';
+  });
+
+  // Listen for mute change events
+  useEffect(() => {
+    const handleMuteChange = (e: CustomEvent) => {
+      setIsMuted(e.detail.muted);
+      
+      // If we have an audio context, suspend it when muted or resume when unmuted
+      if (audioContext.current) {
+        if (e.detail.muted) {
+          audioContext.current.suspend().catch(e => console.error("Error suspending audio context:", e));
+        } else {
+          audioContext.current.resume().catch(e => console.error("Error resuming audio context:", e));
+        }
+      }
+    };
+
+    window.addEventListener('audio-mute-change', handleMuteChange as EventListener);
+    
+    return () => {
+      window.removeEventListener('audio-mute-change', handleMuteChange as EventListener);
+    };
+  }, []);
 
   // Wrapper for symbol click to handle audio initialization
   const handleSymbolClickWithAudio = (symbol: string) => {
-    // Initialize audio context on first user interaction
-    if (!audioInitialized.current) {
+    // Initialize audio context on first user interaction if not muted
+    if (!audioInitialized.current && !isMuted) {
       try {
-        const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-        audioContext.resume().catch(e => console.error("Audio context resume error:", e));
+        audioContext.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+        audioContext.current.resume().catch(e => console.error("Audio context resume error:", e));
         audioInitialized.current = true;
       } catch (err) {
         console.error("Audio context creation error:", err);
