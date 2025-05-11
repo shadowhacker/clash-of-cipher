@@ -18,8 +18,13 @@ const HowToPlayGuide: React.FC<HowToPlayGuideProps> = ({ open, onClose }) => {
         <h3 className="font-semibold text-lg mb-2">How to Play</h3>
         <ul className="space-y-3 list-disc pl-5">
           <li>
-            <span className="font-medium">Memorise the symbols</span>
-            <p className="text-sm text-muted-foreground">Symbols flash for 1 second. Remember their order!</p>
+            <span className="font-medium">Memorize the symbols</span>
+            <p className="text-sm text-muted-foreground">
+              Flash time oscillates between 1.2s and 2.0s every 20 levels.<br/>
+              Levels 1-20: 2.0s → 1.2s<br/>
+              Levels 21-40: 1.2s → 2.0s<br/>
+              And so on...
+            </p>
           </li>
           <li>
             <span className="font-medium">Repeat the sequence</span>

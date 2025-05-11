@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { toast } from 'sonner';
 import { useGameLaunch } from './useGameLaunch.tsx';
+import { getFlashTime } from '../utils/gameUtils';
 
 // Array of all available symbol image filenames
 const MASTER_SYMBOLS = [
@@ -287,10 +288,10 @@ export const useGame = () => {
       setGems(0);
       setShowWrongTaps(false);
 
-      // Show the code for 1000ms then start input phase
+      // Show the code for the calculated flash time then start input phase
       setTimeout(() => {
         startInputPhase();
-      }, 1000);
+      }, getFlashTime(initialLevel) * 1000);
     }
   });
 
@@ -315,10 +316,10 @@ export const useGame = () => {
       // Generate a new grid for this level, ensuring all code symbols are included
       setGridSymbols(generateGrid(currentPack, newCode));
 
-      // Show the code for 1000ms then start input phase
+      // Show the code for the calculated flash time then start input phase
       setTimeout(() => {
         startInputPhase();
-      }, 1000);
+      }, getFlashTime(newLevel) * 1000);
     },
     [
       generateCode,

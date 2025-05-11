@@ -21,7 +21,10 @@ const GuideScreen: React.FC<GuideScreenProps> = ({ onClose, isFirstTime, open })
             <div className="space-y-4">
               <div className="flex items-start gap-3">
                 <span className="text-2xl">1️⃣</span>
-                <p className="text-lg">Symbols blink for 1 s</p>
+                <div>
+                  <p className="text-lg">Memorize the symbols</p>
+                  <p className="text-sm text-gray-600">Flash time oscillates between 1.2s and 2.0s every 20 levels</p>
+                </div>
               </div>
               <div className="flex items-start gap-3">
                 <span className="text-2xl">2️⃣</span>
@@ -51,12 +54,12 @@ const GuideScreen: React.FC<GuideScreenProps> = ({ onClose, isFirstTime, open })
             </div>
           </div>
 
-          <div className="flex flex-col gap-3">
+          <div className="flex justify-center">
             <button
               onClick={onClose}
-              className="w-full py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-lg transition-colors"
+              className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
             >
-              Back
+              {isFirstTime ? "Let's Play!" : "Got it!"}
             </button>
           </div>
         </div>
