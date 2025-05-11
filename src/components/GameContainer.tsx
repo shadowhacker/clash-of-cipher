@@ -6,7 +6,7 @@ import { Button } from './ui/button';
 import AudioInitializer from './AudioInitializer';
 
 interface GameContainerProps {
-  gameState: 'idle' | 'showCode' | 'showCode' | 'input' | 'result';
+  gameState: 'idle' | 'showCode' | 'input' | 'result';
   level: number;
   personalBest: number;
   code: string[];
