@@ -55,18 +55,12 @@ const GameGrid: React.FC<GameGridProps> = ({
 
   return (
     <div className="relative">
-      {/* Visual timer bar - only show during input phase */}
       {gameState === 'input' && (
         <div className="mb-2">
           <Progress 
             value={(timeLeft / 10) * 100} 
             className={`h-2 rounded-full transition-all ${isTimeCritical ? 'bg-red-200' : 'bg-indigo-200'}`}
           />
-          <div className="absolute top-0 left-0 w-full flex justify-center">
-            <div className={`text-4xl font-bold ${isTimeCritical ? 'text-red-600 animate-pulse' : 'text-indigo-800'}`}>
-              {timeLeft}
-            </div>
-          </div>
         </div>
       )}
 
@@ -100,7 +94,6 @@ const GameGrid: React.FC<GameGridProps> = ({
         </div>
       )}
 
-      {/* Add margin-top to accommodate the timer */}
       <div className="grid grid-cols-4 gap-2 max-w-[320px] mx-auto mt-10">
         {gridSymbols.map((symbol, index) => {
           let cellClassName = "w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center rounded-md shadow-md text-2xl transition-colors ";

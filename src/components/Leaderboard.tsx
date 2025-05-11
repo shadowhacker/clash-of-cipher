@@ -14,6 +14,7 @@ import { useLeaderboard } from '@/hooks/useLeaderboard';
 import { getDeviceId } from '@/utils/deviceStorage';
 import PlayerNameDialog from './PlayerNameDialog';
 import { Separator } from '@/components/ui/separator';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface LeaderboardProps {
   personalBest: number;
@@ -66,77 +67,54 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ personalBest }) => {
               See how your score compares with other players.
             </DialogDescription>
           </DialogHeader>
-          <div className="py-2">
+          <ScrollArea className="h-[400px] py-2">
             {loading ? (
               <div className="text-center py-4">Loading leaderboard...</div>
             ) : (
               <>
-                <div className="grid grid-cols-[auto_1fr_auto_auto] gap-2 items-center">
+                <div className="grid grid-cols-[auto_1fr_auto_auto] gap-2 items-center sticky top-0 bg-background z-10 pb-2">
                   <div className="font-semibold text-sm">#</div>
                   <div className="font-semibold text-sm">🧑‍🚀 Name</div>
                   <div className="font-semibold text-sm">🎯 Best</div>
                   <div></div>
-
-                  {leaderboard.map((entry, index) => {
-                    const isCurrentPlayer = entry.device_id === deviceId;
-                    return (
-                      <div key={entry.id} className="contents">
-                        <div className={`py-1 ${isCurrentPlayer ? 'bg-amber-100' : ''}`}>
-                          {index + 1}
-                        </div>
-                        <div className={`py-1 ${isCurrentPlayer ? 'bg-amber-100 font-medium' : ''}`}>
-                          {entry.name} {isCurrentPlayer ? '(You)' : ''}
-                        </div>
-                        <div className={`py-1 ${isCurrentPlayer ? 'bg-amber-100 font-medium' : ''}`}>
-                          {entry.best}
-                        </div>
-                        <div className={`py-1 ${isCurrentPlayer ? 'bg-amber-100' : ''}`}>
-                          {isCurrentPlayer && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-6 w-6 p-0"
-                              onClick={() => sharePlayerScore(entry.name, index + 1, entry.best)}
-                            >
-                              <Share2 className="h-3.5 w-3.5" />
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-
-                  {leaderboard.length === 0 && (
-                    <div className="col-span-4 text-center py-4 text-gray-500">
-                      No scores yet! Be the first to claim your spot.
-                    </div>
-                  )}
                 </div>
 
-                {/* Your position section - only shown if user has a best score but isn't in top 10 */}
-                {userRank === 0 && userEntry && (
-                  <div className="mt-4 pt-4 border-t">
-                    <div className="text-sm font-medium mb-2">Your Position</div>
-                    <div className="grid grid-cols-[auto_1fr_auto_auto] gap-2 items-center bg-amber-50 rounded-md p-2">
-                      <div className="font-medium">?</div>
-                      <div className="font-medium">{userEntry.name} (You)</div>
-                      <div className="font-medium">{userEntry.best}</div>
-                      <div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-6 w-6 p-0"
-                          onClick={() => sharePlayerScore(userEntry.name, userRank, userEntry.best)}
-                        >
-                          <Share2 className="h-3.5 w-3.5" />
-                        </Button>
+                {leaderboard.map((entry, index) => {
+                  const isCurrentPlayer = entry.device_id === deviceId;
+                  return (
+                    <div key={entry.id} className="contents">
+                      <div className={`py-1 ${isCurrentPlayer ? 'bg-amber-100' : ''}`}>
+                        {index + 1}
+                      </div>
+                      <div className={`py-1 ${isCurrentPlayer ? 'bg-amber-100 font-medium' : ''}`}>
+                        {entry.name} {isCurrentPlayer ? '(You)' : ''}
+                      </div>
+                      <div className={`py-1 ${isCurrentPlayer ? 'bg-amber-100 font-medium' : ''}`}>
+                        {entry.best}
+                      </div>
+                      <div className={`py-1 ${isCurrentPlayer ? 'bg-amber-100' : ''}`}>
+                        {isCurrentPlayer && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0"
+                            onClick={() => sharePlayerScore(entry.name, index + 1, entry.best)}
+                          >
+                            <Share2 className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
                       </div>
                     </div>
+                  ))}
+
+                {leaderboard.length === 0 && (
+                  <div className="col-span-4 text-center py-4 text-gray-500">
+                    No scores yet! Be the first to claim your spot.
                   </div>
                 )}
               </>
             )}
-          </div>
+          </ScrollArea>
           <DialogFooter className="sm:justify-center">
             <Button onClick={() => setOpen(false)}>
               Close
