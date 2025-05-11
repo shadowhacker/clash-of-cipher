@@ -1,4 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
+import { Progress } from '../components/ui/progress';
 
 interface GameGridProps {
   onButtonClick: (symbol: string) => void;
@@ -9,6 +11,7 @@ interface GameGridProps {
   currentSymbolPack: string[];
   gridSymbols: string[];
   showWrongTaps?: boolean;
+  timeLeft?: number; // Add timeLeft prop
 }
 
 const GameGrid: React.FC<GameGridProps> = ({
@@ -19,8 +22,10 @@ const GameGrid: React.FC<GameGridProps> = ({
   isPlayerWinner,
   gridSymbols,
   showWrongTaps = false,
+  timeLeft = 10, // Default value
 }) => {
   const [highlightedIndex, setHighlightedIndex] = useState<number | null>(null);
+  const isTimeCritical = timeLeft <= 3 && gameState === 'input';
 
   // Handle button click with visual feedback
   const handleButtonClick = (symbol: string, index: number) => {
@@ -56,6 +61,21 @@ const GameGrid: React.FC<GameGridProps> = ({
 
   return (
     <div className="relative">
+      {/* Visual timer bar - only show during input phase */}
+      {gameState === 'input' && (
+        <div className="mb-2">
+          <Progress 
+            value={(timeLeft / 10) * 100} 
+            className={`h-2 rounded-full transition-all ${isTimeCritical ? 'bg-red-200' : 'bg-indigo-200'}`}
+          />
+          <div className="absolute top-0 left-0 w-full flex justify-center">
+            <div className={`text-4xl font-bold ${isTimeCritical ? 'text-red-600 animate-pulse' : 'text-indigo-800'}`}>
+              {timeLeft}
+            </div>
+          </div>
+        </div>
+      )}
+
       {gameState === 'showCode' && (
         <div className="absolute inset-0 flex items-center justify-center z-10 bg-black rounded-md pointer-events-none">
           <div className="flex flex-col items-center gap-4 max-w-xs justify-center shadow-2xl rounded-lg px-6 py-4">
@@ -86,7 +106,8 @@ const GameGrid: React.FC<GameGridProps> = ({
         </div>
       )}
 
-      <div className="grid grid-cols-4 gap-2 max-w-[320px] mx-auto">
+      {/* Add margin-top to accommodate the timer */}
+      <div className="grid grid-cols-4 gap-2 max-w-[320px] mx-auto mt-10">
         {gridSymbols.map((symbol, index) => {
           // Determine cell color logic for wrong taps visualization
           let cellClassName = "w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center rounded-md shadow-md text-2xl transition-colors ";

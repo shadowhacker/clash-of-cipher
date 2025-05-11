@@ -106,6 +106,17 @@ export const useGame = () => {
     return Math.min(length, 20); // Cap at 20 symbols
   }, []);
 
+  // Calculate flash time based on level with oscillating pattern
+  const getFlashTime = useCallback((level: number): number => {
+    const phase = Math.floor((level - 1) / 20) % 2;  // 0 = down, 1 = up
+    const index = (level - 1) % 20;
+    const step = 0.8 / 19;
+    
+    return phase === 0
+      ? 2.0 - (step * index)  // decreasing
+      : 1.2 + (step * index); // increasing
+  }, []);
+
   // Calculate round score based on new formula
   const calculateRoundScore = useCallback(
     (
@@ -216,8 +227,8 @@ export const useGame = () => {
 
     setTimeout(() => {
       startInputPhase();
-    }, 1000);
-  }, [startInputPhase]);
+    }, getFlashTime(level) * 1000); // Use dynamic flash time
+  }, [startInputPhase, level, getFlashTime]);
 
   // Generate a grid ensuring all code symbols are included
   const generateGrid = useCallback(
@@ -287,10 +298,10 @@ export const useGame = () => {
       setGems(0);
       setShowWrongTaps(false);
 
-      // Show the code for 1000ms then start input phase
+      // Show the code for dynamic time based on level then start input phase
       setTimeout(() => {
         startInputPhase();
-      }, 1000);
+      }, getFlashTime(initialLevel) * 1000); // Use dynamic flash time
     }
   });
 
@@ -315,17 +326,21 @@ export const useGame = () => {
       // Generate a new grid for this level, ensuring all code symbols are included
       setGridSymbols(generateGrid(currentPack, newCode));
 
-      // Show the code for 1000ms then start input phase
+      // Calculate dynamic flash time based on level
+      const flashTime = getFlashTime(newLevel) * 1000;
+
+      // Show the code for dynamic time then start input phase
       setTimeout(() => {
         startInputPhase();
-      }, 1000);
+      }, flashTime);
     },
     [
       generateCode,
       getCurrentSymbolPack,
       generateGrid,
       clearGameTimer,
-      startInputPhase
+      startInputPhase,
+      getFlashTime
     ]
   );
 
@@ -458,6 +473,7 @@ export const useGame = () => {
     currentStreak,
     gems,
     showWrongTaps,
-    Overlay
+    Overlay,
+    getFlashTime, // Export the function for testing/debugging
   };
 };

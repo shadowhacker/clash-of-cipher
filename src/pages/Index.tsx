@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useGame } from '../hooks/useGame';
 import { getPlayerName, savePlayerName } from '../utils/deviceStorage';
@@ -201,6 +202,7 @@ const Index = () => {
             currentSymbolPack={currentSymbolPack}
             gridSymbols={gridSymbols}
             showWrongTaps={showWrongTaps}
+            timeLeft={timeLeft} // Pass timeLeft to GameGrid
           />
         </AudioInitializer>
 
