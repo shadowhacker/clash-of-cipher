@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Progress } from '../components/ui/progress';
 
@@ -11,7 +10,7 @@ interface GameGridProps {
   currentSymbolPack: string[];
   gridSymbols: string[];
   showWrongTaps?: boolean;
-  timeLeft?: number; // Add timeLeft prop
+  timeLeft?: number; 
 }
 
 const GameGrid: React.FC<GameGridProps> = ({
@@ -22,12 +21,11 @@ const GameGrid: React.FC<GameGridProps> = ({
   isPlayerWinner,
   gridSymbols,
   showWrongTaps = false,
-  timeLeft = 10, // Default value
+  timeLeft = 10,
 }) => {
   const [highlightedIndex, setHighlightedIndex] = useState<number | null>(null);
   const isTimeCritical = timeLeft <= 3 && gameState === 'input';
 
-  // Handle button click with visual feedback
   const handleButtonClick = (symbol: string, index: number) => {
     setHighlightedIndex(index);
     setTimeout(() => {
@@ -36,11 +34,9 @@ const GameGrid: React.FC<GameGridProps> = ({
     onButtonClick(symbol);
   };
 
-  // Determine if a symbol is part of the wrong input
   const isWrongInput = (symbol: string, index: number): boolean => {
     if (gameState !== 'result' || isPlayerWinner !== false) return false;
 
-    // Find the first incorrect input position
     let firstWrongIndex = -1;
     for (let i = 0; i < userInput.length; i++) {
       if (userInput[i] !== code[i]) {
@@ -49,11 +45,9 @@ const GameGrid: React.FC<GameGridProps> = ({
       }
     }
 
-    // If this is the wrong symbol that was tapped
     return firstWrongIndex >= 0 && index === gridSymbols.indexOf(userInput[firstWrongIndex]);
   };
 
-  // Check if this symbol is part of the correct sequence (for game over visualization)
   const isCorrectCode = (symbol: string): boolean => {
     if (gameState !== 'result' || isPlayerWinner !== false) return false;
     return code.includes(symbol);
@@ -109,7 +103,6 @@ const GameGrid: React.FC<GameGridProps> = ({
       {/* Add margin-top to accommodate the timer */}
       <div className="grid grid-cols-4 gap-2 max-w-[320px] mx-auto mt-10">
         {gridSymbols.map((symbol, index) => {
-          // Determine cell color logic for wrong taps visualization
           let cellClassName = "w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center rounded-md shadow-md text-2xl transition-colors ";
 
           if (showWrongTaps && isWrongInput(symbol, index)) {
