@@ -16,10 +16,13 @@ import ThemeManager from '../components/ThemeManager';
 import PlayerNameDialog from '../components/PlayerNameDialog';
 import Leaderboard from '../components/Leaderboard';
 import LifeWarning from '../components/LifeWarning';
+import { useGameLayout } from '../hooks/useGameLayout';
+import HeaderControls from '../components/HeaderControls';
+import GameContainer from '../components/GameContainer';
 
 const Index = () => {
+  // State for UI management
   const [showGuide, setShowGuide] = useState(false);
-  const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showPlayerNameDialog, setShowPlayerNameDialog] = useState(false);
   const [isFirstTimePlay, setIsFirstTimePlay] = useState(() => {
     return !localStorage.getItem('hasSeenGuide');
@@ -187,7 +190,7 @@ const Index = () => {
           currentTheme={currentTheme}
           nextMilestone={nextMilestone}
           totalScore={totalScore}
-          onOpenLeaderboard={() => setShowLeaderboard(true)}
+          onOpenLeaderboard={() => {}} // No longer used
           onOpenGuide={() => setShowGuide(true)}
           playerName={getPlayerName()}
         />
