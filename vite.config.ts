@@ -1,8 +1,10 @@
 
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import { fileURLToPath, URL } from 'node:url';
 import path from 'node:path';
+
+// Set environment variable to skip native modules
+process.env.ROLLUP_SKIP_NODEJS = 'true';
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -27,5 +29,8 @@ export default defineConfig({
         warn(warning);
       },
     },
+  },
+  server: {
+    port: 8080
   },
 });
