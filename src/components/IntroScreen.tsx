@@ -1,7 +1,4 @@
-
 import React, { useEffect, useState } from 'react';
-import { doc, onSnapshot } from 'firebase/firestore';
-import { db } from '../lib/firebase';
 import AudioControls from './AudioControls';
 
 interface IntroScreenProps {
@@ -10,22 +7,12 @@ interface IntroScreenProps {
 }
 
 const IntroScreen: React.FC<IntroScreenProps> = ({ onStartGame, onShowGuide }) => {
-  const [livePlayers, setLivePlayers] = useState<string>('—');
   const [hasSeenGuide, setHasSeenGuide] = useState<boolean>(false);
 
   useEffect(() => {
     // Check if user has seen guide
     const seenGuide = localStorage.getItem('hasSeenGuide');
     setHasSeenGuide(!!seenGuide);
-
-    // Subscribe to live players count
-    const unsubscribe = onSnapshot(doc(db, 'stats', 'online'), (doc) => {
-      if (doc.exists()) {
-        setLivePlayers(doc.data().count?.toString() || '—');
-      }
-    });
-
-    return () => unsubscribe();
   }, []);
 
   return (
@@ -35,8 +22,7 @@ const IntroScreen: React.FC<IntroScreenProps> = ({ onStartGame, onShowGuide }) =
       </div>
       <div className="text-center space-y-6">
         <h1 className="text-5xl font-bold tracking-tight">Clash of Cipher</h1>
-        <p className="text-lg text-indigo-200">👥 {livePlayers} players online</p>
-        
+
         <div className="space-y-4 mt-8">
           {hasSeenGuide ? (
             <div className="flex gap-4">
