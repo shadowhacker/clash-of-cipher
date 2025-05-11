@@ -72,7 +72,6 @@
   "devDependencies": {
     "@babel/plugin-transform-react-jsx": "^7.23.4",
     "@eslint/js": "^8.56.0",
-    "@rollup/rollup-darwin-arm64": "^4.9.5",
     "@swc/core-darwin-arm64": "^1.11.25-nightly-20250505.1",
     "@tailwindcss/typography": "^0.5.10",
     "@types/node": "^20.11.24",
@@ -92,20 +91,16 @@
     "vite": "^5.1.4"
   },
   "optionalDependencies": {
-    "@rollup/rollup-darwin-arm64": "^4.40.2",
     "@rollup/rollup-linux-x64-gnu": "^4.40.2"
   },
   "overrides": {
     "rollup": {
-      "@rollup/rollup-darwin-arm64": "4.9.5",
-      "@rollup/rollup-darwin-x64": "4.9.5",
       "@rollup/rollup-linux-x64-gnu": "4.9.5",
       "@rollup/rollup-linux-x64-musl": "4.9.5",
       "@rollup/rollup-win32-x64-msvc": "4.9.5"
     }
   },
   "resolutions": {
-    "rollup": "4.9.5",
-    "@rollup/rollup-darwin-arm64": "4.9.5"
+    "rollup": "4.9.5"
   }
 }
