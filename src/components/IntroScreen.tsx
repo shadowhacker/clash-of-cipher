@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../lib/firebase';
@@ -66,4 +67,4 @@ const IntroScreen: React.FC<IntroScreenProps> = ({ onStartGame, onShowGuide }) =
   );
 };
 
-export default IntroScreen; 
+export default IntroScreen;

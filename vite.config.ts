@@ -26,17 +26,20 @@ export default defineConfig(({ mode }) => ({
         global: 'globalThis',
       },
     },
+    exclude: ['firebase'],
   },
   build: {
+    sourcemap: mode === 'development',
     commonjsOptions: {
       transformMixedEsModules: true,
+      include: [/node_modules/],
     },
     rollupOptions: {
-      // External packages that shouldn't be bundled
       external: [],
       output: {
         manualChunks: {
-          vendor: ['react', 'react-dom', 'firebase']
+          vendor: ['react', 'react-dom'],
+          firebase: ['firebase/app', 'firebase/firestore']
         }
       }
     }
