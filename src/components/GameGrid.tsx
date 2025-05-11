@@ -11,10 +11,10 @@ interface GameGridProps {
   showWrongTaps?: boolean;
 }
 
-const GameGrid: React.FC<GameGridProps> = ({ 
-  onButtonClick, 
-  gameState, 
-  code, 
+const GameGrid: React.FC<GameGridProps> = ({
+  onButtonClick,
+  gameState,
+  code,
   userInput,
   isPlayerWinner,
   gridSymbols,
@@ -34,7 +34,7 @@ const GameGrid: React.FC<GameGridProps> = ({
   // Determine if a symbol is part of the wrong input
   const isWrongInput = (symbol: string, index: number): boolean => {
     if (gameState !== 'result' || isPlayerWinner !== false) return false;
-    
+
     // Find the first incorrect input position
     let firstWrongIndex = -1;
     for (let i = 0; i < userInput.length; i++) {
@@ -43,7 +43,7 @@ const GameGrid: React.FC<GameGridProps> = ({
         break;
       }
     }
-    
+
     // If this is the wrong symbol that was tapped
     return firstWrongIndex >= 0 && index === gridSymbols.indexOf(userInput[firstWrongIndex]);
   };
@@ -64,28 +64,33 @@ const GameGrid: React.FC<GameGridProps> = ({
             </p>
             <div className="flex flex-wrap gap-4 justify-center text-4xl font-bold text-white">
               {code.map((symbol, idx) => (
-                <span key={idx}>{symbol}</span>
+                <span key={idx}>
+                  <img
+                    src={`/symbols/${symbol}`}
+                    alt={`Symbol ${idx + 1}`}
+                    className="w-10 h-10 object-contain inline-block"
+                  />
+                </span>
               ))}
             </div>
           </div>
         </div>
       )}
-      
+
       {gameState === 'result' && (
-        <div className={`absolute inset-0 flex items-center justify-center z-10 ${
-          isPlayerWinner === true ? 'bg-green-500/80' : 'bg-red-500/80'
-        } rounded-md`}>
+        <div className={`absolute inset-0 flex items-center justify-center z-10 ${isPlayerWinner === true ? 'bg-green-500/80' : 'bg-red-500/80'
+          } rounded-md`}>
           <div className="text-white text-2xl font-bold">
             {isPlayerWinner === true ? 'Correct!' : 'Wrong!'}
           </div>
         </div>
       )}
-      
+
       <div className="grid grid-cols-4 gap-2 max-w-[320px] mx-auto">
         {gridSymbols.map((symbol, index) => {
           // Determine cell color logic for wrong taps visualization
           let cellClassName = "w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center rounded-md shadow-md text-2xl transition-colors ";
-          
+
           if (showWrongTaps && isWrongInput(symbol, index)) {
             cellClassName += "bg-red-500 text-white";
           } else if (showWrongTaps && isCorrectCode(symbol)) {
@@ -95,7 +100,7 @@ const GameGrid: React.FC<GameGridProps> = ({
           } else {
             cellClassName += "bg-indigo-100 hover:bg-indigo-200 text-indigo-800";
           }
-          
+
           return (
             <button
               key={index}
@@ -104,23 +109,26 @@ const GameGrid: React.FC<GameGridProps> = ({
               disabled={gameState !== 'input'}
               aria-label={`Symbol ${index + 1}`}
             >
-              {symbol}
+              <img
+                src={`/symbols/${symbol}`}
+                alt={`Symbol ${index + 1}`}
+                className="w-10 h-10 object-contain"
+              />
             </button>
           );
         })}
       </div>
-      
+
       {gameState === 'input' && (
         <div className="mt-4 flex flex-col gap-2 items-center">
           <div className="flex justify-center gap-2">
             <div className="text-sm font-medium text-indigo-800">Progress:</div>
             <div className="flex gap-1">
               {code.map((_, idx) => (
-                <div 
-                  key={idx} 
-                  className={`w-6 h-6 rounded-full border-2 border-indigo-800 ${
-                    userInput[idx] ? 'bg-indigo-800' : 'bg-transparent'
-                  }`}
+                <div
+                  key={idx}
+                  className={`w-6 h-6 rounded-full border-2 border-indigo-800 ${userInput[idx] ? 'bg-indigo-800' : 'bg-transparent'
+                    }`}
                 />
               ))}
             </div>

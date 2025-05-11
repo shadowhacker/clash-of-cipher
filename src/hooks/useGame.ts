@@ -1,15 +1,56 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { toast } from "sonner";
+import { toast } from 'sonner';
 import { useGameLaunch } from './useGameLaunch.tsx';
 
-// Array of all available symbols
-const MASTER_SYMBOLS = ['▲', '●', '◆', '★', '☆', '■', '✦', '✿', '♣', '♥', '☀', '☂'];
+// Array of all available symbol image filenames
+const MASTER_SYMBOLS = [
+  'symbol-1.png',
+  'symbol-2.png',
+  'symbol-3.png',
+  'symbol-4.png',
+  'symbol-5.png',
+  'symbol-6.png',
+  'symbol-7.png',
+  'symbol-8.png',
+  'symbol-9.png',
+  'symbol-10.png',
+  'symbol-11.png',
+  'symbol-12.png',
+  'symbol-13.png',
+  'symbol-14.png',
+  'symbol-15.png',
+  'symbol-16.png',
+  'symbol-17.png',
+  'symbol-18.png',
+  'symbol-19.png',
+  'symbol-20.png',
+  'symbol-21.png',
+  'symbol-22.png',
+  'symbol-23.png',
+  'symbol-24.png',
+  'symbol-25.png',
+  'symbol-26.png',
+  'symbol-27.png',
+  'symbol-28.png',
+  'symbol-29.png',
+  'symbol-30.png',
+  'symbol-31.png',
+  'symbol-32.png',
+  'symbol-33.png',
+  'symbol-34.png'
+];
 
 // Game states
 type GameState = 'idle' | 'showCode' | 'input' | 'result';
 
 // Color themes for different level milestones
-const THEMES = ['bg-amber-500', 'bg-emerald-500', 'bg-sky-500', 'bg-fuchsia-500', 'bg-rose-500'];
+const THEMES = [
+  'bg-amber-500',
+  'bg-emerald-500',
+  'bg-sky-500',
+  'bg-fuchsia-500',
+  'bg-rose-500'
+];
 
 // Hook for managing game state
 export const useGame = () => {
@@ -28,16 +69,16 @@ export const useGame = () => {
   const [timeLeft, setTimeLeft] = useState(10);
   const [gridSymbols, setGridSymbols] = useState<string[]>([]);
   const [showStartScreen, setShowStartScreen] = useState(true);
-  
+
   // New scoring system state
   const [totalScore, setTotalScore] = useState(0);
   const [currentStreak, setCurrentStreak] = useState(0);
   const [gems, setGems] = useState(0);
   const [showWrongTaps, setShowWrongTaps] = useState(false);
-  
+
   // Timer reference to track and clear intervals
   const timerRef = useRef<number | null>(null);
-  
+
   // Clear any existing timer
   const clearGameTimer = useCallback(() => {
     if (timerRef.current !== null) {
@@ -45,20 +86,20 @@ export const useGame = () => {
       timerRef.current = null;
     }
   }, []);
-  
+
   // Get current theme based on level
   const getCurrentTheme = useCallback((currentLevel: number) => {
     return THEMES[Math.floor((currentLevel - 1) / 10) % THEMES.length];
   }, []);
-  
+
   // Get current symbol pack based on level
   const getCurrentSymbolPack = useCallback((currentLevel: number) => {
     const packIndex = Math.floor((currentLevel - 1) / 7) % 2;
-    return packIndex === 0 
-      ? MASTER_SYMBOLS.slice(0, 8) 
+    return packIndex === 0
+      ? MASTER_SYMBOLS.slice(0, 8)
       : MASTER_SYMBOLS.slice(4, 12);
   }, []);
-  
+
   // Calculate code length based on level
   const getCodeLength = useCallback((currentLevel: number) => {
     const length = 2 + Math.floor((currentLevel - 1) / 4);
@@ -66,58 +107,68 @@ export const useGame = () => {
   }, []);
 
   // Calculate round score based on new formula
-  const calculateRoundScore = useCallback((round: number, codeLen: number, secondsRemaining: number, streak: number) => {
-    // Base points: (roundNumber ** 2) * codeLength
-    const basePts = Math.pow(round, 2) * codeLen;
-    
-    // Speed multiplier: 1 + (secondsLeft / 10) - ranges from 1.0 to 2.0
-    const speedMult = 1 + (secondsRemaining / 10);
-    
-    // Flawless multiplier: 1.25 ** currentStreak
-    const flawlessMult = Math.pow(1.25, streak);
-    
-    // Calculate round score
-    let roundScore = Math.floor(basePts * speedMult * flawlessMult);
-    
-    // Jackpot round: every 20th round adds 1000 bonus points
-    if (round % 20 === 0) {
-      roundScore += 1000;
-    }
-    
-    return {
-      roundScore,
-      speedMult,
-      flawlessMult
-    };
-  }, []);
-  
+  const calculateRoundScore = useCallback(
+    (
+      round: number,
+      codeLen: number,
+      secondsRemaining: number,
+      streak: number
+    ) => {
+      // Base points: (roundNumber ** 2) * codeLength
+      const basePts = Math.pow(round, 2) * codeLen;
+
+      // Speed multiplier: 1 + (secondsLeft / 10) - ranges from 1.0 to 2.0
+      const speedMult = 1 + secondsRemaining / 10;
+
+      // Flawless multiplier: 1.25 ** currentStreak
+      const flawlessMult = Math.pow(1.25, streak);
+
+      // Calculate round score
+      let roundScore = Math.floor(basePts * speedMult * flawlessMult);
+
+      // Jackpot round: every 20th round adds 1000 bonus points
+      if (round % 20 === 0) {
+        roundScore += 1000;
+      }
+
+      return {
+        roundScore,
+        speedMult,
+        flawlessMult
+      };
+    },
+    []
+  );
+
   // Game over function
   const gameOver = useCallback(() => {
     clearGameTimer();
     setIsPlayerWinner(false);
     setGameState('result');
-    
+
     // Update personal best if total score is higher
     if (totalScore > personalBest) {
       setPersonalBest(totalScore);
       localStorage.setItem('cipher-clash-best', totalScore.toString());
     }
-    
-    setTimeout(() => {
-      setShowGameOverModal(true);
-    }, showWrongTaps ? 2500 : 1000); // Longer delay if showing wrong taps
-    
+
+    setTimeout(
+      () => {
+        setShowGameOverModal(true);
+      },
+      showWrongTaps ? 2500 : 1000
+    ); // Longer delay if showing wrong taps
   }, [totalScore, personalBest, clearGameTimer, showWrongTaps]);
-  
+
   // Lose a life handler - define before any functions that use it
   const loseLife = useCallback(() => {
     clearGameTimer(); // Clear any existing timer first
-    
+
     // Reset streak when losing a life
     setCurrentStreak(0);
     setShowWrongTaps(true);
-    
-    setLives(prevLives => {
+
+    setLives((prevLives) => {
       const newLives = Math.max(prevLives - 1, 0);
       if (newLives === 0) {
         // Call gameOver directly here to avoid stale closure issues
@@ -131,23 +182,23 @@ export const useGame = () => {
       }
       return newLives;
     });
-    
+
     // Add a pause to make life loss more noticeable
     setGameState('result');
     setIsPlayerWinner(false);
     setTimeLeft(10); // Reset timer
-  }, [clearGameTimer, gameOver]); 
-  
+  }, [clearGameTimer, gameOver]);
+
   // Start input phase (renamed from flash-done callback)
   const startInputPhase = useCallback(() => {
     setGameState('input');
-    
+
     // Immediately start the timer as requested
     setTimeLeft(10);
     clearGameTimer();
-    
+
     timerRef.current = window.setInterval(() => {
-      setTimeLeft(prev => {
+      setTimeLeft((prev) => {
         if (prev <= 1) {
           clearGameTimer();
           loseLife(); // Handle timeout
@@ -157,49 +208,55 @@ export const useGame = () => {
       });
     }, 1000);
   }, [clearGameTimer, loseLife]);
-  
+
   // Restart the same level (on wrong input or timeout)
   const restartSameLevel = useCallback(() => {
     setUserInput([]);
     setGameState('showCode');
-    
+
     setTimeout(() => {
       startInputPhase();
     }, 1000);
   }, [startInputPhase]);
-  
+
   // Generate a grid ensuring all code symbols are included
-  const generateGrid = useCallback((symbolPack: string[], codeSequence: string[]) => {
-    // Start with a random grid from the symbol pack
-    const result: string[] = Array.from({ length: 16 }, () => {
-      const randomIndex = Math.floor(Math.random() * symbolPack.length);
-      return symbolPack[randomIndex];
-    });
-    
-    // Make sure all code symbols exist in the grid
-    codeSequence.forEach(symbol => {
-      // Check if symbol is already in the grid
-      if (!result.includes(symbol)) {
-        // Replace a random cell with this symbol
-        const randomCellIndex = Math.floor(Math.random() * result.length);
-        result[randomCellIndex] = symbol;
-      }
-    });
-    
-    return result;
-  }, []);
-  
+  const generateGrid = useCallback(
+    (symbolPack: string[], codeSequence: string[]) => {
+      // Start with a random grid from the symbol pack
+      const result: string[] = Array.from({ length: 16 }, () => {
+        const randomIndex = Math.floor(Math.random() * symbolPack.length);
+        return symbolPack[randomIndex];
+      });
+
+      // Make sure all code symbols exist in the grid
+      codeSequence.forEach((symbol) => {
+        // Check if symbol is already in the grid
+        if (!result.includes(symbol)) {
+          // Replace a random cell with this symbol
+          const randomCellIndex = Math.floor(Math.random() * result.length);
+          result[randomCellIndex] = symbol;
+        }
+      });
+
+      return result;
+    },
+    []
+  );
+
   // Generate a random code of symbols based on current level
-  const generateCode = useCallback((currentLevel: number) => {
-    const currentPack = getCurrentSymbolPack(currentLevel);
-    const codeLength = getCodeLength(currentLevel);
-    
-    return Array.from({ length: codeLength }, () => {
-      const randomIndex = Math.floor(Math.random() * currentPack.length);
-      return currentPack[randomIndex];
-    });
-  }, [getCurrentSymbolPack, getCodeLength]);
-  
+  const generateCode = useCallback(
+    (currentLevel: number) => {
+      const currentPack = getCurrentSymbolPack(currentLevel);
+      const codeLength = getCodeLength(currentLevel);
+
+      return Array.from({ length: codeLength }, () => {
+        const randomIndex = Math.floor(Math.random() * currentPack.length);
+        return currentPack[randomIndex];
+      });
+    },
+    [getCurrentSymbolPack, getCodeLength]
+  );
+
   // Calculate next milestone level
   const getNextMilestone = useCallback((currentLevel: number) => {
     const nextColor = Math.ceil((currentLevel + 1) / 10) * 10;
@@ -223,13 +280,13 @@ export const useGame = () => {
       setTimeLeft(10);
       setGridSymbols(generateGrid(currentPack, newCode));
       setShowStartScreen(false);
-      
+
       // Reset score system
       setTotalScore(0);
       setCurrentStreak(0);
       setGems(0);
       setShowWrongTaps(false);
-      
+
       // Show the code for 1000ms then start input phase
       setTimeout(() => {
         startInputPhase();
@@ -244,73 +301,103 @@ export const useGame = () => {
   }, [clearGameTimer, launchRun]);
 
   // Start next level
-  const startNextLevel = useCallback((newLevel: number) => {
-    clearGameTimer();
-    const newCode = generateCode(newLevel);
-    const currentPack = getCurrentSymbolPack(newLevel);
-    setCode(newCode);
-    setUserInput([]);
-    setLevel(newLevel);
-    setGameState('showCode');
-    setTimeLeft(10);
-    
-    // Generate a new grid for this level, ensuring all code symbols are included
-    setGridSymbols(generateGrid(currentPack, newCode));
-    
-    // Show the code for 1000ms then start input phase
-    setTimeout(() => {
-      startInputPhase();
-    }, 1000);
-  }, [generateCode, getCurrentSymbolPack, generateGrid, clearGameTimer, startInputPhase]);
+  const startNextLevel = useCallback(
+    (newLevel: number) => {
+      clearGameTimer();
+      const newCode = generateCode(newLevel);
+      const currentPack = getCurrentSymbolPack(newLevel);
+      setCode(newCode);
+      setUserInput([]);
+      setLevel(newLevel);
+      setGameState('showCode');
+      setTimeLeft(10);
+
+      // Generate a new grid for this level, ensuring all code symbols are included
+      setGridSymbols(generateGrid(currentPack, newCode));
+
+      // Show the code for 1000ms then start input phase
+      setTimeout(() => {
+        startInputPhase();
+      }, 1000);
+    },
+    [
+      generateCode,
+      getCurrentSymbolPack,
+      generateGrid,
+      clearGameTimer,
+      startInputPhase
+    ]
+  );
 
   // Handle user input - remove timer start on first input
-  const handleSymbolClick = useCallback((symbol: string) => {
-    if (gameState !== 'input') return;
-    
-    const newUserInput = [...userInput, symbol];
-    setUserInput(newUserInput);
-    
-    // If user has selected enough symbols, compare with code
-    if (newUserInput.length === code.length) {
-      clearGameTimer();
-      // Check if input matches the code exactly
-      const isCorrect = newUserInput.every((sym, i) => sym === code[i]);
-      
-      if (isCorrect) {
-        // User got it right
-        setIsPlayerWinner(true);
-        
-        // Increment streak
-        const newStreak = currentStreak + 1;
-        setCurrentStreak(newStreak);
-        
-        // Calculate score for this round
-        const secondsRemaining = timeLeft;
-        const { roundScore, speedMult } = calculateRoundScore(level, code.length, secondsRemaining, newStreak);
-        
-        // Update total score
-        setTotalScore(prev => prev + roundScore);
-        
-        // Show toast with score info
-        toast(
-          `+${roundScore} pts • x${speedMult.toFixed(1)} Speed • Streak ${newStreak}`, 
-          { duration: 1000 }
-        );
-        
-        // Show success result briefly
-        setGameState('result');
-        
-        // Auto advance to next level after 1 second
-        setTimeout(() => {
-          const nextLevel = level + 1;
-          startNextLevel(nextLevel);
-        }, 1000);
-      } else {
-        // User got it wrong
-        loseLife();
+  const handleSymbolClick = useCallback(
+    (symbol: string) => {
+      if (gameState !== 'input') return;
+
+      const newUserInput = [...userInput, symbol];
+      setUserInput(newUserInput);
+
+      // If user has selected enough symbols, compare with code
+      if (newUserInput.length === code.length) {
+        clearGameTimer();
+        // Check if input matches the code exactly
+        const isCorrect = newUserInput.every((sym, i) => sym === code[i]);
+
+        if (isCorrect) {
+          // User got it right
+          setIsPlayerWinner(true);
+
+          // Increment streak
+          const newStreak = currentStreak + 1;
+          setCurrentStreak(newStreak);
+
+          // Calculate score for this round
+          const secondsRemaining = timeLeft;
+          const { roundScore, speedMult } = calculateRoundScore(
+            level,
+            code.length,
+            secondsRemaining,
+            newStreak
+          );
+
+          // Update total score
+          setTotalScore((prev) => prev + roundScore);
+
+          // Show toast with score info
+          toast(
+            `+${roundScore} pts • x${speedMult.toFixed(
+              1
+            )} Speed • Streak ${newStreak}`,
+            { duration: 1000 }
+          );
+
+          // Show success result briefly
+          setGameState('result');
+
+          // Auto advance to next level after 1 second
+          setTimeout(() => {
+            const nextLevel = level + 1;
+            startNextLevel(nextLevel);
+          }, 1000);
+        } else {
+          // User got it wrong
+          loseLife();
+        }
       }
-    }
-  }, [gameState, userInput, code, level, timeLeft, loseLife, clearGameTimer, currentStreak, calculateRoundScore, startNextLevel]);
+    },
+    [
+      gameState,
+      userInput,
+      code,
+      level,
+      timeLeft,
+      loseLife,
+      clearGameTimer,
+      currentStreak,
+      calculateRoundScore,
+      startNextLevel
+    ]
+  );
 
   // Copy "share my best" text to clipboard
   const shareScore = useCallback(() => {
@@ -334,7 +421,7 @@ export const useGame = () => {
     setCurrentStreak(0);
     setShowWrongTaps(false);
   }, [clearGameTimer]);
-  
+
   // Dismiss start screen
   const dismissStartScreen = useCallback(() => {
     setShowStartScreen(false);
@@ -371,6 +458,6 @@ export const useGame = () => {
     currentStreak,
     gems,
     showWrongTaps,
-    Overlay,
+    Overlay
   };
 };
