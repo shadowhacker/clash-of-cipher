@@ -4,16 +4,17 @@ import AudioControls from './AudioControls';
 interface IntroScreenProps {
   onStartGame: () => void;
   onShowGuide: () => void;
+  forceUpdate?: boolean; // Optional prop to force refresh
 }
 
-const IntroScreen: React.FC<IntroScreenProps> = ({ onStartGame, onShowGuide }) => {
+const IntroScreen: React.FC<IntroScreenProps> = ({ onStartGame, onShowGuide, forceUpdate }) => {
   const [hasSeenGuide, setHasSeenGuide] = useState<boolean>(false);
 
   useEffect(() => {
     // Check if user has seen guide
     const seenGuide = localStorage.getItem('hasSeenGuide');
     setHasSeenGuide(!!seenGuide);
-  }, []);
+  }, [forceUpdate]); // Re-run effect when forceUpdate changes
 
   return (
     <div className="fixed inset-0 flex flex-col items-center justify-center bg-gradient-to-b from-indigo-900 to-indigo-800 text-white">
