@@ -23,8 +23,9 @@ const Index = () => {
   const [isFirstTimePlay, setIsFirstTimePlay] = useState(() => {
     return !localStorage.getItem('hasSeenGuide');
   });
-  
-  const { 
+  const [guideVisited, setGuideVisited] = useState(false);
+
+  const {
     gameState,
     level,
     personalBest,
@@ -98,11 +99,10 @@ const Index = () => {
   // Handle guide screen close for first-time users
   const handleGuideClose = () => {
     setShowGuide(false);
-    if (isFirstTimePlay) {
-      localStorage.setItem('hasSeenGuide', 'true');
-      setIsFirstTimePlay(false);
-      // Note: We don't automatically start the game after closing guide
-    }
+    localStorage.setItem('hasSeenGuide', 'true');
+    setIsFirstTimePlay(false);
+    // Force IntroScreen to rerender
+    setGuideVisited(prev => !prev);
   };
 
   // Handle game over modal close
@@ -113,12 +113,13 @@ const Index = () => {
   if (showStartScreen) {
     return (
       <>
-        <IntroScreen 
+        <IntroScreen
           onStartGame={handleIntroStartGame}
           onShowGuide={handleIntroShowGuide}
+          forceUpdate={guideVisited}
         />
-        <GuideScreen 
-          open={showGuide} 
+        <GuideScreen
+          open={showGuide}
           onClose={handleGuideClose}
           isFirstTime={isFirstTimePlay}
         />
@@ -130,30 +131,30 @@ const Index = () => {
     <div className="min-h-screen bg-gradient-to-b from-indigo-50 to-purple-50 flex flex-col items-center justify-center p-4">
       {/* Theme Manager (handles body background) */}
       <ThemeManager currentTheme={currentTheme} />
-      
+
       {/* Sound Effects */}
-      <SoundEffects 
-        gameState={gameState} 
-        isPlayerWinner={isPlayerWinner} 
+      <SoundEffects
+        gameState={gameState}
+        isPlayerWinner={isPlayerWinner}
       />
-      
+
       {/* Player Name Dialog */}
-      <PlayerNameDialog 
-        open={showPlayerNameDialog} 
+      <PlayerNameDialog
+        open={showPlayerNameDialog}
         onSubmit={handlePlayerNameSubmit}
         onClose={() => {
           // If they dismiss without entering a name, we'll show it again later
           setShowPlayerNameDialog(false);
         }}
       />
-      
+
       <div className="w-full max-w-md">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-center text-indigo-800">🔮 Cipher Clash</h1>
           <div className="flex items-center space-x-2">
             <AudioControls />
             <Leaderboard personalBest={personalBest} />
-            <button 
+            <button
               onClick={() => setShowGuide(true)}
               className="p-2 rounded-full bg-indigo-100 hover:bg-indigo-200 text-indigo-800"
               aria-label="How to Play"
@@ -164,13 +165,13 @@ const Index = () => {
         </div>
 
         {/* Life Warning */}
-        <LifeWarning 
-          lives={lives} 
-          gameState={gameState} 
-          isPlayerWinner={isPlayerWinner} 
+        <LifeWarning
+          lives={lives}
+          gameState={gameState}
+          isPlayerWinner={isPlayerWinner}
         />
 
-        <GameStatus 
+        <GameStatus
           gameState={gameState}
           level={level}
           personalBest={personalBest}
@@ -185,10 +186,10 @@ const Index = () => {
           onOpenGuide={() => setShowGuide(true)}
           playerName={getPlayerName()}
         />
-        
+
         <AudioInitializer onSymbolClick={handleSymbolClick}>
-          <GameGrid 
-            onButtonClick={(symbol) => {}} // This prop will be overridden by AudioInitializer
+          <GameGrid
+            onButtonClick={(symbol) => { }} // This prop will be overridden by AudioInitializer
             gameState={gameState}
             code={code}
             userInput={userInput}
@@ -201,7 +202,7 @@ const Index = () => {
 
         {gameState === 'idle' && (
           <div className="mt-6 flex justify-center">
-            <Button 
+            <Button
               onClick={startGame}
               className={`${themeClasses} text-lg px-8 py-6`}
             >
@@ -209,7 +210,7 @@ const Index = () => {
             </Button>
           </div>
         )}
-        
+
         <GameOverModal
           level={level}
           personalBest={personalBest}
@@ -219,9 +220,9 @@ const Index = () => {
           totalScore={totalScore}
           onClose={handleGameOverClose}
         />
-        
-        <GuideScreen 
-          open={showGuide} 
+
+        <GuideScreen
+          open={showGuide}
           onClose={handleGuideClose}
           isFirstTime={isFirstTimePlay}
         />
