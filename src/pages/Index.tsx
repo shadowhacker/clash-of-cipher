@@ -67,7 +67,7 @@ const Index = () => {
         setShowPlayerNameDialog(true);
       }
     }
-  }, []);
+  }, [showStartScreen]);
 
   // Handle player name submission
   const handlePlayerNameSubmit = (name: string) => {
@@ -78,14 +78,29 @@ const Index = () => {
     }
   };
 
-  // Handle start screen dismissal
-  const handleDismissStartScreen = () => {
+  // Handle intro screen start game
+  const handleIntroStartGame = () => {
     dismissStartScreen();
     const playerName = getPlayerName();
     if (!playerName) {
       setShowPlayerNameDialog(true);
     } else {
       startGame();
+    }
+  };
+
+  // Handle intro screen show guide
+  const handleIntroShowGuide = () => {
+    setShowGuide(true);
+  };
+
+  // Handle guide screen close for first-time users
+  const handleGuideClose = () => {
+    setShowGuide(false);
+    if (isFirstTimePlay) {
+      localStorage.setItem('hasSeenGuide', 'true');
+      setIsFirstTimePlay(false);
+      // Note: We don't automatically start the game after closing guide
     }
   };
 
@@ -96,10 +111,17 @@ const Index = () => {
 
   if (showStartScreen) {
     return (
-      <IntroScreen 
-        onStartGame={handleDismissStartScreen}
-        onShowGuide={() => setShowGuide(true)}
-      />
+      <>
+        <IntroScreen 
+          onStartGame={handleIntroStartGame}
+          onShowGuide={handleIntroShowGuide}
+        />
+        <GuideScreen 
+          open={showGuide} 
+          onClose={handleGuideClose}
+          isFirstTime={isFirstTimePlay}
+        />
+      </>
     );
   }
 
@@ -198,16 +220,8 @@ const Index = () => {
         
         <GuideScreen 
           open={showGuide} 
-          onClose={() => setShowGuide(false)}
+          onClose={handleGuideClose}
           isFirstTime={isFirstTimePlay}
-          onStartGame={() => {
-            if (isFirstTimePlay) {
-              localStorage.setItem('hasSeenGuide', 'true');
-              setIsFirstTimePlay(false);
-            }
-            setShowGuide(false);
-            startGame();
-          }}
         />
 
         {/* Game Launch Overlay */}
