@@ -23,7 +23,6 @@ const Index = () => {
   const [isFirstTimePlay, setIsFirstTimePlay] = useState(() => {
     return !localStorage.getItem('hasSeenGuide');
   });
-  const [guideVisited, setGuideVisited] = useState(false);
 
   const {
     gameState,
@@ -99,10 +98,7 @@ const Index = () => {
   // Handle guide screen close for first-time users
   const handleGuideClose = () => {
     setShowGuide(false);
-    localStorage.setItem('hasSeenGuide', 'true');
     setIsFirstTimePlay(false);
-    // Force IntroScreen to rerender
-    setGuideVisited(prev => !prev);
   };
 
   // Handle game over modal close
@@ -116,7 +112,6 @@ const Index = () => {
         <IntroScreen
           onStartGame={handleIntroStartGame}
           onShowGuide={handleIntroShowGuide}
-          forceUpdate={guideVisited}
         />
         <GuideScreen
           open={showGuide}
