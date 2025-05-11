@@ -6,6 +6,7 @@ import {
   DialogTitle,
   DialogFooter,
   DialogClose,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { toast } from "sonner";
@@ -74,6 +75,9 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
             <DialogTitle className="text-center text-xl flex items-center justify-center gap-2">
               <Trophy className="h-5 w-5" /> Game Over
             </DialogTitle>
+            <DialogDescription className="text-center">
+              Your game has ended. Here's how you did.
+            </DialogDescription>
           </DialogHeader>
           <div className="py-4 text-center">
             <p className="text-lg mb-2">
@@ -103,10 +107,13 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
               <span className="block text-3xl mb-2">🎉</span>
               Challenge your friends!
             </DialogTitle>
+            <DialogDescription className="text-center">
+              Your score has been copied to clipboard. Share it with friends.
+            </DialogDescription>
           </DialogHeader>
           <div className="py-4 text-center">
             <p className="text-md mb-4 bg-indigo-50 p-3 rounded-md border border-indigo-100">
-              I just scored {totalScore} points on Round {level} of Cipher Clash!<br/>
+              I just scored {totalScore} points on Round {level} of Cipher Clash!<br />
               Think you can beat me? Play → https://clash-of-cipher.lovable.app/
             </p>
             <p className="text-green-600 text-sm flex items-center justify-center">

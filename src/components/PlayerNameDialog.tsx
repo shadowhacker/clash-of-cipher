@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import {
   Dialog,
@@ -6,6 +5,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,23 +23,39 @@ const PlayerNameDialog: React.FC<PlayerNameDialogProps> = ({ open, onSubmit, onC
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (name.trim()) {
+      console.log('Dialog form submitted with name:', name);
       onSubmit(name);
+      // Reset name field after submission
+      setName('');
+    }
+  };
+
+  // This will be called when the dialog is closed without form submission
+  const handleOpenChange = (isOpen: boolean) => {
+    if (!isOpen) {
+      console.log('Dialog closed via escape/click outside');
+      onClose();
+      // Reset name field
+      setName('');
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-center text-xl">Enter Your Name</DialogTitle>
+          <DialogDescription className="text-center">
+            Enter a name or nickname to identify yourself in the game.
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="py-4">
           <div className="grid gap-4">
             <div className="grid gap-2">
               <Label htmlFor="name">How should we call you?</Label>
-              <Input 
+              <Input
                 id="name"
-                placeholder="Your name or nickname" 
+                placeholder="Your name or nickname"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 autoFocus
