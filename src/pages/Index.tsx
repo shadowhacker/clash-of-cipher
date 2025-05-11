@@ -3,22 +3,21 @@ import { useGame } from '../hooks/useGame';
 import { getPlayerName, savePlayerName } from '../utils/deviceStorage';
 import IntroScreen from '../components/IntroScreen';
 import GuideScreen from '../components/GuideScreen';
-import GameGrid from '../components/GameGrid';
-import GameStatus from '../components/GameStatus';
 import GameOverModal from '../components/GameOverModal';
 import AudioControls from '../components/AudioControls';
-import { Button } from '../components/ui/button';
-import { HelpCircle } from 'lucide-react';
 import AudioInitializer from '../components/AudioInitializer';
 import SoundEffects from '../components/SoundEffects';
 import ThemeManager from '../components/ThemeManager';
 import PlayerNameDialog from '../components/PlayerNameDialog';
 import Leaderboard from '../components/Leaderboard';
 import LifeWarning from '../components/LifeWarning';
+import HeaderControls from '../components/HeaderControls';
+import GameContainer from '../components/GameContainer';
+import { useGameLayout } from '../hooks/useGameLayout';
 
 const Index = () => {
+  // State for UI management
   const [showGuide, setShowGuide] = useState(false);
-  const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showPlayerNameDialog, setShowPlayerNameDialog] = useState(false);
   const [isFirstTimePlay, setIsFirstTimePlay] = useState(() => {
     return !localStorage.getItem('hasSeenGuide');
@@ -155,17 +154,10 @@ const Index = () => {
       <div className="w-full max-w-md">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-center text-indigo-800">🔮 Cipher Clash</h1>
-          <div className="flex items-center space-x-2">
-            <AudioControls />
-            <Leaderboard personalBest={personalBest} />
-            <button
-              onClick={() => setShowGuide(true)}
-              className="p-2 rounded-full bg-indigo-100 hover:bg-indigo-200 text-indigo-800"
-              aria-label="How to Play"
-            >
-              <HelpCircle className="w-5 h-5" />
-            </button>
-          </div>
+          <HeaderControls 
+            onOpenGuide={() => setShowGuide(true)}
+            personalBest={personalBest}
+          />
         </div>
 
         {/* Life Warning */}
@@ -175,45 +167,30 @@ const Index = () => {
           isPlayerWinner={isPlayerWinner}
         />
 
-        <GameStatus
+        <GameContainer
           gameState={gameState}
           level={level}
           personalBest={personalBest}
+          code={code}
+          userInput={userInput}
+          isPlayerWinner={isPlayerWinner}
+          showGameOverModal={showGameOverModal}
           lives={lives}
           timeLeft={timeLeft}
+          currentSymbolPack={currentSymbolPack}
+          currentTheme={currentTheme}
+          gridSymbols={gridSymbols}
+          themeClasses={themeClasses}
+          handleSymbolClick={handleSymbolClick}
           startGame={startGame}
           resetGame={resetGame}
-          currentTheme={currentTheme}
           nextMilestone={nextMilestone}
           totalScore={totalScore}
-          onOpenLeaderboard={() => setShowLeaderboard(true)}
-          onOpenGuide={() => setShowGuide(true)}
+          currentStreak={currentStreak}
+          showWrongTaps={showWrongTaps}
           playerName={getPlayerName()}
+          onOpenGuide={() => setShowGuide(true)}
         />
-
-        <AudioInitializer onSymbolClick={handleSymbolClick}>
-          <GameGrid
-            onButtonClick={(symbol) => { }} // This prop will be overridden by AudioInitializer
-            gameState={gameState}
-            code={code}
-            userInput={userInput}
-            isPlayerWinner={isPlayerWinner}
-            currentSymbolPack={currentSymbolPack}
-            gridSymbols={gridSymbols}
-            showWrongTaps={showWrongTaps}
-          />
-        </AudioInitializer>
-
-        {gameState === 'idle' && (
-          <div className="mt-6 flex justify-center">
-            <Button
-              onClick={startGame}
-              className={`${themeClasses} text-lg px-8 py-6`}
-            >
-              Start Game
-            </Button>
-          </div>
-        )}
 
         <GameOverModal
           level={level}

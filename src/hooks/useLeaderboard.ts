@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { getDeviceId, getPlayerName, savePlayerName } from '@/utils/deviceStorage';
@@ -18,12 +17,10 @@ export const useLeaderboard = (personalBest: number) => {
   const [playerName, setPlayerName] = useState<string | null>(null);
   const [showNamePrompt, setShowNamePrompt] = useState(false);
   
-  // Load player name and leaderboard on initial render
   useEffect(() => {
     const storedName = getPlayerName();
     setPlayerName(storedName);
     
-    // If no name is stored, we'll need to prompt for one
     if (!storedName && personalBest > 0) {
       setShowNamePrompt(true);
     }
@@ -31,14 +28,12 @@ export const useLeaderboard = (personalBest: number) => {
     fetchLeaderboard();
   }, []);
 
-  // Update the leaderboard entry when personal best changes
   useEffect(() => {
     if (personalBest > 0 && playerName) {
       updateLeaderboardEntry(playerName, personalBest);
     }
   }, [personalBest, playerName]);
 
-  // Fetch leaderboard data from Supabase
   const fetchLeaderboard = async () => {
     setLoading(true);
     try {
@@ -46,7 +41,7 @@ export const useLeaderboard = (personalBest: number) => {
         .from('leaderboard')
         .select('*')
         .order('best', { ascending: false })
-        .limit(10);
+        .limit(50);
         
       if (error) {
         console.error('Error fetching leaderboard:', error);
@@ -60,12 +55,10 @@ export const useLeaderboard = (personalBest: number) => {
     }
   };
 
-  // Update or create a leaderboard entry
   const updateLeaderboardEntry = async (name: string, score: number) => {
     const deviceId = getDeviceId();
     
     try {
-      // First, check if an entry already exists for this device
       const { data: existingEntries } = await supabase
         .from('leaderboard')
         .select('id, best')
@@ -75,7 +68,6 @@ export const useLeaderboard = (personalBest: number) => {
       if (existingEntries && existingEntries.length > 0) {
         const currentEntry = existingEntries[0];
         
-        // Only update if the new score is higher than the existing one
         if (score > currentEntry.best) {
           await supabase
             .from('leaderboard')
@@ -86,11 +78,9 @@ export const useLeaderboard = (personalBest: number) => {
             })
             .eq('device_id', deviceId);
           
-          // Refresh the leaderboard
           fetchLeaderboard();
         }
       } else {
-        // No existing entry for this device, create a new one
         await supabase
           .from('leaderboard')
           .insert([{ 
@@ -99,7 +89,6 @@ export const useLeaderboard = (personalBest: number) => {
             device_id: deviceId
           }]);
         
-        // Refresh the leaderboard
         fetchLeaderboard();
       }
     } catch (err) {
@@ -107,7 +96,6 @@ export const useLeaderboard = (personalBest: number) => {
     }
   };
 
-  // Save player name
   const submitPlayerName = (name: string) => {
     if (name && name.trim()) {
       const trimmedName = name.trim();
@@ -115,7 +103,6 @@ export const useLeaderboard = (personalBest: number) => {
       setPlayerName(trimmedName);
       setShowNamePrompt(false);
       
-      // Update the leaderboard with the new name and current score
       if (personalBest > 0) {
         updateLeaderboardEntry(trimmedName, personalBest);
       }
