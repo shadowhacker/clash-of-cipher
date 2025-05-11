@@ -8,7 +8,6 @@ import SoundEffects from '../components/SoundEffects';
 import ThemeManager from '../components/ThemeManager';
 import LifeWarning from '../components/LifeWarning';
 import AudioInitializer from '../components/AudioInitializer';
-import Leaderboard from '../components/Leaderboard';
 import PlayerNameDialog from '../components/PlayerNameDialog';
 import { useGame } from '../hooks/useGame';
 import { HelpCircle } from 'lucide-react';
@@ -18,15 +17,14 @@ import IntroScreen from '../components/IntroScreen';
 import GuideScreen from '../components/GuideScreen';
 import CountdownOverlay from '../components/CountdownOverlay';
 import LoadingScreen from '../components/LoadingScreen';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '../lib/firebase';
+
+const DEFAULT_SYMBOLS = ['▲', '●', '◆', '★', '☆', '■', '✦', '✿'];
 
 const Index = () => {
   const [showIntro, setShowIntro] = useState(true);
   const [showGuideScreen, setShowGuideScreen] = useState(false);
   const [showCountdown, setShowCountdown] = useState(false);
   const [hasSeenGuide, setHasSeenGuide] = useState(() => !!localStorage.getItem('hasSeenGuide'));
-  const [showLeaderboard, setShowLeaderboard] = React.useState(false);
   const [showPlayerNameDialog, setShowPlayerNameDialog] = React.useState(false);
   const [isFirstTimePlay, setIsFirstTimePlay] = React.useState(() => {
     return !localStorage.getItem('cipher-clash-first-play');
@@ -107,10 +105,12 @@ const Index = () => {
   const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
   const runCountdown = async (numbers: (number | string)[]) => {
+    setShowCountdown(true);
     for (const num of numbers) {
       setOverlay(<CountdownOverlay count={num} />);
       await sleep(1000);
     }
+    setShowCountdown(false);
   };
 
   const beginNewRunCore = () => {
@@ -159,18 +159,6 @@ const Index = () => {
   const advanceRound = () => {
     const roundTime = 10 - timeLeft;
     setFastest(t => t === 0 ? roundTime : Math.min(t, roundTime));
-    
-    // Persist fastest time with score
-    const playerId = getDeviceId();
-    const name = getPlayerName();
-    if (playerId && name) {
-      setDoc(doc(db, 'scores', playerId), {
-        name,
-        bestScore: personalBest,
-        fastest,
-        ts: serverTimestamp()
-      }, { merge: true });
-    }
   };
 
   if (showIntro) {
@@ -186,7 +174,6 @@ const Index = () => {
           isFirstTime={!hasSeenGuide}
           onStart={handleGuideStart}
         />
-        {showCountdown && <CountdownOverlay onComplete={handleCountdownComplete} />}
       </>
     );
   }
@@ -216,7 +203,6 @@ const Index = () => {
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-center text-indigo-800">🔮 Cipher Clash</h1>
           <div className="flex items-center space-x-2">
-            <Leaderboard personalBest={personalBest} />
             <button 
               onClick={handleShowGuide}
               className="p-2 rounded-full bg-indigo-100 hover:bg-indigo-200 text-indigo-800"
@@ -245,7 +231,6 @@ const Index = () => {
           currentTheme={currentTheme}
           nextMilestone={nextMilestone}
           totalScore={totalScore}
-          onOpenLeaderboard={() => setShowLeaderboard(true)}
           playerName={getPlayerName()}
         />
         
@@ -283,7 +268,7 @@ const Index = () => {
           onClose={handleGameOverClose}
         />
         
-        {showCountdown && <CountdownOverlay onComplete={handleCountdownComplete} />}
+        {overlay}
       </div>
     </div>
   );
