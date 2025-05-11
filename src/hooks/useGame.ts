@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { toast } from "sonner";
+import { useGameLaunch } from './useGameLaunch.tsx';
 
 // Array of all available symbols
 const MASTER_SYMBOLS = ['▲', '●', '◆', '★', '☆', '■', '✦', '✿', '♣', '♥', '☀', '☂'];
@@ -206,33 +207,41 @@ export const useGame = () => {
     return Math.min(nextColor, nextPack);
   }, []);
 
-  // Start a new game
+  // Initialize game launch hook
+  const { launchRun, Overlay } = useGameLaunch({
+    onLaunchComplete: () => {
+      // Start the first round after countdown
+      const initialLevel = 1;
+      const newCode = generateCode(initialLevel);
+      const currentPack = getCurrentSymbolPack(initialLevel);
+      setCode(newCode);
+      setUserInput([]);
+      setLevel(initialLevel);
+      setGameState('showCode');
+      setShowGameOverModal(false);
+      setLives(2);
+      setTimeLeft(10);
+      setGridSymbols(generateGrid(currentPack, newCode));
+      setShowStartScreen(false);
+      
+      // Reset score system
+      setTotalScore(0);
+      setCurrentStreak(0);
+      setGems(0);
+      setShowWrongTaps(false);
+      
+      // Show the code for 1000ms then start input phase
+      setTimeout(() => {
+        startInputPhase();
+      }, 1000);
+    }
+  });
+
+  // Update startGame to use launchRun
   const startGame = useCallback(() => {
     clearGameTimer();
-    const initialLevel = 1;
-    const newCode = generateCode(initialLevel);
-    const currentPack = getCurrentSymbolPack(initialLevel);
-    setCode(newCode);
-    setUserInput([]);
-    setLevel(initialLevel);
-    setGameState('showCode');
-    setShowGameOverModal(false);
-    setLives(2);
-    setTimeLeft(10);
-    setGridSymbols(generateGrid(currentPack, newCode));
-    setShowStartScreen(false);
-    
-    // Reset score system
-    setTotalScore(0);
-    setCurrentStreak(0);
-    setGems(0);
-    setShowWrongTaps(false);
-    
-    // Show the code for 1000ms then start input phase
-    setTimeout(() => {
-      startInputPhase();
-    }, 1000);
-  }, [generateCode, getCurrentSymbolPack, generateGrid, clearGameTimer, startInputPhase]);
+    launchRun();
+  }, [clearGameTimer, launchRun]);
 
   // Start next level
   const startNextLevel = useCallback((newLevel: number) => {
@@ -361,6 +370,7 @@ export const useGame = () => {
     totalScore,
     currentStreak,
     gems,
-    showWrongTaps
+    showWrongTaps,
+    Overlay,
   };
 };

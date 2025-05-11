@@ -1,26 +1,26 @@
 import React, { useState, useEffect } from 'react';
+import { useGame } from '../hooks/useGame';
+import { getPlayerName, savePlayerName } from '../utils/deviceStorage';
+import IntroScreen from '../components/IntroScreen';
+import GuideScreen from '../components/GuideScreen';
 import GameGrid from '../components/GameGrid';
 import GameStatus from '../components/GameStatus';
 import GameOverModal from '../components/GameOverModal';
-import HowToPlayGuide from '../components/HowToPlayGuide';
-import StartScreen from '../components/StartScreen';
+import { Button } from '../components/ui/button';
+import { HelpCircle } from 'lucide-react';
+import AudioInitializer from '../components/AudioInitializer';
 import SoundEffects from '../components/SoundEffects';
 import ThemeManager from '../components/ThemeManager';
-import LifeWarning from '../components/LifeWarning';
-import AudioInitializer from '../components/AudioInitializer';
-import Leaderboard from '../components/Leaderboard';
 import PlayerNameDialog from '../components/PlayerNameDialog';
-import { useGame } from '../hooks/useGame';
-import { HelpCircle } from 'lucide-react';
-import { getPlayerName, savePlayerName, getDeviceId } from '../utils/deviceStorage';
-import { Button } from '../components/ui/button';
+import Leaderboard from '../components/Leaderboard';
+import LifeWarning from '../components/LifeWarning';
 
 const Index = () => {
-  const [showGuide, setShowGuide] = React.useState(false);
-  const [showLeaderboard, setShowLeaderboard] = React.useState(false);
-  const [showPlayerNameDialog, setShowPlayerNameDialog] = React.useState(false);
-  const [isFirstTimePlay, setIsFirstTimePlay] = React.useState(() => {
-    return !localStorage.getItem('cipher-clash-first-play');
+  const [showGuide, setShowGuide] = useState(false);
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [showPlayerNameDialog, setShowPlayerNameDialog] = useState(false);
+  const [isFirstTimePlay, setIsFirstTimePlay] = useState(() => {
+    return !localStorage.getItem('hasSeenGuide');
   });
   
   const { 
@@ -45,7 +45,8 @@ const Index = () => {
     nextMilestone,
     totalScore,
     currentStreak,
-    showWrongTaps
+    showWrongTaps,
+    Overlay
   } = useGame();
 
   // Theme classes for buttons
@@ -93,21 +94,13 @@ const Index = () => {
     resetGame();
   };
 
-  // Handle delayed start for first-time players
-  const handleDelayedStart = () => {
-    if (isFirstTimePlay) {
-      localStorage.setItem('cipher-clash-first-play', 'true');
-      setIsFirstTimePlay(false);
-      setTimeout(() => {
-        startGame();
-      }, 2500); // 2.5 second delay
-    } else {
-      startGame();
-    }
-  };
-
   if (showStartScreen) {
-    return <StartScreen onStart={handleDismissStartScreen} />;
+    return (
+      <IntroScreen 
+        onStartGame={handleDismissStartScreen}
+        onShowGuide={() => setShowGuide(true)}
+      />
+    );
   }
 
   return (
@@ -185,7 +178,7 @@ const Index = () => {
         {gameState === 'idle' && (
           <div className="mt-6 flex justify-center">
             <Button 
-              onClick={handleDelayedStart}
+              onClick={startGame}
               className={`${themeClasses} text-lg px-8 py-6`}
             >
               Start Game
@@ -203,10 +196,22 @@ const Index = () => {
           onClose={handleGameOverClose}
         />
         
-        <HowToPlayGuide 
+        <GuideScreen 
           open={showGuide} 
-          onClose={() => setShowGuide(false)} 
+          onClose={() => setShowGuide(false)}
+          isFirstTime={isFirstTimePlay}
+          onStartGame={() => {
+            if (isFirstTimePlay) {
+              localStorage.setItem('hasSeenGuide', 'true');
+              setIsFirstTimePlay(false);
+            }
+            setShowGuide(false);
+            startGame();
+          }}
         />
+
+        {/* Game Launch Overlay */}
+        <Overlay />
       </div>
     </div>
   );
