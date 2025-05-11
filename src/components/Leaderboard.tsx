@@ -8,12 +8,11 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Share2, Trophy, User } from 'lucide-react';
+import { Share2, Trophy } from 'lucide-react';
 import { toast } from '@/components/ui/sonner';
 import { useLeaderboard } from '@/hooks/useLeaderboard';
 import { getDeviceId } from '@/utils/deviceStorage';
 import PlayerNameDialog from './PlayerNameDialog';
-import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface LeaderboardProps {
@@ -33,9 +32,9 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ personalBest }) => {
     submitPlayerName
   } = useLeaderboard(personalBest);
 
-  // Find user's position in the leaderboard
-  const userRank = leaderboard.findIndex(entry => entry.device_id === deviceId) + 1;
-  const userEntry = leaderboard.find(entry => entry.device_id === deviceId);
+  // Safely find user's position in the leaderboard
+  const userRank = leaderboard?.findIndex(entry => entry?.device_id === deviceId) ?? -1;
+  const userEntry = leaderboard?.find(entry => entry?.device_id === deviceId);
 
   // Handle sharing a specific player's score
   const sharePlayerScore = (name: string, rank: number, best: number) => {
@@ -79,7 +78,8 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ personalBest }) => {
                   <div></div>
                 </div>
 
-                {leaderboard.map((entry, index) => {
+                {Array.isArray(leaderboard) && leaderboard.map((entry, index) => {
+                  if (!entry) return null;
                   const isCurrentPlayer = entry.device_id === deviceId;
                   return (
                     <div key={entry.id} className="contents">
@@ -105,9 +105,10 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ personalBest }) => {
                         )}
                       </div>
                     </div>
-                  ))}
+                  );
+                })}
 
-                {leaderboard.length === 0 && (
+                {(!Array.isArray(leaderboard) || leaderboard.length === 0) && (
                   <div className="col-span-4 text-center py-4 text-gray-500">
                     No scores yet! Be the first to claim your spot.
                   </div>
