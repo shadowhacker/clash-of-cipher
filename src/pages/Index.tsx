@@ -72,20 +72,31 @@ const Index = () => {
 
   // Handle player name submission
   const handlePlayerNameSubmit = (name: string) => {
+    console.log('Name submitted:', name);
     savePlayerName(name);
     setShowPlayerNameDialog(false);
-    if (gameState === 'idle') {
+
+    // If we're on the intro screen, proceed with dismissing it and starting the game
+    if (showStartScreen) {
+      console.log('On start screen, dismissing and starting game');
+      dismissStartScreen();
+      startGame();
+    } else if (gameState === 'idle') {
+      console.log('In idle state, starting game');
+      // Otherwise, just start the game if we're in idle state
       startGame();
     }
   };
 
   // Handle intro screen start game
   const handleIntroStartGame = () => {
-    dismissStartScreen();
     const playerName = getPlayerName();
     if (!playerName) {
+      // We need to get the player name first
       setShowPlayerNameDialog(true);
     } else {
+      // Already have a name, proceed directly
+      dismissStartScreen();
       startGame();
     }
   };
@@ -118,6 +129,14 @@ const Index = () => {
           onClose={handleGuideClose}
           isFirstTime={isFirstTimePlay}
         />
+        <PlayerNameDialog
+          open={showPlayerNameDialog}
+          onSubmit={handlePlayerNameSubmit}
+          onClose={() => {
+            // Just hide the dialog if they dismiss without entering a name
+            setShowPlayerNameDialog(false);
+          }}
+        />
       </>
     );
   }
@@ -131,16 +150,6 @@ const Index = () => {
       <SoundEffects
         gameState={gameState}
         isPlayerWinner={isPlayerWinner}
-      />
-
-      {/* Player Name Dialog */}
-      <PlayerNameDialog
-        open={showPlayerNameDialog}
-        onSubmit={handlePlayerNameSubmit}
-        onClose={() => {
-          // If they dismiss without entering a name, we'll show it again later
-          setShowPlayerNameDialog(false);
-        }}
       />
 
       <div className="w-full max-w-md">

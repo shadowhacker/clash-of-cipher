@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import {
   Dialog,
@@ -23,12 +22,25 @@ const PlayerNameDialog: React.FC<PlayerNameDialogProps> = ({ open, onSubmit, onC
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (name.trim()) {
+      console.log('Dialog form submitted with name:', name);
       onSubmit(name);
+      // Reset name field after submission
+      setName('');
+    }
+  };
+
+  // This will be called when the dialog is closed without form submission
+  const handleOpenChange = (isOpen: boolean) => {
+    if (!isOpen) {
+      console.log('Dialog closed via escape/click outside');
+      onClose();
+      // Reset name field
+      setName('');
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-center text-xl">Enter Your Name</DialogTitle>
@@ -37,9 +49,9 @@ const PlayerNameDialog: React.FC<PlayerNameDialogProps> = ({ open, onSubmit, onC
           <div className="grid gap-4">
             <div className="grid gap-2">
               <Label htmlFor="name">How should we call you?</Label>
-              <Input 
+              <Input
                 id="name"
-                placeholder="Your name or nickname" 
+                placeholder="Your name or nickname"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 autoFocus
