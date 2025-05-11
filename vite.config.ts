@@ -11,7 +11,6 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     react({
       jsxImportSource: 'react',
-      // Remove the invalid jsxRuntime property
     }),
     mode === 'development' && componentTagger(),
   ].filter(Boolean),
@@ -33,6 +32,9 @@ export default defineConfig(({ mode }) => ({
       },
       external: [
         '@rollup/rollup-linux-x64-gnu',
+        '@rollup/rollup-win32-x64-msvc',
+        '@rollup/rollup-darwin-x64',
+        '@rollup/rollup-darwin-arm64',
         'esbuild/bin/esbuild'
       ]
     },
