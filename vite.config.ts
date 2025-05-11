@@ -1,3 +1,4 @@
+
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react-swc';
 import path from 'node:path';
@@ -31,7 +32,8 @@ export default defineConfig(({ mode }) => ({
       },
       external: [
         '@rollup/rollup-linux-x64-gnu',
-        'esbuild/bin/esbuild'
+        'esbuild/bin/esbuild',
+        '@esbuild/linux-x64'
       ]
     },
   },
