@@ -11,7 +11,12 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     react({
       jsxRuntime: 'automatic',
-      jsxImportSource: 'react'
+      jsxImportSource: 'react',
+      babel: {
+        plugins: [
+          ['@babel/plugin-transform-react-jsx', { runtime: 'automatic' }]
+        ]
+      }
     }),
     mode === 'development' && componentTagger(),
   ].filter(Boolean),
@@ -22,6 +27,7 @@ export default defineConfig(({ mode }) => ({
   },
   optimizeDeps: {
     exclude: ['@rollup/rollup-linux-x64-gnu'],
+    include: ['react/jsx-runtime']
   },
   build: {
     commonjsOptions: {
