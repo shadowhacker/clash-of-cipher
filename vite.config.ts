@@ -1,4 +1,3 @@
-
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react-swc';
 import path from 'node:path';
@@ -9,19 +8,19 @@ process.env.ROLLUP_SKIP_NODEJS = 'true';
 
 export default defineConfig(({ mode }) => ({
   plugins: [
-    react({
-      jsxImportSource: 'react',
-    }),
+    react(),
     mode === 'development' && componentTagger(),
   ].filter(Boolean),
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
-      'react/jsx-runtime': 'react/jsx-runtime.js'
     },
   },
   optimizeDeps: {
-    include: ['react/jsx-runtime', 'react']
+    include: ['react', 'react-dom'],
+    esbuildOptions: {
+      jsx: 'automatic'
+    }
   },
   build: {
     rollupOptions: {
@@ -32,9 +31,6 @@ export default defineConfig(({ mode }) => ({
       },
       external: [
         '@rollup/rollup-linux-x64-gnu',
-        '@rollup/rollup-win32-x64-msvc',
-        '@rollup/rollup-darwin-x64',
-        '@rollup/rollup-darwin-arm64',
         'esbuild/bin/esbuild'
       ]
     },
