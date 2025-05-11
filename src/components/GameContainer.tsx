@@ -6,7 +6,7 @@ import { Button } from './ui/button';
 import AudioInitializer from './AudioInitializer';
 
 interface GameContainerProps {
-  gameState: 'idle' | 'showCode' | 'input' | 'result';
+  gameState: 'idle' | 'showCode' | 'showCode' | 'input' | 'result';
   level: number;
   personalBest: number;
   code: string[];
@@ -39,6 +39,7 @@ const GameContainer: React.FC<GameContainerProps> = ({
   isPlayerWinner,
   lives,
   timeLeft,
+  currentSymbolPack,
   currentTheme,
   gridSymbols,
   themeClasses,
@@ -76,7 +77,7 @@ const GameContainer: React.FC<GameContainerProps> = ({
           code={code}
           userInput={userInput}
           isPlayerWinner={isPlayerWinner}
-          currentSymbolPack={currentSymbolPack || []}
+          currentSymbolPack={currentSymbolPack}
           gridSymbols={gridSymbols}
           showWrongTaps={showWrongTaps}
           timeLeft={timeLeft}
