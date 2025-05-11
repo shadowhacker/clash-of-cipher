@@ -5,6 +5,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -44,6 +45,9 @@ const PlayerNameDialog: React.FC<PlayerNameDialogProps> = ({ open, onSubmit, onC
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-center text-xl">Enter Your Name</DialogTitle>
+          <DialogDescription className="text-center">
+            Enter a name or nickname to identify yourself in the game.
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="py-4">
           <div className="grid gap-4">

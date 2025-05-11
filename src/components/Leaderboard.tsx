@@ -5,6 +5,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Share2, Trophy, User } from 'lucide-react';
@@ -61,6 +62,9 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ personalBest }) => {
             <DialogTitle className="text-center text-xl">
               🏆 Hall of Heroes
             </DialogTitle>
+            <DialogDescription className="text-center">
+              See how your score compares with other players.
+            </DialogDescription>
           </DialogHeader>
           <div className="py-2">
             {loading ? (
