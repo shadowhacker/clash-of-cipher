@@ -8,6 +8,7 @@ import SoundEffects from '../components/SoundEffects';
 import ThemeManager from '../components/ThemeManager';
 import LifeWarning from '../components/LifeWarning';
 import AudioInitializer from '../components/AudioInitializer';
+import Leaderboard from '../components/Leaderboard';
 import PlayerNameDialog from '../components/PlayerNameDialog';
 import { useGame } from '../hooks/useGame';
 import { HelpCircle } from 'lucide-react';
@@ -16,21 +17,17 @@ import { Button } from '../components/ui/button';
 import IntroScreen from '../components/IntroScreen';
 import GuideScreen from '../components/GuideScreen';
 import CountdownOverlay from '../components/CountdownOverlay';
-import LoadingScreen from '../components/LoadingScreen';
-
-const DEFAULT_SYMBOLS = ['▲', '●', '◆', '★', '☆', '■', '✦', '✿'];
 
 const Index = () => {
   const [showIntro, setShowIntro] = useState(true);
   const [showGuideScreen, setShowGuideScreen] = useState(false);
   const [showCountdown, setShowCountdown] = useState(false);
   const [hasSeenGuide, setHasSeenGuide] = useState(() => !!localStorage.getItem('hasSeenGuide'));
+  const [showLeaderboard, setShowLeaderboard] = React.useState(false);
   const [showPlayerNameDialog, setShowPlayerNameDialog] = React.useState(false);
   const [isFirstTimePlay, setIsFirstTimePlay] = React.useState(() => {
     return !localStorage.getItem('cipher-clash-first-play');
   });
-  const [fastest, setFastest] = useState(0);
-  const [overlay, setOverlay] = useState<React.ReactNode>(null);
   
   const { 
     gameState,
@@ -102,38 +99,19 @@ const Index = () => {
     resetGame();
   };
 
-  const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
-  const runCountdown = async (numbers: (number | string)[]) => {
+  // Replace handleDelayedStart and related logic
+  const beginNewRun = () => {
     setShowCountdown(true);
-    for (const num of numbers) {
-      setOverlay(<CountdownOverlay count={num} />);
-      await sleep(1000);
-    }
+  };
+
+  const handleCountdownComplete = () => {
     setShowCountdown(false);
-  };
-
-  const beginNewRunCore = () => {
-    resetGame();
     startGame();
-  };
-
-  const launchRun = async () => {
-    // Phase 1: short loading splash
-    setOverlay(<LoadingScreen />);
-    await sleep(1000);
-
-    // Phase 2: 3-2-1-GO countdown
-    await runCountdown([3, 2, 1, 'GO!']);
-
-    // Phase 3: really start the first round
-    beginNewRunCore();
-    setOverlay(null);
   };
 
   const handleIntroStart = () => {
     setShowIntro(false);
-    launchRun();
+    beginNewRun();
   };
 
   const handleShowGuide = () => {
@@ -152,13 +130,7 @@ const Index = () => {
     localStorage.setItem('hasSeenGuide', 'true');
     setHasSeenGuide(true);
     setShowGuideScreen(false);
-    launchRun();
-  };
-
-  // Update advanceRound to track fastest time
-  const advanceRound = () => {
-    const roundTime = 10 - timeLeft;
-    setFastest(t => t === 0 ? roundTime : Math.min(t, roundTime));
+    beginNewRun();
   };
 
   if (showIntro) {
@@ -174,6 +146,7 @@ const Index = () => {
           isFirstTime={!hasSeenGuide}
           onStart={handleGuideStart}
         />
+        {showCountdown && <CountdownOverlay onComplete={handleCountdownComplete} />}
       </>
     );
   }
@@ -203,6 +176,7 @@ const Index = () => {
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-center text-indigo-800">🔮 Cipher Clash</h1>
           <div className="flex items-center space-x-2">
+            <Leaderboard personalBest={personalBest} />
             <button 
               onClick={handleShowGuide}
               className="p-2 rounded-full bg-indigo-100 hover:bg-indigo-200 text-indigo-800"
@@ -231,6 +205,7 @@ const Index = () => {
           currentTheme={currentTheme}
           nextMilestone={nextMilestone}
           totalScore={totalScore}
+          onOpenLeaderboard={() => setShowLeaderboard(true)}
           playerName={getPlayerName()}
         />
         
@@ -250,7 +225,7 @@ const Index = () => {
         {gameState === 'idle' && (
           <div className="mt-6 flex justify-center">
             <Button 
-              onClick={launchRun}
+              onClick={beginNewRun}
               className={`${themeClasses} text-lg px-8 py-6`}
             >
               Start Game
@@ -262,13 +237,13 @@ const Index = () => {
           level={level}
           personalBest={personalBest}
           open={showGameOverModal}
-          onRestart={launchRun}
+          onRestart={beginNewRun}
           onShare={shareScore}
           totalScore={totalScore}
           onClose={handleGameOverClose}
         />
         
-        {overlay}
+        {showCountdown && <CountdownOverlay onComplete={handleCountdownComplete} />}
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface GameGridProps {
   onButtonClick: (symbol: string) => void;
@@ -57,42 +57,45 @@ const GameGrid: React.FC<GameGridProps> = ({
   return (
     <div className="relative">
       {gameState === 'showCode' && (
-        <div className="absolute inset-0 flex items-center justify-center z-10 bg-black/90 rounded-lg pointer-events-none">
-          <div className="flex flex-wrap gap-4 max-w-xs justify-center shadow-2xl rounded-lg px-6 py-4">
-            {code.map((symbol, idx) => (
-              <span key={idx} className="text-5xl font-bold text-white">{symbol}</span>
-            ))}
+        <div className="absolute inset-0 flex items-center justify-center z-10 bg-black rounded-md pointer-events-none">
+          <div className="flex flex-col items-center flex-wrap gap-4 max-w-xs justify-center shadow-2xl rounded-lg px-6 py-4 text-4xl font-bold text-white">
+            <p className="text-sm uppercase tracking-wide text-amber-400 mb-2">
+              Memorise these!
+            </p>
+            <div className="flex flex-wrap gap-4 justify-center">
+              {code.map((symbol, idx) => (
+                <span key={idx} className="text-4xl text-white">{symbol}</span>
+              ))}
+            </div>
           </div>
         </div>
       )}
       
       {gameState === 'result' && (
         <div className={`absolute inset-0 flex items-center justify-center z-10 ${
-          isPlayerWinner === true ? 'bg-green-500/90' : 'bg-red-500/90'
-        } rounded-lg`}>
-          <div className="text-white text-3xl font-bold">
+          isPlayerWinner === true ? 'bg-green-500/80' : 'bg-red-500/80'
+        } rounded-md`}>
+          <div className="text-white text-2xl font-bold">
             {isPlayerWinner === true ? 'Correct!' : 'Wrong!'}
           </div>
         </div>
       )}
       
-      <div className="grid grid-cols-4 gap-2 bg-indigo-100 p-4 rounded-lg">
+      <div className="grid grid-cols-3 gap-2 bg-black p-4 rounded-lg">
         {gridSymbols.map((symbol, index) => (
           <button
             key={index}
             onClick={() => handleButtonClick(symbol, index)}
             className={`
-              w-[72px] h-[72px]
+              w-16 h-16 sm:w-20 sm:h-20
               flex items-center justify-center
-              bg-white border border-indigo-200
-              text-indigo-800 text-2xl font-bold
-              rounded-lg shadow-md
-              hover:bg-indigo-50
-              active:scale-95
-              transition-all duration-150
-              ${highlightedIndex === index ? 'scale-95 bg-indigo-50' : ''}
-              ${showWrongTaps && userInput[index] === symbol ? 'bg-green-500 text-white' : ''}
-              ${showWrongTaps && userInput[index] !== symbol ? 'bg-red-500 text-white' : ''}
+              bg-gray-700 border border-gray-600
+              text-white text-2xl font-bold
+              rounded-md shadow-inner
+              hover:bg-gray-600
+              transition-colors duration-150
+              ${showWrongTaps && userInput[index] === symbol ? 'bg-green-500' : ''}
+              ${showWrongTaps && userInput[index] !== symbol ? 'bg-red-600' : ''}
             `}
           >
             {symbol}

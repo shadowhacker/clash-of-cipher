@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { toast } from "sonner";
 
 // Array of all available symbols
-const MASTER_SYMBOLS = ['▲', '●', '◆', '★', '☆', '■', '✦', '✿'];
+const MASTER_SYMBOLS = ['▲', '●', '◆', '★', '☆', '■', '✦', '✿', '♣', '♥', '☀', '☂'];
 
 // Game states
 type GameState = 'idle' | 'showCode' | 'input' | 'result';
@@ -52,7 +52,10 @@ export const useGame = () => {
   
   // Get current symbol pack based on level
   const getCurrentSymbolPack = useCallback((currentLevel: number) => {
-    return MASTER_SYMBOLS;
+    const packIndex = Math.floor((currentLevel - 1) / 7) % 2;
+    return packIndex === 0 
+      ? MASTER_SYMBOLS.slice(0, 8) 
+      : MASTER_SYMBOLS.slice(4, 12);
   }, []);
   
   // Calculate code length based on level
