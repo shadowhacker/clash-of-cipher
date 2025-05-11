@@ -4,9 +4,6 @@ import react from '@vitejs/plugin-react-swc';
 import path from 'node:path';
 import { componentTagger } from "lovable-tagger";
 
-// Tell Rollup to skip trying to use Node.js modules
-process.env.ROLLUP_SKIP_NODEJS = 'true';
-
 export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
@@ -31,6 +28,7 @@ export default defineConfig(({ mode }) => ({
         warn(warning);
       },
       external: [
+        // Explicitly mark problematic native modules as external
         '@rollup/rollup-linux-x64-gnu',
         'esbuild/bin/esbuild',
         '@esbuild/linux-x64'
