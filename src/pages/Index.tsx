@@ -17,9 +17,6 @@ import { Button } from '../components/ui/button';
 import IntroScreen from '../components/IntroScreen';
 import GuideScreen from '../components/GuideScreen';
 import CountdownOverlay from '../components/CountdownOverlay';
-import LoadingScreen from '../components/LoadingScreen';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '../lib/firebase';
 
 const Index = () => {
   const [showIntro, setShowIntro] = useState(true);
@@ -31,8 +28,6 @@ const Index = () => {
   const [isFirstTimePlay, setIsFirstTimePlay] = React.useState(() => {
     return !localStorage.getItem('cipher-clash-first-play');
   });
-  const [fastest, setFastest] = useState(0);
-  const [overlay, setOverlay] = useState<React.ReactNode>(null);
   
   const { 
     gameState,
@@ -104,36 +99,19 @@ const Index = () => {
     resetGame();
   };
 
-  const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
-  const runCountdown = async (numbers: (number | string)[]) => {
-    for (const num of numbers) {
-      setOverlay(<CountdownOverlay count={num} />);
-      await sleep(1000);
-    }
+  // Replace handleDelayedStart and related logic
+  const beginNewRun = () => {
+    setShowCountdown(true);
   };
 
-  const beginNewRunCore = () => {
-    resetGame();
+  const handleCountdownComplete = () => {
+    setShowCountdown(false);
     startGame();
-  };
-
-  const launchRun = async () => {
-    // Phase 1: short loading splash
-    setOverlay(<LoadingScreen />);
-    await sleep(1000);
-
-    // Phase 2: 3-2-1-GO countdown
-    await runCountdown([3, 2, 1, 'GO!']);
-
-    // Phase 3: really start the first round
-    beginNewRunCore();
-    setOverlay(null);
   };
 
   const handleIntroStart = () => {
     setShowIntro(false);
-    launchRun();
+    beginNewRun();
   };
 
   const handleShowGuide = () => {
@@ -152,25 +130,7 @@ const Index = () => {
     localStorage.setItem('hasSeenGuide', 'true');
     setHasSeenGuide(true);
     setShowGuideScreen(false);
-    launchRun();
-  };
-
-  // Update advanceRound to track fastest time
-  const advanceRound = () => {
-    const roundTime = 10 - timeLeft;
-    setFastest(t => t === 0 ? roundTime : Math.min(t, roundTime));
-    
-    // Persist fastest time with score
-    const playerId = getDeviceId();
-    const name = getPlayerName();
-    if (playerId && name) {
-      setDoc(doc(db, 'scores', playerId), {
-        name,
-        bestScore: personalBest,
-        fastest,
-        ts: serverTimestamp()
-      }, { merge: true });
-    }
+    beginNewRun();
   };
 
   if (showIntro) {
@@ -265,7 +225,7 @@ const Index = () => {
         {gameState === 'idle' && (
           <div className="mt-6 flex justify-center">
             <Button 
-              onClick={launchRun}
+              onClick={beginNewRun}
               className={`${themeClasses} text-lg px-8 py-6`}
             >
               Start Game
@@ -277,7 +237,7 @@ const Index = () => {
           level={level}
           personalBest={personalBest}
           open={showGameOverModal}
-          onRestart={launchRun}
+          onRestart={beginNewRun}
           onShare={shareScore}
           totalScore={totalScore}
           onClose={handleGameOverClose}

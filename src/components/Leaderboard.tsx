@@ -1,25 +1,19 @@
-import React, { useEffect, useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from '@/components/ui/dialog';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
-import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
-import { db } from '../lib/firebase';
-
-interface Score {
-  name: string;
-  bestScore: number;
-  fastest: number;
-  ts: any;
-}
+import { Button } from '@/components/ui/button';
+import { Share2, Trophy, User } from 'lucide-react';
+import { toast } from '@/components/ui/sonner';
+import { useLeaderboard } from '@/hooks/useLeaderboard';
+import { getDeviceId } from '@/utils/deviceStorage';
+import PlayerNameDialog from './PlayerNameDialog';
+import { Separator } from '@/components/ui/separator';
 
 interface LeaderboardProps {
   personalBest: number;
@@ -27,86 +21,132 @@ interface LeaderboardProps {
 
 const Leaderboard: React.FC<LeaderboardProps> = ({ personalBest }) => {
   const [open, setOpen] = useState(false);
-  const [scores, setScores] = useState<Score[]>([]);
-  const [loading, setLoading] = useState(true);
+  const deviceId = getDeviceId();
+  
+  const {
+    leaderboard,
+    loading,
+    playerName,
+    showNamePrompt,
+    setShowNamePrompt,
+    submitPlayerName
+  } = useLeaderboard(personalBest);
 
-  useEffect(() => {
-    const fetchScores = async () => {
-      try {
-        const scoresRef = collection(db, 'scores');
-        const q = query(scoresRef, orderBy('bestScore', 'desc'), limit(10));
-        const querySnapshot = await getDocs(q);
-        const scoreData = querySnapshot.docs.map(doc => doc.data() as Score);
-        setScores(scoreData);
-      } catch (error) {
-        console.error('Error fetching scores:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Find user's position in the leaderboard
+  const userRank = leaderboard.findIndex(entry => entry.device_id === deviceId) + 1;
+  const userEntry = leaderboard.find(entry => entry.device_id === deviceId);
 
-    if (open) {
-      fetchScores();
-    }
-  }, [open]);
+  // Handle sharing a specific player's score
+  const sharePlayerScore = (name: string, rank: number, best: number) => {
+    const shareText = `${name} is #${rank} on Cipher Clash with Round ${best}! Try: https://symbol-grid-sparkle-showdown.lovable.app/`;
+    navigator.clipboard.writeText(shareText);
+    toast("Copied to clipboard!", {
+      description: "Share this achievement!",
+    });
+  };
 
   return (
     <>
-      <button
-        onClick={() => setOpen(true)}
-        className="p-2 rounded-full bg-indigo-100 hover:bg-indigo-200 text-indigo-800"
-        aria-label="Leaderboard"
+      <Button 
+        variant="outline" 
+        size="icon" 
+        onClick={() => setOpen(true)} 
+        className="rounded-full"
       >
-        🏆
-      </button>
-
+        <Trophy className="h-4 w-4" />
+      </Button>
+      
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-center text-xl">🏆 Leaderboard</DialogTitle>
+            <DialogTitle className="text-center text-xl">
+              🏆 Hall of Heroes
+            </DialogTitle>
           </DialogHeader>
-          
-          {loading ? (
-            <div className="py-4 text-center">Loading...</div>
-          ) : (
-            <div className="py-4">
-              <div className="grid grid-cols-4 gap-2 text-sm font-medium text-gray-500 mb-2">
-                <div>#</div>
-                <div>Player</div>
-                <div>Score</div>
-                <div className="flex items-center gap-1">
-                  ⏱ Fastest
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger>ℹ️</TooltipTrigger>
-                      <TooltipContent>
-                        <p>Your quickest round completion (does not affect rank).</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+          <div className="py-2">
+            {loading ? (
+              <div className="text-center py-4">Loading leaderboard...</div>
+            ) : (
+              <>
+                <div className="grid grid-cols-[auto_1fr_auto_auto] gap-2 items-center">
+                  <div className="font-semibold text-sm">#</div>
+                  <div className="font-semibold text-sm">🧑‍🚀 Name</div>
+                  <div className="font-semibold text-sm">🎯 Best</div>
+                  <div></div>
+                  
+                  {leaderboard.map((entry, index) => {
+                    const isCurrentPlayer = entry.device_id === deviceId;
+                    return (
+                      <React.Fragment key={entry.id}>
+                        <div className={`py-1 ${isCurrentPlayer ? 'bg-amber-100' : ''}`}>
+                          {index + 1}
+                        </div>
+                        <div className={`py-1 ${isCurrentPlayer ? 'bg-amber-100 font-medium' : ''}`}>
+                          {entry.name} {isCurrentPlayer ? '(You)' : ''}
+                        </div>
+                        <div className={`py-1 ${isCurrentPlayer ? 'bg-amber-100 font-medium' : ''}`}>
+                          {entry.best}
+                        </div>
+                        <div className={`py-1 ${isCurrentPlayer ? 'bg-amber-100' : ''}`}>
+                          {isCurrentPlayer && (
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              className="h-6 w-6 p-0"
+                              onClick={() => sharePlayerScore(entry.name, index + 1, entry.best)}
+                            >
+                              <Share2 className="h-3.5 w-3.5" />
+                            </Button>
+                          )}
+                        </div>
+                      </React.Fragment>
+                    );
+                  })}
+                  
+                  {leaderboard.length === 0 && (
+                    <div className="col-span-4 text-center py-4 text-gray-500">
+                      No scores yet! Be the first to claim your spot.
+                    </div>
+                  )}
                 </div>
-              </div>
-              
-              <div className="space-y-2">
-                {scores.map((score, index) => (
-                  <div key={index} className="grid grid-cols-4 gap-2 items-center">
-                    <div className="font-medium">{index + 1}</div>
-                    <div className="flex items-center gap-1">
-                      🧑 {score.name}
-                    </div>
-                    <div className="flex items-center gap-1">
-                      🎯 {score.bestScore.toLocaleString()}
-                    </div>
-                    <div className="flex items-center gap-1">
-                      ⏱ {score.fastest.toFixed(1)}s
+                
+                {/* Your position section - only shown if user has a best score but isn't in top 10 */}
+                {userRank === 0 && userEntry && (
+                  <div className="mt-4 pt-4 border-t">
+                    <div className="text-sm font-medium mb-2">Your Position</div>
+                    <div className="grid grid-cols-[auto_1fr_auto_auto] gap-2 items-center bg-amber-50 rounded-md p-2">
+                      <div className="font-medium">?</div>
+                      <div className="font-medium">{userEntry.name} (You)</div>
+                      <div className="font-medium">{userEntry.best}</div>
+                      <div>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          className="h-6 w-6 p-0"
+                          onClick={() => sharePlayerScore(userEntry.name, userRank, userEntry.best)}
+                        >
+                          <Share2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
+                )}
+              </>
+            )}
+          </div>
+          <DialogFooter className="sm:justify-center">
+            <Button onClick={() => setOpen(false)}>
+              Close
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <PlayerNameDialog 
+        open={showNamePrompt} 
+        onSubmit={submitPlayerName}
+        onClose={() => setShowNamePrompt(false)} 
+      />
     </>
   );
 };
