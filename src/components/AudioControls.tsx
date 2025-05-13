@@ -32,9 +32,9 @@ const AudioControls: React.FC<AudioControlsProps> = ({ className = '' }) => {
       title={isMuted ? "Unmute sounds" : "Mute sounds"}
     >
       {isMuted ? (
-        <VolumeX className="w-5 h-5 text-indigo-800" />
+        <VolumeX className="w-5 h-5 text-amber-400" />
       ) : (
-        <Volume2 className="w-5 h-5 text-indigo-800" />
+        <Volume2 className="w-5 h-5 text-amber-400" />
       )}
     </button>
   );
