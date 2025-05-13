@@ -8,7 +8,7 @@ interface ThemeManagerProps {
 const ThemeManager: React.FC<ThemeManagerProps> = ({ currentTheme }) => {
   // Apply theme to body background
   useEffect(() => {
-    document.body.className = `min-h-screen transition-colors duration-1000 ${currentTheme.replace('bg-', 'bg-')}`;
+    document.body.className = `min-h-screen transition-colors duration-1000 bg-gradient-to-b from-indigo-950 to-amber-950`;
     
     return () => {
       document.body.className = '';

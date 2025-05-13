@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useGame } from '../hooks/useGame';
 import { getPlayerName, savePlayerName } from '../utils/deviceStorage';
@@ -56,7 +57,7 @@ const Index = () => {
     'bg-sky-500': 'bg-sky-600 hover:bg-sky-700',
     'bg-fuchsia-500': 'bg-fuchsia-600 hover:bg-fuchsia-700',
     'bg-rose-500': 'bg-rose-600 hover:bg-rose-700',
-  }[currentTheme] || 'bg-indigo-600 hover:bg-indigo-700';
+  }[currentTheme] || 'bg-amber-600 hover:bg-amber-700';
 
   // Check for existing player name whenever the component mounts
   useEffect(() => {
@@ -141,7 +142,7 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-indigo-50 to-purple-50 flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-b from-indigo-950 to-amber-950 flex flex-col items-center justify-center p-4">
       {/* Theme Manager (handles body background) */}
       <ThemeManager currentTheme={currentTheme} />
 
@@ -153,7 +154,7 @@ const Index = () => {
 
       <div className="w-full max-w-md">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-center text-indigo-800">🔮 Cipher Clash</h1>
+          <h1 className="text-3xl font-bold text-center text-amber-500">🧘 Dhyanam</h1>
           <HeaderControls 
             onOpenGuide={() => setShowGuide(true)}
             personalBest={personalBest}

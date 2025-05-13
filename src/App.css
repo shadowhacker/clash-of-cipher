@@ -1,3 +1,4 @@
+
 #root {
   max-width: 1280px;
   margin: 0 auto;
@@ -12,10 +13,10 @@
   transition: filter 300ms;
 }
 .logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
+  filter: drop-shadow(0 0 2em #f59e0baa);
 }
 .logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+  filter: drop-shadow(0 0 2em #f59e0baa);
 }
 
 @keyframes logo-spin {
@@ -38,5 +39,26 @@
 }
 
 .read-the-docs {
-  color: #888;
+  color: #f59e0b;
+}
+
+/* Dhyanam specific styles */
+.spiritual-glow {
+  box-shadow: 0 0 15px rgba(245, 158, 11, 0.6);
+}
+
+.mandala-bg {
+  background-color: #1e1b4b;
+  background-image: url('/lovable-uploads/f24a658f-3a8a-4ef1-88ca-0ea1e57c865b.png');
+  background-size: 400px;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-blend-mode: overlay;
+  opacity: 0.1;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -1;
 }

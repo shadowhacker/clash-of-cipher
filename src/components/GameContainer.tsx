@@ -88,9 +88,9 @@ const GameContainer: React.FC<GameContainerProps> = ({
         <div className="mt-6 flex justify-center">
           <Button
             onClick={startGame}
-            className={`${themeClasses} text-lg px-8 py-6`}
+            className={`bg-amber-600 hover:bg-amber-700 text-lg px-8 py-6 text-amber-100 rounded-xl border border-amber-500/50`}
           >
-            Start Game
+            Begin Your Tapasya
           </Button>
         </div>
       )}

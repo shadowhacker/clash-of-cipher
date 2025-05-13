@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Progress } from '../components/ui/progress';
 
@@ -59,18 +60,18 @@ const GameGrid: React.FC<GameGridProps> = ({
         <div className="mb-2">
           <Progress 
             value={(timeLeft / 10) * 100} 
-            className={`h-2 rounded-full transition-all ${isTimeCritical ? 'bg-red-200' : 'bg-indigo-200'}`}
+            className={`h-2 rounded-full transition-all ${isTimeCritical ? 'bg-red-200' : 'bg-amber-800/30'}`}
           />
         </div>
       )}
 
       {gameState === 'showCode' && (
-        <div className="absolute inset-0 flex items-center justify-center z-10 bg-black rounded-md pointer-events-none">
+        <div className="absolute inset-0 flex items-center justify-center z-10 bg-indigo-950/90 rounded-md pointer-events-none border border-amber-700/50">
           <div className="flex flex-col items-center gap-4 max-w-xs justify-center shadow-2xl rounded-lg px-6 py-4">
-            <p className="text-sm uppercase tracking-wide text-amber-400">
-              Memorise these!
+            <p className="text-sm uppercase tracking-wide text-amber-500">
+              Meditate on these
             </p>
-            <div className="flex flex-wrap gap-4 justify-center text-4xl font-bold text-white">
+            <div className="flex flex-wrap gap-4 justify-center text-4xl font-bold text-amber-400">
               {code.map((symbol, idx) => (
                 <span key={idx}>
                   <img
@@ -89,7 +90,7 @@ const GameGrid: React.FC<GameGridProps> = ({
         <div className={`absolute inset-0 flex items-center justify-center z-10 ${isPlayerWinner === true ? 'bg-green-500/80' : 'bg-red-500/80'
           } rounded-md`}>
           <div className="text-white text-2xl font-bold">
-            {isPlayerWinner === true ? 'Correct!' : 'Wrong!'}
+            {isPlayerWinner === true ? 'Enlightened!' : 'Focus Lost!'}
           </div>
         </div>
       )}
@@ -103,9 +104,9 @@ const GameGrid: React.FC<GameGridProps> = ({
           } else if (showWrongTaps && isCorrectCode(symbol)) {
             cellClassName += "bg-green-500/70 text-white";
           } else if (highlightedIndex === index) {
-            cellClassName += "bg-green-400 text-indigo-800";
+            cellClassName += "bg-amber-500 text-indigo-950";
           } else {
-            cellClassName += "bg-indigo-100 hover:bg-indigo-200 text-indigo-800";
+            cellClassName += "bg-amber-900/40 hover:bg-amber-800/60 text-amber-300 border border-amber-700/30";
           }
 
           return (
@@ -129,12 +130,12 @@ const GameGrid: React.FC<GameGridProps> = ({
       {gameState === 'input' && (
         <div className="mt-4 flex flex-col gap-2 items-center">
           <div className="flex justify-center gap-2">
-            <div className="text-sm font-medium text-indigo-800">Progress:</div>
+            <div className="text-sm font-medium text-amber-400">Progress:</div>
             <div className="flex gap-1">
               {code.map((_, idx) => (
                 <div
                   key={idx}
-                  className={`w-6 h-6 rounded-full border-2 border-indigo-800 ${userInput[idx] ? 'bg-indigo-800' : 'bg-transparent'
+                  className={`w-6 h-6 rounded-full border-2 border-amber-600 ${userInput[idx] ? 'bg-amber-600' : 'bg-transparent'
                     }`}
                 />
               ))}

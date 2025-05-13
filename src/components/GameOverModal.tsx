@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import {
   Dialog,
@@ -36,13 +37,13 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
   const handleShare = () => {
     const text = onShare();
     toast("Copied to clipboard!", {
-      description: "Share your score with friends!",
+      description: "Share your meditative score with friends!",
     });
     setShowShareModal(true);
   };
 
   const handleShareAgain = () => {
-    const text = `I just scored ${totalScore} points on Round ${level} of Cipher Clash!\nThink you can beat me? Play → https://clash-of-cipher.lovable.app/`;
+    const text = `I just reached spiritual level ${level} with ${totalScore} points in Dhyanam!\nCan you achieve deeper meditation? Play → https://dhyanam.lovable.app/`;
     navigator.clipboard.writeText(text);
     toast("Copied again!", {
       description: "Ready to share!",
@@ -62,7 +63,7 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
   // Copy to clipboard when share modal opens
   useEffect(() => {
     if (showShareModal) {
-      const text = `I just scored ${totalScore} points on Round ${level} of Cipher Clash!\nThink you can beat me? Play → https://clash-of-cipher.lovable.app/`;
+      const text = `I just reached spiritual level ${level} with ${totalScore} points in Dhyanam!\nCan you achieve deeper meditation? Play → https://dhyanam.lovable.app/`;
       navigator.clipboard.writeText(text);
     }
   }, [showShareModal, totalScore, level]);
@@ -70,29 +71,29 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
   return (
     <>
       <Dialog open={open} onOpenChange={handleCloseModal}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md bg-gradient-to-b from-indigo-950 to-amber-950 border border-amber-700 text-amber-200">
           <DialogHeader>
-            <DialogTitle className="text-center text-xl flex items-center justify-center gap-2">
-              <Trophy className="h-5 w-5" /> Game Over
+            <DialogTitle className="text-center text-xl flex items-center justify-center gap-2 text-amber-500">
+              <Trophy className="h-5 w-5" /> Meditation Complete
             </DialogTitle>
-            <DialogDescription className="text-center">
-              Your game has ended. Here's how you did.
+            <DialogDescription className="text-center text-amber-400/80">
+              Your journey of focus has ended. Here's your achievement.
             </DialogDescription>
           </DialogHeader>
           <div className="py-4 text-center">
-            <p className="text-lg mb-2">
-              You scored <span className="font-bold">{totalScore} points</span>!
+            <p className="text-lg mb-2 text-amber-300">
+              You scored <span className="font-bold text-amber-500">{totalScore} points</span>!
             </p>
-            <p className="mb-2">
-              Reached <span className="font-bold">Round {level}</span>
+            <p className="mb-2 text-amber-300">
+              Reached <span className="font-bold text-amber-500">Level {level}</span>
             </p>
-            <p>Your lifetime best: <span className="font-bold">{personalBest}</span></p>
+            <p className="text-amber-300">Your best: <span className="font-bold text-amber-500">{personalBest}</span></p>
           </div>
           <DialogFooter className="sm:justify-center gap-2">
-            <Button onClick={handleTryAgain}>
+            <Button onClick={handleTryAgain} className="bg-amber-600 hover:bg-amber-700 text-amber-100">
               <RefreshCw className="mr-2 h-4 w-4" /> Try Again
             </Button>
-            <Button variant="outline" onClick={handleShare}>
+            <Button variant="outline" onClick={handleShare} className="border-amber-700 text-amber-400 hover:bg-amber-900/30">
               <Share2 className="mr-2 h-4 w-4" />
               Share My Score
             </Button>
@@ -101,30 +102,30 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
       </Dialog>
 
       <Dialog open={showShareModal} onOpenChange={setShowShareModal}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md bg-gradient-to-b from-indigo-950 to-amber-950 border border-amber-700 text-amber-200">
           <DialogHeader>
-            <DialogTitle className="text-center text-xl">
-              <span className="block text-3xl mb-2">🎉</span>
+            <DialogTitle className="text-center text-xl text-amber-500">
+              <span className="block text-3xl mb-2">🧘</span>
               Challenge your friends!
             </DialogTitle>
-            <DialogDescription className="text-center">
-              Your score has been copied to clipboard. Share it with friends.
+            <DialogDescription className="text-center text-amber-400/80">
+              Your score has been copied. Share with friends to inspire their meditation.
             </DialogDescription>
           </DialogHeader>
           <div className="py-4 text-center">
-            <p className="text-md mb-4 bg-indigo-50 p-3 rounded-md border border-indigo-100">
-              I just scored {totalScore} points on Round {level} of Cipher Clash!<br />
-              Think you can beat me? Play → https://clash-of-cipher.lovable.app/
+            <p className="text-md mb-4 bg-amber-950/50 p-3 rounded-md border border-amber-800/50 text-amber-300">
+              I just reached spiritual level {level} with {totalScore} points in Dhyanam!<br />
+              Can you achieve deeper meditation? Play → https://dhyanam.lovable.app/
             </p>
-            <p className="text-green-600 text-sm flex items-center justify-center">
+            <p className="text-green-500 text-sm flex items-center justify-center">
               <span className="inline-block mr-1">✅</span> Message copied—paste it to WhatsApp, Telegram, X, etc.
             </p>
           </div>
           <DialogFooter className="sm:justify-center gap-2">
-            <Button variant="outline" onClick={() => setShowShareModal(false)}>
+            <Button variant="outline" onClick={() => setShowShareModal(false)} className="border-amber-700 text-amber-400 hover:bg-amber-900/30">
               Close
             </Button>
-            <Button onClick={handleShareAgain}>
+            <Button onClick={handleShareAgain} className="bg-amber-600 hover:bg-amber-700 text-amber-100">
               Share Again
             </Button>
           </DialogFooter>
