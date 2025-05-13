@@ -68,7 +68,7 @@ const GameGrid: React.FC<GameGridProps> = ({
             </p>
             <div className="flex flex-wrap gap-4 justify-center text-4xl font-bold text-white">
               {code.map((symbol, idx) => (
-                <span key={idx}>
+                <span key={idx} className="bg-amber-800/80 p-2 rounded-md border border-amber-600/70 shadow-md">
                   <img
                     src={`/symbols/${symbol}`}
                     alt={`Symbol ${idx + 1}`}
