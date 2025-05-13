@@ -154,7 +154,7 @@ const Index = () => {
 
       <div className="w-full max-w-md">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-center text-amber-400">🔮 Dhyanam</h1>
+          <h1 className="text-3xl font-bold text-center text-amber-400">🧘 Dhyanam</h1>
           <div className="flex items-center space-x-2">
             <AudioControls className="bg-amber-800/50 hover:bg-amber-700/50" />
             <Leaderboard personalBest={personalBest} />
