@@ -101,11 +101,3 @@
     @apply bg-background text-foreground;
   }
 }
-
-.dhyanam-bg {
-  background-image: url('/lovable-uploads/f24a658f-3a8a-4ef1-88ca-0ea1e57c865b.png');
-  background-size: contain;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-blend-mode: overlay;
-}

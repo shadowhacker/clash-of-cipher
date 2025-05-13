@@ -46,5 +46,8 @@ export default defineConfig(({ mode }) => ({
       '::1',
       'bde17037-8046-4120-8250-f239b886ed12.lovableproject.com'
     ]
+  },
+  define: {
+    'import.meta.url': JSON.stringify('')
   }
 }));
