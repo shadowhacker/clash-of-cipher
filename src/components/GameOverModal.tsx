@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { toast } from "sonner";
-import { Share2, X, Trophy, RefreshCw } from 'lucide-react';
+import { Share2, RefreshCw } from 'lucide-react';
 
 interface GameOverModalProps {
   level: number;
@@ -71,42 +71,64 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
   return (
     <>
       <Dialog open={open} onOpenChange={handleCloseModal}>
-        <DialogContent className="sm:max-w-md bg-gradient-to-b from-indigo-950 to-amber-950 border border-amber-700 text-amber-200">
-          <DialogHeader>
-            <DialogTitle className="text-center text-xl flex items-center justify-center gap-2 text-amber-500">
-              <Trophy className="h-5 w-5" /> Meditation Complete
-            </DialogTitle>
-            <DialogDescription className="text-center text-amber-400/80">
-              Your journey of focus has ended. Here's your achievement.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-4 text-center">
-            <p className="text-lg mb-2 text-amber-300">
-              You scored <span className="font-bold text-amber-500">{totalScore} points</span>!
-            </p>
-            <p className="mb-2 text-amber-300">
-              Reached <span className="font-bold text-amber-500">Level {level}</span>
-            </p>
-            <p className="text-amber-300">Your best: <span className="font-bold text-amber-500">{personalBest}</span></p>
+        <DialogContent className="sm:max-w-md border-0 bg-transparent shadow-none p-0">
+          <div className="w-full bg-gradient-to-b from-[#221F26]/95 to-[#1A1F2C]/95 border border-amber-900/50 rounded-lg overflow-hidden">
+            <div className="relative pt-8 px-6 pb-6">
+              <div className="absolute inset-0 bg-[url('/lovable-uploads/d239d8bd-0e89-40ef-a501-bee4d78b326f.png')] bg-center bg-cover opacity-30 z-0"></div>
+              
+              <div className="relative z-10 flex flex-col items-center">
+                <h2 className="text-3xl sm:text-4xl font-bold text-amber-500 text-center mb-1">
+                  YOUR TAPASYA BROKE
+                </h2>
+                
+                <div className="w-20 h-20 my-4">
+                  {/* Trident symbol - SVG representation */}
+                  <svg viewBox="0 0 24 24" fill="none" className="w-full h-full text-amber-600">
+                    <path d="M12 3L12 21M12 3C11 6 6 8 6 8M12 3C13 6 18 8 18 8M6 21H18" 
+                      stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-12 mt-6 w-full text-center">
+                  <div>
+                    <h3 className="text-xl text-amber-500">SCORE</h3>
+                    <p className="text-4xl font-bold text-amber-400">{totalScore}</p>
+                  </div>
+                  <div>
+                    <h3 className="text-xl text-amber-500">LEVEL</h3>
+                    <p className="text-4xl font-bold text-amber-400">REACHED {level}</p>
+                  </div>
+                </div>
+                
+                <div className="w-full mt-10 flex flex-col gap-4">
+                  <Button 
+                    onClick={handleTryAgain} 
+                    className="w-full py-6 text-xl bg-gradient-to-r from-amber-800 to-amber-700 hover:from-amber-700 hover:to-amber-600 text-amber-200 rounded-lg border border-amber-600"
+                  >
+                    <RefreshCw className="mr-2 h-5 w-5" /> RESTART DHYANAM
+                  </Button>
+                  
+                  <Button 
+                    variant="outline" 
+                    onClick={handleShare} 
+                    className="w-full py-6 text-xl bg-transparent border border-amber-700/50 text-amber-400 hover:bg-amber-900/30 rounded-lg"
+                  >
+                    <Share2 className="mr-2 h-5 w-5" />
+                    CHALLENGE YOUR SANGHA
+                  </Button>
+                </div>
+              </div>
+            </div>
           </div>
-          <DialogFooter className="sm:justify-center gap-2">
-            <Button onClick={handleTryAgain} className="bg-amber-600 hover:bg-amber-700 text-amber-100">
-              <RefreshCw className="mr-2 h-4 w-4" /> Try Again
-            </Button>
-            <Button variant="outline" onClick={handleShare} className="border-amber-700 text-amber-400 hover:bg-amber-900/30">
-              <Share2 className="mr-2 h-4 w-4" />
-              Share My Score
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
 
       <Dialog open={showShareModal} onOpenChange={setShowShareModal}>
-        <DialogContent className="sm:max-w-md bg-gradient-to-b from-indigo-950 to-amber-950 border border-amber-700 text-amber-200">
+        <DialogContent className="sm:max-w-md bg-gradient-to-b from-[#1A1F2C] to-[#221F26] border border-amber-800/50 text-amber-200">
           <DialogHeader>
             <DialogTitle className="text-center text-xl text-amber-500">
               <span className="block text-3xl mb-2">🧘</span>
-              Challenge your friends!
+              Challenge your Sangha
             </DialogTitle>
             <DialogDescription className="text-center text-amber-400/80">
               Your score has been copied. Share with friends to inspire their meditation.
