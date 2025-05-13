@@ -50,14 +50,14 @@ const Index = () => {
     Overlay
   } = useGame();
 
-  // Theme classes for buttons
+  // Theme classes for buttons - update to prefer amber as the default
   const themeClasses = {
     'bg-amber-500': 'bg-amber-600 hover:bg-amber-700',
     'bg-emerald-500': 'bg-emerald-600 hover:bg-emerald-700',
     'bg-sky-500': 'bg-sky-600 hover:bg-sky-700',
     'bg-fuchsia-500': 'bg-fuchsia-600 hover:bg-fuchsia-700',
     'bg-rose-500': 'bg-rose-600 hover:bg-rose-700',
-  }[currentTheme] || 'bg-indigo-600 hover:bg-indigo-700';
+  }[currentTheme] || 'bg-amber-600 hover:bg-amber-700';
 
   // Check for existing player name whenever the component mounts
   useEffect(() => {
@@ -142,7 +142,7 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-indigo-50 to-purple-50 flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-b from-amber-900/90 to-amber-950 flex flex-col items-center justify-center p-4">
       {/* Theme Manager (handles body background) */}
       <ThemeManager currentTheme={currentTheme} />
 
@@ -154,13 +154,13 @@ const Index = () => {
 
       <div className="w-full max-w-md">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-center text-indigo-800">🔮 Cipher Clash</h1>
+          <h1 className="text-3xl font-bold text-center text-amber-400">🔮 Dhyanam</h1>
           <div className="flex items-center space-x-2">
-            <AudioControls />
+            <AudioControls className="bg-amber-800/50 hover:bg-amber-700/50" />
             <Leaderboard personalBest={personalBest} />
             <button
               onClick={() => setShowGuide(true)}
-              className="p-2 rounded-full bg-indigo-100 hover:bg-indigo-200 text-indigo-800"
+              className="p-2 rounded-full bg-amber-800/50 hover:bg-amber-700/60 text-amber-400"
               aria-label="How to Play"
             >
               <HelpCircle className="w-5 h-5" />
@@ -208,9 +208,9 @@ const Index = () => {
           <div className="mt-6 flex justify-center">
             <Button
               onClick={startGame}
-              className={`${themeClasses} text-lg px-8 py-6`}
+              className={`${themeClasses} text-lg px-8 py-6 text-amber-100 border border-amber-500/30`}
             >
-              Start Game
+              Begin Your Tapasya
             </Button>
           </div>
         )}
