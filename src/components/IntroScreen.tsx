@@ -17,7 +17,7 @@ const IntroScreen: React.FC<IntroScreenProps> = ({ onStartGame, onShowGuide }) =
         backgroundRepeat: 'no-repeat'
       }}>
       <div className="absolute top-4 right-4 z-10">
-        <AudioControls className="bg-amber-800/50 hover:bg-amber-700/50" />
+        <AudioControls />
       </div>
 
       <div className="w-full h-full flex flex-col justify-end items-center px-4" style={{ paddingBottom: '5vh' }}>

@@ -15,6 +15,7 @@ import ThemeManager from '../components/ThemeManager';
 import PlayerNameDialog from '../components/PlayerNameDialog';
 import Leaderboard from '../components/Leaderboard';
 import LifeWarning from '../components/LifeWarning';
+import HelpButton from '../components/HelpButton';
 
 const Index = () => {
   const [showGuide, setShowGuide] = useState(false);
@@ -164,15 +165,9 @@ const Index = () => {
         <div className="flex justify-between items-center mb-5">
           <h1 className="text-3xl font-bold text-center text-amber-400">🧘 Dhyanam</h1>
           <div className="flex items-center space-x-2">
-            <AudioControls className="bg-amber-800/50 hover:bg-amber-700/50" />
-            <Leaderboard className="bg-amber-800/50 hover:bg-amber-700/50" personalBest={personalBest} />
-            <button
-              onClick={() => setShowGuide(true)}
-              className="p-2 rounded-full bg-amber-800/50 hover:bg-amber-700/60 text-amber-400"
-              aria-label="How to Play"
-            >
-              <HelpCircle className="w-5 h-5" />
-            </button>
+            <AudioControls />
+            <Leaderboard personalBest={personalBest} />
+            <HelpButton onClick={() => setShowGuide(true)} />
           </div>
         </div>
 

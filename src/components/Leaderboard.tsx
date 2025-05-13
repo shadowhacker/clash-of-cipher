@@ -14,6 +14,7 @@ import { useLeaderboard } from '@/hooks/useLeaderboard';
 import { getDeviceId } from '@/utils/deviceStorage';
 import PlayerNameDialog from './PlayerNameDialog';
 import { Separator } from '@/components/ui/separator';
+import GameButton from './GameButton';
 
 interface LeaderboardProps {
   personalBest: number;
@@ -48,13 +49,12 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ className = '', personalBest 
 
   return (
     <>
-      <Button
-        size="icon"
+      <GameButton
         onClick={() => setOpen(true)}
-        className={`p-2 rounded-full bg-indigo-100 hover:bg-indigo-200 transition-colors ${className}`}
-      >
-        <Trophy className="h-4 w-4 text-amber-400" />
-      </Button>
+        icon={<Trophy className="h-5 w-5" />}
+        label="Leaderboard"
+        className={className}
+      />
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-md">
