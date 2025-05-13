@@ -20,24 +20,28 @@ const IntroScreen: React.FC<IntroScreenProps> = ({ onStartGame, onShowGuide }) =
         <AudioControls className="bg-amber-800/50 hover:bg-amber-700/50" />
       </div>
 
-      <div className="w-full h-full flex flex-col justify-end" style={{ paddingBottom: '5vh' }}>
+      <div className="w-full h-full flex flex-col justify-end items-center px-4" style={{ paddingBottom: '5vh' }}>
         <div className="flex-grow"></div>
 
-        <div className="flex justify-center" style={{ marginBottom: '4vh' }}>
+        <div className="flex justify-center w-full" style={{ marginBottom: '4vh' }}>
           <h1
+            className="text-center px-2"
             style={{
               color: '#ffa825',
               fontFamily: 'serif',
               fontWeight: 'bold',
-              fontSize: 'clamp(3rem, 12vw, 6rem)',
-              textShadow: '0 4px 4px rgb(0, 0, 0)',
+              fontSize: 'clamp(4rem, 20vw, 6rem)',
+              textShadow: '0 4px 8px rgba(0, 0, 0, 0.8)',
               letterSpacing: '0.02em',
+              lineHeight: '1',
+              width: '100%',
+              maxWidth: '90vw'
             }}>
             Dhyanam
           </h1>
         </div>
 
-        <div className="flex justify-center" style={{ marginBottom: '3vh' }}>
+        <div className="flex justify-center w-full" style={{ marginBottom: '3vh' }}>
           <button
             onClick={onStartGame}
             className="transition-transform hover:scale-105 focus:outline-none"
@@ -47,12 +51,12 @@ const IntroScreen: React.FC<IntroScreenProps> = ({ onStartGame, onShowGuide }) =
               border: '4px solid #873b11',
               borderRadius: '16px',
               padding: '12px 20px',
-              fontSize: 'clamp(1rem, 3vw, 1.25rem)',
+              fontSize: 'clamp(1rem, 4vw, 1.25rem)',
               fontWeight: '700',
               letterSpacing: '0.05em',
               boxShadow: '0 0 25px rgba(105, 49, 15, 0.5)',
               textTransform: 'uppercase',
-              width: 'clamp(240px, 80vw, 320px)',
+              width: 'clamp(240px, 85vw, 320px)',
               height: '54px',
               display: 'flex',
               alignItems: 'center',
