@@ -122,12 +122,12 @@ const GameGrid: React.FC<GameGridProps> = ({
       {gameState === 'input' && (
         <div className="mt-4 flex flex-col gap-2 items-center">
           <div className="flex justify-center gap-2">
-            <div className="text-sm font-medium text-indigo-800">Progress:</div>
+            <div className="text-sm font-medium text-amber-400">Progress:</div>
             <div className="flex gap-1">
               {code.map((_, idx) => (
                 <div
                   key={idx}
-                  className={`w-6 h-6 rounded-full border-2 border-indigo-800 ${userInput[idx] ? 'bg-indigo-800' : 'bg-transparent'
+                  className={`w-6 h-6 rounded-full border-2 border-amber-400 ${userInput[idx] ? 'bg-amber-800' : 'bg-transparent'
                     }`}
                 />
               ))}
