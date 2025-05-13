@@ -6,7 +6,7 @@ import { useGameLaunch } from './useGameLaunch.tsx';
 export const MAX_ROUND_TIME = 10; // Maximum time for each round in seconds
 
 // Array of all available symbol image filenames
-const MASTER_SYMBOLS = [
+export const MASTER_SYMBOLS = [
   'symbol-1.png',
   'symbol-2.png',
   'symbol-3.png',
