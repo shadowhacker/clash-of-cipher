@@ -23,7 +23,7 @@ const IntroScreen: React.FC<IntroScreenProps> = ({ onStartGame, onShowGuide }) =
       <div className="w-full h-full flex flex-col justify-end items-center px-4" style={{ paddingBottom: '5vh' }}>
         <div className="flex-grow"></div>
 
-        <div className="flex justify-center w-full" style={{ marginBottom: '4vh' }}>
+        <div className="flex justify-center w-full" style={{ marginBottom: '2vh' }}>
           <h1
             className="text-center px-2"
             style={{
@@ -39,6 +39,19 @@ const IntroScreen: React.FC<IntroScreenProps> = ({ onStartGame, onShowGuide }) =
             }}>
             Dhyanam
           </h1>
+        </div>
+
+        <div className="flex justify-center w-full" style={{ marginBottom: '4vh' }}>
+          <p className="text-center text-amber-400/90 px-4"
+            style={{
+              fontFamily: 'serif',
+              fontSize: 'clamp(0.9rem, 4vw, 1.3rem)',
+              textShadow: '0 4px 8px rgba(0, 0, 0, 0.8)',
+              letterSpacing: '0.05em',
+              maxWidth: '90vw'
+            }}>
+            The ancient memory practice of spiritual mastery
+          </p>
         </div>
 
         <div className="flex justify-center w-full" style={{ marginBottom: '3vh' }}>
