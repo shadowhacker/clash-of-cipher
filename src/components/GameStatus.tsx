@@ -1,6 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, Medal, HelpCircle } from 'lucide-react';
+import { MAX_ROUND_TIME } from '../hooks/useGame';
 
 interface GameStatusProps {
   gameState: 'idle' | 'showCode' | 'input' | 'result';
@@ -42,53 +43,91 @@ const GameStatus: React.FC<GameStatusProps> = ({
 
   const isTimeCritical = timeLeft <= 3 && gameState === 'input';
 
+  // Calculate the percentage for the progress bar using the MAX_ROUND_TIME constant
+  const timePercentage = Math.min(100, Math.max(0, (timeLeft / MAX_ROUND_TIME) * 100));
+
+  // Determine progress bar color based on time left
+  const getProgressBarColor = () => {
+    if (timeLeft <= 3) return 'bg-red-500';
+    if (timeLeft <= 5) return 'bg-amber-500';
+    return 'bg-amber-600';
+  };
+
   return (
-    <div className="flex flex-col space-y-1 max-w-[320px] mx-auto">
-      <div className="mb-2">
-        <div className="flex items-center justify-between">
-          <div className="text-sm text-amber-400 font-medium text-center w-full">
+    <div className="flex flex-col space-y-3 max-w-[320px] mx-auto">
+      {/* Welcome and Best Meditation Score */}
+      <div className="mb-1">
+        <div className="flex items-center justify-center">
+          <div className="text-amber-400 font-medium text-center">
             {gameState === 'idle' && playerName ? (
               <div className="space-y-1">
-                <div>Welcome back, {playerName}!</div>
-                <div>🏆 Lifetime Best: {personalBest}</div>
+                <div className="text-lg">Welcome back, {playerName}!</div>
+                <div className="text-base font-semibold">🏆 Best Meditation: {personalBest}</div>
               </div>
             ) : (
-              <div>🏆 Lifetime Best: {personalBest}</div>
+              <div className="text-base font-semibold">🏆 Best Meditation: {personalBest}</div>
             )}
           </div>
         </div>
       </div>
 
-      <div className="h-[48px] flex items-center justify-between mb-2 bg-amber-900/50 rounded-md p-2 transition-colors border border-amber-800/30">
-        {gameState === 'idle' ? (
-          <div className="flex w-full justify-center">
-            {/* Empty div to maintain layout */}
-          </div>
-        ) : (
-          <>
+      {gameState !== 'idle' && (
+        <div className="relative">
+          {/* Decorative horizontal line */}
+          <div className="absolute w-full h-[2px] bg-gradient-to-r from-transparent via-amber-600/70 to-transparent -top-2"></div>
+
+          {/* Game status panel */}
+          <div className="h-[52px] flex items-center justify-between mb-2 bg-amber-900/50 rounded-md p-3 transition-colors border border-amber-700/50">
             <div className="flex items-center space-x-2">
-              <span className="text-amber-400 font-medium">Round {level}</span>
-              <span className="text-amber-400">·</span>
-              <span className="text-amber-400 font-medium">Score {totalScore}</span>
+              <div className="flex flex-col">
+                <span className="text-amber-400 font-medium text-sm">ROUND</span>
+                <span className="text-amber-300 font-bold text-xl">{level}</span>
+              </div>
+              <div className="h-9 w-[1px] bg-amber-700/50 mx-1"></div>
+              <div className="flex flex-col">
+                <span className="text-amber-400 font-medium text-sm">SCORE</span>
+                <span className="text-amber-300 font-bold text-xl">{totalScore}</span>
+              </div>
             </div>
 
-            <div className="flex items-center space-x-4">
-              <span className="text-amber-400 font-medium">❤️ {lives}</span>
-              <span className={`text-amber-400 font-medium ${isTimeCritical ? 'animate-bounce text-amber-300' : ''}`}>
-                ⏱ {timeLeft}s
-              </span>
+            <div className="flex items-center space-x-3">
+              <div className="flex flex-col items-center">
+                <span className="text-amber-300 font-bold text-xl flex items-center">
+                  {lives} <span className="ml-1 text-base">❤️</span>
+                </span>
+              </div>
+
+              <div className="flex flex-col items-center">
+                <span className={`text-amber-300 font-bold text-xl flex items-center ${isTimeCritical ? 'animate-pulse text-red-400' : ''}`}>
+                  {timeLeft}<span className="ml-1 text-base">s</span>
+                </span>
+              </div>
+
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={resetGame}
-                className="p-1 text-amber-400 hover:bg-amber-800/50 hover:text-amber-300"
+                className="p-1 rounded-full text-amber-400 hover:bg-amber-800/70 hover:text-amber-300"
               >
                 <RefreshCw className="h-4 w-4" />
               </Button>
             </div>
-          </>
-        )}
-      </div>
+          </div>
+
+          {/* Time progress bar */}
+          {gameState === 'input' && (
+            <div className="w-full h-2 bg-amber-900/30 rounded-full overflow-hidden mt-1 mb-3">
+              <div
+                className={`h-full ${getProgressBarColor()} transition-all duration-1000 ease-linear`}
+                style={{ width: `${timePercentage}%` }}
+              ></div>
+            </div>
+          )}
+
+          {/* Decorative horizontal line */}
+          <div className="absolute w-full h-[2px] bg-gradient-to-r from-transparent via-amber-600/70 to-transparent -bottom-2"></div>
+        </div>
+      )}
     </div>
   );
 };

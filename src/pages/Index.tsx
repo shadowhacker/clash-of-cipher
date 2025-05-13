@@ -142,7 +142,14 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-amber-900/90 to-amber-950 flex flex-col items-center justify-center p-4">
+    <div
+      className="min-h-screen flex flex-col items-center justify-center p-4 relative"
+      style={{
+        background: 'linear-gradient(to bottom, #1a0d05, #0e0817)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center'
+      }}
+    >
       {/* Theme Manager (handles body background) */}
       <ThemeManager currentTheme={currentTheme} />
 
@@ -152,12 +159,13 @@ const Index = () => {
         isPlayerWinner={isPlayerWinner}
       />
 
-      <div className="w-full max-w-md">
-        <div className="flex justify-between items-center mb-6">
+      <div className="w-full max-w-md relative">
+        {/* Header section with title and controls */}
+        <div className="flex justify-between items-center mb-5">
           <h1 className="text-3xl font-bold text-center text-amber-400">🧘 Dhyanam</h1>
           <div className="flex items-center space-x-2">
             <AudioControls className="bg-amber-800/50 hover:bg-amber-700/50" />
-            <Leaderboard personalBest={personalBest} />
+            <Leaderboard className="bg-amber-800/50 hover:bg-amber-700/50" personalBest={personalBest} />
             <button
               onClick={() => setShowGuide(true)}
               className="p-2 rounded-full bg-amber-800/50 hover:bg-amber-700/60 text-amber-400"
@@ -168,6 +176,9 @@ const Index = () => {
           </div>
         </div>
 
+        {/* Decorative horizontal line */}
+        <div className="w-full h-[2px] bg-gradient-to-r from-transparent via-amber-600/70 to-transparent mb-4"></div>
+
         {/* Life Warning */}
         <LifeWarning
           lives={lives}
@@ -175,6 +186,7 @@ const Index = () => {
           isPlayerWinner={isPlayerWinner}
         />
 
+        {/* Game Status */}
         <GameStatus
           gameState={gameState}
           level={level}
@@ -191,6 +203,7 @@ const Index = () => {
           playerName={getPlayerName()}
         />
 
+        {/* Game Grid */}
         <AudioInitializer onSymbolClick={handleSymbolClick}>
           <GameGrid
             onButtonClick={(symbol) => { }} // This prop will be overridden by AudioInitializer
@@ -204,13 +217,31 @@ const Index = () => {
           />
         </AudioInitializer>
 
+        {/* Start Game Button */}
         {gameState === 'idle' && (
           <div className="mt-6 flex justify-center">
             <Button
               onClick={startGame}
-              className={`${themeClasses} text-lg px-8 py-6 text-amber-100 border border-amber-500/30`}
+              className="w-full max-w-md py-4 font-bold text-xl rounded-xl transition-transform hover:scale-105 focus:outline-none"
+              style={{
+                backgroundColor: '#69310f',
+                color: '#ffbb24',
+                border: '4px solid #873b11',
+                borderRadius: '16px',
+                padding: '12px 20px',
+                fontSize: 'clamp(1rem, 3vw, 1.25rem)',
+                fontWeight: '700',
+                letterSpacing: '0.05em',
+                boxShadow: '0 0 25px rgba(105, 49, 15, 0.5)',
+                textTransform: 'uppercase',
+                width: 'clamp(240px, 80vw, 320px)',
+                height: '54px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
             >
-              Begin Your Tapasya
+              BEGIN YOUR TAPASYA
             </Button>
           </div>
         )}

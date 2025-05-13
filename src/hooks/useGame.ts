@@ -2,6 +2,9 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { toast } from 'sonner';
 import { useGameLaunch } from './useGameLaunch.tsx';
 
+// Game constants
+export const MAX_ROUND_TIME = 10; // Maximum time for each round in seconds
+
 // Array of all available symbol image filenames
 const MASTER_SYMBOLS = [
   'symbol-1.png',
@@ -66,7 +69,7 @@ export const useGame = () => {
   const [isPlayerWinner, setIsPlayerWinner] = useState<boolean | null>(null);
   const [showGameOverModal, setShowGameOverModal] = useState(false);
   const [lives, setLives] = useState(2);
-  const [timeLeft, setTimeLeft] = useState(10);
+  const [timeLeft, setTimeLeft] = useState(MAX_ROUND_TIME);
   const [gridSymbols, setGridSymbols] = useState<string[]>([]);
   const [showStartScreen, setShowStartScreen] = useState(true);
 
@@ -186,7 +189,7 @@ export const useGame = () => {
     // Add a pause to make life loss more noticeable
     setGameState('result');
     setIsPlayerWinner(false);
-    setTimeLeft(10); // Reset timer
+    setTimeLeft(MAX_ROUND_TIME); // Reset timer using constant
   }, [clearGameTimer, gameOver]);
 
   // Start input phase (renamed from flash-done callback)
@@ -194,7 +197,7 @@ export const useGame = () => {
     setGameState('input');
 
     // Immediately start the timer as requested
-    setTimeLeft(10);
+    setTimeLeft(MAX_ROUND_TIME);
     clearGameTimer();
 
     timerRef.current = window.setInterval(() => {
@@ -277,7 +280,7 @@ export const useGame = () => {
       setGameState('showCode');
       setShowGameOverModal(false);
       setLives(2);
-      setTimeLeft(10);
+      setTimeLeft(MAX_ROUND_TIME);
       setGridSymbols(generateGrid(currentPack, newCode));
       setShowStartScreen(false);
 
@@ -310,7 +313,7 @@ export const useGame = () => {
       setUserInput([]);
       setLevel(newLevel);
       setGameState('showCode');
-      setTimeLeft(10);
+      setTimeLeft(MAX_ROUND_TIME);
 
       // Generate a new grid for this level, ensuring all code symbols are included
       setGridSymbols(generateGrid(currentPack, newCode));
@@ -416,7 +419,7 @@ export const useGame = () => {
     setIsPlayerWinner(null);
     setShowGameOverModal(false);
     setLives(2);
-    setTimeLeft(10);
+    setTimeLeft(MAX_ROUND_TIME);
     setTotalScore(0);
     setCurrentStreak(0);
     setShowWrongTaps(false);

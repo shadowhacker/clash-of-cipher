@@ -14,7 +14,7 @@ interface GameGridProps {
   isPlayerWinner: boolean | null;
   currentSymbolPack: string[];
   gridSymbols: string[];
-  progressPct: number;
+  showWrongTaps?: boolean;
 }
 
 const AudioInitializer: React.FC<AudioInitializerProps> = ({ onSymbolClick, children }) => {
@@ -29,7 +29,7 @@ const AudioInitializer: React.FC<AudioInitializerProps> = ({ onSymbolClick, chil
   useEffect(() => {
     const handleMuteChange = (e: CustomEvent) => {
       setIsMuted(e.detail.muted);
-      
+
       // If we have an audio context, suspend it when muted or resume when unmuted
       if (audioContext.current) {
         if (e.detail.muted) {
@@ -41,7 +41,7 @@ const AudioInitializer: React.FC<AudioInitializerProps> = ({ onSymbolClick, chil
     };
 
     window.addEventListener('audio-mute-change', handleMuteChange as EventListener);
-    
+
     return () => {
       window.removeEventListener('audio-mute-change', handleMuteChange as EventListener);
     };
@@ -59,7 +59,7 @@ const AudioInitializer: React.FC<AudioInitializerProps> = ({ onSymbolClick, chil
         console.error("Audio context creation error:", err);
       }
     }
-    
+
     // Call original handler
     onSymbolClick(symbol);
   };

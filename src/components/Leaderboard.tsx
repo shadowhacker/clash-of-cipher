@@ -17,9 +17,10 @@ import { Separator } from '@/components/ui/separator';
 
 interface LeaderboardProps {
   personalBest: number;
+  className?: string;
 }
 
-const Leaderboard: React.FC<LeaderboardProps> = ({ personalBest }) => {
+const Leaderboard: React.FC<LeaderboardProps> = ({ className = '', personalBest }) => {
   const [open, setOpen] = useState(false);
   const deviceId = getDeviceId();
 
@@ -48,12 +49,11 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ personalBest }) => {
   return (
     <>
       <Button
-        variant="outline"
         size="icon"
         onClick={() => setOpen(true)}
-        className="rounded-full"
+        className={`p-2 rounded-full bg-indigo-100 hover:bg-indigo-200 transition-colors ${className}`}
       >
-        <Trophy className="h-4 w-4" />
+        <Trophy className="h-4 w-4 text-amber-400" />
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
