@@ -1,18 +1,16 @@
-
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react-swc';
 import path from 'node:path';
-import { componentTagger } from "lovable-tagger";
+import { componentTagger } from 'lovable-tagger';
 
 export default defineConfig(({ mode }) => ({
-  plugins: [
-    react(),
-    mode === 'development' && componentTagger(),
-  ].filter(Boolean),
+  plugins: [react(), mode === 'development' && componentTagger()].filter(
+    Boolean
+  ),
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
-    },
+      '@': path.resolve(__dirname, './src')
+    }
   },
   optimizeDeps: {
     include: ['react', 'react-dom'],
@@ -23,8 +21,11 @@ export default defineConfig(({ mode }) => ({
   build: {
     rollupOptions: {
       onwarn(warning, warn) {
-        if (warning.code === 'MODULE_LEVEL_DIRECTIVE' || 
-            warning.code === 'MISSING_EXPORT') return;
+        if (
+          warning.code === 'MODULE_LEVEL_DIRECTIVE' ||
+          warning.code === 'MISSING_EXPORT'
+        )
+          return;
         warn(warning);
       },
       external: [
@@ -33,10 +34,17 @@ export default defineConfig(({ mode }) => ({
         'esbuild/bin/esbuild',
         '@esbuild/linux-x64'
       ]
-    },
+    }
   },
   server: {
-    host: "::",
-    port: 8080
-  },
+    host: '::',
+    port: 8080,
+    allowedHosts: [
+      'localhost',
+      '127.0.0.1',
+      '0.0.0.0',
+      '::1',
+      'bde17037-8046-4120-8250-f239b886ed12.lovableproject.com'
+    ]
+  }
 }));
