@@ -32,7 +32,7 @@ export const SYMBOL_CONFIG = {
 
     // Correct symbol distribution
     // At level 1, there will be this many copies of each correct symbol
-    MAX_CORRECT_SYMBOL_COPIES: 3,
+    MAX_CORRECT_SYMBOL_COPIES: 6,
 
     // At max level, ensure at least this many copies of each correct symbol
     MIN_CORRECT_SYMBOL_COPIES: 1
