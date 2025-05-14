@@ -1,4 +1,4 @@
-import { SYMBOL_CONFIG, MILESTONE_INTERVALS } from '../config/gameConfig';
+import { SYMBOL_CONFIG, MILESTONE_INTERVALS, MAX_LEVELS, CODE_LENGTH } from '../config/gameConfig';
 import { secureRandomInt, secureShuffleArray, secureRandomSample } from './randomUtils';
 
 // Array of all available symbol image filenames
@@ -14,35 +14,37 @@ export const MASTER_SYMBOLS = [
     'symbol-33.png', 'symbol-34.png'
 ];
 
-/**
- * Calculate the target difficulty based on current level
- * @param level - Current game level
- * @returns Difficulty value (higher means more difficult)
- */
-export function calculateDifficulty(level: number): number {
-    const { INITIAL_DIFFICULTY, MAX_DIFFICULTY } = SYMBOL_CONFIG;
-
-    // Linear progression from initial to max difficulty
-    const difficulty = INITIAL_DIFFICULTY + ((MAX_DIFFICULTY - INITIAL_DIFFICULTY) * (level - 1) / 50);
-
-    // Clamp to max difficulty
-    return Math.min(difficulty, MAX_DIFFICULTY);
+// Validate that MASTER_SYMBOLS.length matches SYMBOL_CONFIG.TOTAL_SYMBOLS
+if (MASTER_SYMBOLS.length !== SYMBOL_CONFIG.TOTAL_SYMBOLS) {
+    console.warn(`Warning: MASTER_SYMBOLS.length (${MASTER_SYMBOLS.length}) does not match SYMBOL_CONFIG.TOTAL_SYMBOLS (${SYMBOL_CONFIG.TOTAL_SYMBOLS}). This may cause issues with symbol distribution.`);
 }
 
 /**
- * Calculate the number of unique symbols to use based on level and difficulty
+ * Calculate a progress ratio (0.0 to 1.0) based on current level
+ * This is the core difficulty scaling function used throughout the game
+ * @param level - Current game level (1 to MAX_LEVELS)
+ * @returns Difficulty ratio from 0.0 (easiest) to 1.0 (hardest)
+ */
+export function calculateProgressRatio(level: number): number {
+    // Ensure level is within bounds
+    const boundedLevel = Math.max(1, Math.min(level, MAX_LEVELS));
+
+    // Calculate a linear progress ratio from 0.0 to 1.0 
+    // Level 1 = 0.0, MAX_LEVELS = 1.0
+    return (boundedLevel - 1) / (MAX_LEVELS - 1);
+}
+
+/**
+ * Calculate the number of unique symbols to use based on level
  * @param level - Current game level 
  * @returns Number of unique symbols to use
  */
 export function calculateUniqueSymbolCount(level: number): number {
     const { MIN_GRID_SYMBOLS, MAX_GRID_SYMBOLS } = SYMBOL_CONFIG;
-    const difficulty = calculateDifficulty(level);
+    const progressRatio = calculateProgressRatio(level);
 
-    // Calculate how many unique symbols to use (more at higher difficulty)
-    const ratio = (difficulty - SYMBOL_CONFIG.INITIAL_DIFFICULTY) /
-        (SYMBOL_CONFIG.MAX_DIFFICULTY - SYMBOL_CONFIG.INITIAL_DIFFICULTY);
-
-    const uniqueCount = MIN_GRID_SYMBOLS + Math.floor((MAX_GRID_SYMBOLS - MIN_GRID_SYMBOLS) * ratio);
+    // Linear progression from min to max symbols as level increases
+    const uniqueCount = MIN_GRID_SYMBOLS + Math.floor((MAX_GRID_SYMBOLS - MIN_GRID_SYMBOLS) * progressRatio);
 
     // Ensure we always have at least the minimum count
     return Math.max(uniqueCount, MIN_GRID_SYMBOLS);
@@ -60,19 +62,54 @@ export function getSymbolPack(level: number): string[] {
 }
 
 /**
+ * Calculate how many symbols should be in the code sequence based on level
+ * @param level - Current game level
+ * @returns Length of code sequence
+ */
+export function calculateCodeLength(level: number): number {
+    const { MIN, MAX } = CODE_LENGTH;
+    const progressRatio = calculateProgressRatio(level);
+
+    // Linear progression from minimum to maximum code length
+    const codeLength = MIN + Math.floor((MAX - MIN) * progressRatio);
+
+    // Ensure code length is within bounds
+    return Math.min(Math.max(codeLength, MIN), MAX);
+}
+
+/**
  * Generate a code sequence for the player to memorize
  * @param level - Current game level
  * @param availableSymbols - Symbols available for this level
  * @returns Array of symbol filenames forming the code
  */
 export function generateCode(level: number, availableSymbols: string[]): string[] {
-    // Calculate code length based on level (longer at higher levels)
-    const codeLength = 2 + Math.floor((level - 1) / MILESTONE_INTERVALS.CODE_LENGTH_INCREASE);
-    // Cap at 10 symbols max for playability
-    const cappedLength = Math.min(codeLength, 10);
+    const codeLength = calculateCodeLength(level);
 
     // Always use a fresh random code
-    return secureRandomSample(availableSymbols, cappedLength);
+    return secureRandomSample(availableSymbols, codeLength);
+}
+
+/**
+ * Calculate the number of copies of each correct symbol to include in the grid
+ * @param level - Current game level
+ * @param codeLength - Length of the code sequence
+ * @returns Number of copies of each correct symbol
+ */
+export function calculateCorrectSymbolCopies(level: number, codeLength: number): number {
+    const { MAX_CORRECT_SYMBOL_COPIES, MIN_CORRECT_SYMBOL_COPIES, GRID_SIZE } = SYMBOL_CONFIG;
+    const progressRatio = calculateProgressRatio(level);
+
+    // Calculate ideal maximum copies based on grid size and code length
+    // This ensures we don't try to add too many copies at early levels
+    const maxPossibleCopies = Math.floor(GRID_SIZE / (codeLength * 2));
+    const adjustedMaxCopies = Math.min(MAX_CORRECT_SYMBOL_COPIES, maxPossibleCopies);
+
+    // Linear reduction from max copies to min copies as difficulty increases
+    const rawCopies = adjustedMaxCopies - ((adjustedMaxCopies - MIN_CORRECT_SYMBOL_COPIES) * progressRatio);
+
+    // Round to nearest integer and ensure at least minimum copies
+    return Math.max(Math.round(rawCopies), MIN_CORRECT_SYMBOL_COPIES);
 }
 
 /**
@@ -92,20 +129,23 @@ export function generateGrid(
     // 1. Create a set of remaining available symbols (excluding code symbols)
     const remainingSymbols = availableSymbols.filter(sym => !codeSymbols.includes(sym));
 
-    // 2. Calculate difficulty-based distribution
-    const difficulty = calculateDifficulty(level);
-    const codeSymbolFrequency = Math.max(1, Math.floor(GRID_SIZE / codeSymbols.length / difficulty));
+    // 2. Calculate how many copies of each code symbol to include
+    const copiesPerSymbol = calculateCorrectSymbolCopies(level, codeSymbols.length);
 
-    // 3. Create initial grid with proper code symbol frequency
+    // 3. Create initial grid with guaranteed code symbols
     let initialGrid: string[] = [];
 
-    // Add each code symbol at least once
+    // First, add at least one copy of each code symbol to guarantee its presence
     initialGrid = [...codeSymbols];
 
-    // Add additional copies of code symbols based on difficulty (easier levels get more)
-    if (codeSymbolFrequency > 1) {
-        for (let i = 0; i < codeSymbolFrequency - 1; i++) {
-            initialGrid = [...initialGrid, ...secureRandomSample(codeSymbols, Math.min(codeSymbols.length, 2))];
+    // Add additional copies of code symbols based on the calculated copies
+    if (copiesPerSymbol > 1) {
+        // For each additional copy needed beyond the first one
+        for (let i = 1; i < copiesPerSymbol; i++) {
+            // Take a subset of code symbols to add more copies of
+            const extraSymbols = secureRandomSample(codeSymbols, Math.min(codeSymbols.length,
+                Math.floor(GRID_SIZE / 4))); // Limit to 1/4 of grid size for balance
+            initialGrid = [...initialGrid, ...extraSymbols];
         }
     }
 
@@ -114,7 +154,7 @@ export function generateGrid(
 
     if (remainingSlots > 0) {
         // If we have enough remaining symbols, use a sample
-        // Otherwise, allow repeats from the same set by using more random samples
+        // Otherwise, allow repeats from the same set
         if (remainingSymbols.length >= remainingSlots) {
             initialGrid = [...initialGrid, ...secureRandomSample(remainingSymbols, remainingSlots)];
         } else {
