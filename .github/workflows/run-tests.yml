@@ -1,0 +1,66 @@
+name: Clash of Cipher Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Run Test Suite
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install canvas dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libcairo2-dev libjpeg-dev libpango1.0-dev libgif-dev build-essential g++
+
+      - name: Run Jest tests with coverage
+        run: npm run test:coverage
+
+      - name: Run basic tests
+        run: npm run test:basic
+
+      - name: Archive test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-report
+          path: |
+            coverage/
+            TEST_SUMMARY.md
+
+      - name: Create test summary
+        if: always()
+        run: |
+          echo "# Test Results Summary" > test-results.md
+          echo "## Jest Tests" >> test-results.md
+          echo "\`\`\`" >> test-results.md
+          npm run test >> test-results.md
+          echo "\`\`\`" >> test-results.md
+          echo "## Basic Tests" >> test-results.md
+          echo "\`\`\`" >> test-results.md
+          npm run test:basic >> test-results.md
+          echo "\`\`\`" >> test-results.md
+
+      - name: Upload test summary
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-summary
+          path: test-results.md

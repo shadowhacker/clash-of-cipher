@@ -1,8 +1,41 @@
 # Welcome to your Lovable project
 
+![CI](https://github.com/shadowhacker/clash-of-cipher/actions/workflows/run-tests.yml/badge.svg)
+
 ## Project info
 
 **URL**: https://lovable.dev/projects/bde17037-8046-4120-8250-f239b886ed12
+
+## Testing
+
+This project includes a complete test suite for the Clash of Cipher game mechanics. 
+
+### Running Tests Locally
+
+```sh
+# Run the full Jest test suite
+npm run test
+
+# Run the basic tests that don't require Jest
+npm run test:basic
+
+# Generate test coverage report
+npm run test:coverage
+```
+
+### Continuous Integration
+
+This project uses GitHub Actions to automatically run tests on every push and pull request. The workflow:
+
+1. Installs Node.js and project dependencies
+2. Installs system dependencies for canvas support
+3. Runs the full Jest test suite with coverage
+4. Runs the basic test suite
+5. Archives test results as artifacts
+
+You can see the test workflow configuration in `.github/workflows/run-tests.yml`.
+
+> **Note:** The badge above is powered by GitHub Actions and requires no extra secrets or Gists.
 
 ## How can I edit this code?
 
