@@ -8,26 +8,46 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import SymbolPreloader from "./components/SymbolPreloader";
 import InitialLoadingScreen from "./components/InitialLoadingScreen";
-import { preloadAllGameSymbols } from "./hooks/useImageCache";
+import { preloadAllGameSymbols, loadingProgress } from "./hooks/useImageCache";
 
 const queryClient = new QueryClient();
 
 const App = () => {
   const [appReady, setAppReady] = useState(false);
   const [symbolsPreloaded, setSymbolsPreloaded] = useState(false);
+  const [loadingComplete, setLoadingComplete] = useState(false);
 
   // Preload symbols when app launches
   useEffect(() => {
     // Start preloading symbols right away
-    preloadAllGameSymbols().then(() => {
-      setSymbolsPreloaded(true);
-    });
+    console.log('Starting to preload all game symbols...');
+    preloadAllGameSymbols()
+      .then(() => {
+        console.log(`All symbols preloaded! Loading progress: ${loadingProgress.loaded}/${loadingProgress.total}`);
+        setSymbolsPreloaded(true);
+      })
+      .catch(error => {
+        console.error('Error preloading symbols:', error);
+        // Still mark as preloaded to allow game to continue
+        setSymbolsPreloaded(true);
+      });
   }, []);
 
-  // Handle loading screen completion
+  // Handle loading screen completion - only called when InitialLoadingScreen is done
   const handleLoadingComplete = () => {
-    setAppReady(true);
+    console.log('Loading screen animation complete');
+    setLoadingComplete(true);
   };
+
+  // Only mark app as ready when both conditions are met:
+  // 1. Symbols are preloaded (or attempted to preload)
+  // 2. Loading screen animation is complete
+  useEffect(() => {
+    if (symbolsPreloaded && loadingComplete) {
+      console.log('App is now fully ready to render!');
+      setAppReady(true);
+    }
+  }, [symbolsPreloaded, loadingComplete]);
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -49,7 +69,7 @@ const App = () => {
           <Toaster />
           <Sonner />
 
-          {/* Only show the app content when the loading screen is complete */}
+          {/* Only show the app content when fully ready */}
           {appReady && (
             <BrowserRouter>
               <Routes>

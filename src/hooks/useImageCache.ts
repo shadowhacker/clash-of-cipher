@@ -11,6 +11,15 @@ const CRITICAL_UI_IMAGES = [
     '/images/bg-intro.png'  // Intro background image
 ];
 
+// Track overall loading progress
+export const loadingProgress = {
+    total: 0,
+    loaded: 0,
+    get percentage() {
+        return this.total === 0 ? 0 : Math.floor((this.loaded / this.total) * 100);
+    }
+};
+
 /**
  * Preloads and caches an image
  * @param src The image source URL
@@ -28,6 +37,9 @@ export const preloadImage = (src: string): Promise<HTMLImageElement> => {
         return loadingPromises[src];
     }
 
+    // Increment total count for progress tracking
+    loadingProgress.total++;
+
     // Start loading the image
     loadingStatus[src] = 'loading';
 
@@ -39,12 +51,22 @@ export const preloadImage = (src: string): Promise<HTMLImageElement> => {
             // Store the loaded image in cache
             imageCache[src] = img;
             loadingStatus[src] = 'loaded';
+            // Update progress
+            loadingProgress.loaded++;
+            console.log(`Loaded image: ${src} (${loadingProgress.percentage}%)`);
             resolve(img);
         };
 
         img.onerror = () => {
             loadingStatus[src] = 'error';
-            reject(new Error(`Failed to load image: ${src}`));
+            // Still increment loaded count to maintain progress
+            loadingProgress.loaded++;
+            console.error(`Failed to load image: ${src}`);
+            // Create a placeholder image to not break the game
+            const placeholderImg = new Image();
+            placeholderImg.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 50 50"%3E%3Crect width="50" height="50" fill="%23fbbf24"%3E%3C/rect%3E%3C/svg%3E';
+            imageCache[src] = placeholderImg;
+            resolve(placeholderImg); // Resolve with placeholder instead of rejecting
         };
 
         // Start loading the image
@@ -76,8 +98,8 @@ export const preloadCriticalUIImages = async (): Promise<void> => {
 };
 
 /**
- * Preloads all game symbols at once
- * @returns A promise that resolves when all symbols are loaded or after timeout
+ * Preloads all game symbols
+ * @returns A promise that resolves only when all symbols are loaded
  */
 export const preloadAllGameSymbols = async (): Promise<void> => {
     try {
@@ -87,22 +109,20 @@ export const preloadAllGameSymbols = async (): Promise<void> => {
         // Create an array of all symbol URLs
         const symbolUrls = MASTER_SYMBOLS.map(symbol => `/symbols/${symbol}`);
 
-        // Start loading all symbols with a timeout
-        const loadingPromise = Promise.all(
-            symbolUrls.map(url => preloadImage(url).catch(err => {
-                console.error(`Error loading ${url}:`, err);
-                return null; // Continue despite errors
-            }))
+        console.log(`Starting to preload ${symbolUrls.length} game symbols...`);
+
+        // Start loading all symbols and wait for ALL to complete
+        await Promise.all(
+            symbolUrls.map(url =>
+                preloadImage(url)
+                    .catch(err => {
+                        console.error(`Error loading ${url}:`, err);
+                        return null; // Continue despite errors
+                    })
+            )
         );
 
-        // Create a timeout promise
-        const timeoutPromise = new Promise<null>(resolve =>
-            setTimeout(() => resolve(null), 5000) // 5-second timeout
-        );
-
-        // Race between loading all images and timeout
-        await Promise.race([loadingPromise, timeoutPromise]);
-
+        console.log('All game symbols successfully preloaded');
     } catch (error) {
         console.error("Error preloading game symbols:", error);
     }

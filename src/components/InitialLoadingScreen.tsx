@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { loadingProgress } from '../hooks/useImageCache';
 
 interface InitialLoadingScreenProps {
     onComplete?: () => void;
@@ -7,45 +8,78 @@ interface InitialLoadingScreenProps {
 
 /**
  * A component that shows a loading screen when the game first loads
- * Improves the perceived performance and user experience
+ * Shows actual loading progress of game images
  */
 const InitialLoadingScreen: React.FC<InitialLoadingScreenProps> = ({ onComplete }) => {
     const [progress, setProgress] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
     const [fadeOut, setFadeOut] = useState(false);
+    const [message, setMessage] = useState('Preparing your spiritual journey...');
 
     useEffect(() => {
-        // Simulate loading progress for better UX
-        const startTime = Date.now();
-        const maxLoadTime = 5000; // Maximum loading time of 5 seconds
+        // Use a real progress tracker based on actual image loading
+        const updateProgress = setInterval(() => {
+            // Get the actual loading percentage from our tracker
+            setProgress(loadingProgress.percentage);
 
-        // Update progress every 100ms
-        const interval = setInterval(() => {
-            const elapsed = Date.now() - startTime;
-            const newProgress = Math.min(Math.round((elapsed / maxLoadTime) * 100), 99);
-            setProgress(newProgress);
+            // Update loading message based on progress
+            if (loadingProgress.percentage <= 30) {
+                setMessage('Awakening ancient symbols...');
+            } else if (loadingProgress.percentage <= 70) {
+                setMessage('Aligning spiritual energies...');
+            } else if (loadingProgress.percentage < 100) {
+                setMessage('Preparing your path to enlightenment...');
+            } else {
+                setMessage('Your meditation journey awaits...');
+            }
+
+            // If fully loaded or if we've reached 100%, start fade out
+            if (loadingProgress.percentage >= 100) {
+                clearInterval(updateProgress);
+
+                // Show 100% for at least half a second before fading
+                setTimeout(() => setFadeOut(true), 500);
+
+                // Complete and remove from DOM after fade out
+                setTimeout(() => {
+                    setIsLoading(false);
+                    if (onComplete) onComplete();
+                }, 1500);
+            }
         }, 100);
 
-        // Show loading animation for at least 1.5 seconds
+        // Minimum loading time - even if assets load quickly, 
+        // show loading screen for at least 1.5 seconds
         const minLoadingTimeout = setTimeout(() => {
-            clearInterval(interval);
+            if (loadingProgress.percentage >= 100) {
+                clearInterval(updateProgress);
+                setProgress(100);
+                setFadeOut(true);
 
-            // Complete the loading
+                setTimeout(() => {
+                    setIsLoading(false);
+                    if (onComplete) onComplete();
+                }, 1000);
+            }
+        }, 1500);
+
+        // Failsafe - if loading takes too long (over 15s), proceed anyway
+        const failsafeTimeout = setTimeout(() => {
+            clearInterval(updateProgress);
             setProgress(100);
+            setMessage('Begin your tapasya...');
+            setFadeOut(true);
 
-            // Start fade out animation
-            setTimeout(() => setFadeOut(true), 500);
-
-            // Complete and remove from DOM after fade out
             setTimeout(() => {
                 setIsLoading(false);
                 if (onComplete) onComplete();
             }, 1000);
-        }, 1500);
+        }, 15000);
 
         return () => {
-            clearInterval(interval);
+            clearInterval(updateProgress);
             clearTimeout(minLoadingTimeout);
+            clearTimeout(failsafeTimeout);
         };
     }, [onComplete]);
 
@@ -70,7 +104,7 @@ const InitialLoadingScreen: React.FC<InitialLoadingScreenProps> = ({ onComplete 
             <div className="flex flex-col items-center max-w-md px-6 py-8">
                 <h1 className="text-4xl font-bold text-amber-400 mb-6">Dhyanam</h1>
                 <p className="text-amber-300/80 text-center mb-8">
-                    Preparing your meditation journey...
+                    {message}
                 </p>
 
                 {/* Loading bar */}
