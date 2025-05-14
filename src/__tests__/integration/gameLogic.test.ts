@@ -1,7 +1,5 @@
 import {
     SYMBOL_CONFIG,
-    MAX_ROUND_TIME,
-    STARTING_LIVES,
     SYMBOL_FLASH_TIME,
     SYMBOL_COUNT,
     getFlashTime,

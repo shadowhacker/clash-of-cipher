@@ -7,9 +7,6 @@
 export const MAX_ROUND_TIME = 10; // Maximum time for each round in seconds
 export const STARTING_LIVES = 2; // Number of lives player starts with
 
-// Level progression
-// Infinite levels - removed MAX_LEVELS
-
 // Flash/Show code time configuration
 export const SYMBOL_FLASH_TIME = {
     MAX: 2.0,    // Maximum flash time (seconds)

@@ -329,7 +329,6 @@ export const useGame = () => {
     (newLevel: number): void => {
       clearGameTimer();
 
-      // With infinite levels, we no longer need the MAX_LEVELS check
       // Generate level code
       const { newCode, availableSymbols } = generateLevelCode(newLevel);
       setCode(newCode);

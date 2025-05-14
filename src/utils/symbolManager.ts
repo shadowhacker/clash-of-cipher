@@ -1,5 +1,5 @@
-import { SYMBOL_CONFIG, MILESTONE_INTERVALS } from '../config/gameConfig';
-import { secureRandomInt, secureShuffleArray, secureRandomSample } from './randomUtils';
+import { SYMBOL_CONFIG } from '../config/gameConfig';
+import { secureShuffleArray, secureRandomSample } from './randomUtils';
 
 // Array of all available symbol image filenames
 export const MASTER_SYMBOLS = [
@@ -81,12 +81,8 @@ export function getSymbolPack(level: number): string[] {
  * @returns Array of symbol filenames forming the code
  */
 export function generateCode(level: number, availableSymbols: string[]): string[] {
-    // For backward compatibility, we'll default to a small sequence length
-    // but this is now overridden in useGame's generateLevelCode function
-    const defaultCodeLength = Math.min(3, availableSymbols.length);
-
-    // Always use a fresh random code
-    return secureRandomSample(availableSymbols, defaultCodeLength);
+    // Always use a fresh random code, length is determined by the caller
+    return secureRandomSample(availableSymbols, Math.min(3, availableSymbols.length));
 }
 
 /**
