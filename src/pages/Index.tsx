@@ -158,6 +158,7 @@ const Index = () => {
       <SoundEffects
         gameState={gameState}
         isPlayerWinner={isPlayerWinner}
+        level={level}
       />
 
       <div className="w-full max-w-md relative">

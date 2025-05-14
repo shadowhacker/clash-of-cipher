@@ -108,7 +108,15 @@ export const useGame = () => {
   // Game over function
   const gameOver = useCallback(() => {
     clearGameTimer();
-    setIsPlayerWinner(false);
+
+    // Don't set isPlayerWinner to false if we've completed all levels
+    // This prevents the "broken" sound effect from playing
+    const isVictory = level >= MAX_LEVELS;
+
+    if (!isVictory) {
+      setIsPlayerWinner(false);
+    }
+
     setGameState('result');
 
     // Update personal best if total score is higher
@@ -123,7 +131,7 @@ export const useGame = () => {
       },
       showWrongTaps ? 2500 : 1000
     ); // Longer delay if showing wrong taps
-  }, [totalScore, personalBest, clearGameTimer, showWrongTaps]);
+  }, [totalScore, personalBest, clearGameTimer, showWrongTaps, level]);
 
   // Start input phase (renamed from flash-done callback)
   const startInputPhase = useCallback(() => {
@@ -311,9 +319,14 @@ export const useGame = () => {
       if (newLevel > MAX_LEVELS) {
         console.log(`Reached maximum level ${MAX_LEVELS}! Game complete.`);
         // Display a special toast for completing all levels
-        toast.success(`Congratulations! You've completed all ${MAX_LEVELS} levels!`, {
+        toast.success(`🎉 Enlightenment Achieved! You've mastered all ${MAX_LEVELS} levels!`, {
           duration: 5000
         });
+
+        // Set player as winner first to ensure victory sound plays
+        setIsPlayerWinner(true);
+
+        // Then show game over
         gameOver();
         return;
       }
@@ -433,7 +446,12 @@ export const useGame = () => {
 
   // Copy "share my best" text to clipboard
   const shareScore = useCallback(() => {
-    const text = `I just scored ${totalScore} points on Round ${level} of Cipher Clash!\nThink you can beat me? Play → https://symbol-grid-sparkle-showdown.lovable.app/`;
+    // Different text based on if the player completed all levels
+    const isGameComplete = level >= MAX_LEVELS;
+    const text = isGameComplete
+      ? `I achieved enlightenment with ${totalScore} points by completing all ${MAX_LEVELS} levels in Dhyanam!\nCan you match my spiritual journey? Play → https://clash-of-cipher.lovable.app/`
+      : `I just scored ${totalScore} points on Round ${level} of Dhyanam!\nThink you can beat me? Play → https://clash-of-cipher.lovable.app/`;
+
     navigator.clipboard.writeText(text);
     return text;
   }, [totalScore, level]);
