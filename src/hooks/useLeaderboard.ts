@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { getDeviceId, getPlayerName, savePlayerName } from '@/utils/deviceStorage';
@@ -115,14 +116,21 @@ export const useLeaderboard = (personalBest: number) => {
   // Update or create a leaderboard entry
   const updateLeaderboardEntry = async (name: string, score: number) => {
     const deviceId = getDeviceId();
+    setUpdating(true);
 
     try {
       // First, check if an entry already exists for this device
-      const { data: existingEntries } = await supabase
+      const { data: existingEntries, error: fetchError } = await supabase
         .from('leaderboard')
         .select('id, best')
         .eq('device_id', deviceId)
         .limit(1);
+
+      if (fetchError) {
+        logger.error('Error checking existing leaderboard entry:', fetchError);
+        setUpdating(false);
+        return;
+      }
 
       let updated = false;
 
@@ -131,20 +139,28 @@ export const useLeaderboard = (personalBest: number) => {
 
         // Only update if the new score is higher than the existing one
         if (score > currentEntry.best) {
-          await supabase
+          const { error: updateError } = await supabase
             .from('leaderboard')
             .update({
               name,
               best: score,
               updated_at: new Date().toISOString()
             })
-            .eq('device_id', deviceId);
+            .eq('id', currentEntry.id);
+
+          if (updateError) {
+            logger.error('Error updating leaderboard entry:', updateError);
+            setUpdating(false);
+            setError("Failed to update your score. Please try again later.");
+            return;
+          }
 
           updated = true;
+          logger.info(`Updated leaderboard entry for ${name} with score ${score}`);
         }
       } else {
         // No existing entry for this device, create a new one
-        await supabase
+        const { error: insertError } = await supabase
           .from('leaderboard')
           .insert([{
             name,
@@ -152,7 +168,15 @@ export const useLeaderboard = (personalBest: number) => {
             device_id: deviceId
           }]);
 
+        if (insertError) {
+          logger.error('Error creating leaderboard entry:', insertError);
+          setUpdating(false);
+          setError("Failed to create leaderboard entry. Please try again later.");
+          return;
+        }
+
         updated = true;
+        logger.info(`Created new leaderboard entry for ${name} with score ${score}`);
       }
 
       // Only fetch leaderboard if we updated something
@@ -160,6 +184,7 @@ export const useLeaderboard = (personalBest: number) => {
         // Fetch immediately to show updated results
         await fetchLeaderboard();
       }
+      setUpdating(false);
     } catch (err) {
       setUpdating(false);
       setError("Failed to update leaderboard. Please try again later.");
