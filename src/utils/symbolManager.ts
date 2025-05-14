@@ -34,14 +34,14 @@ export function calculateProgressRatio(level: number): number {
     // Ensure level is at least 1
     const boundedLevel = Math.max(1, level);
 
-    // For levels 1-10, use linear scaling
-    if (boundedLevel <= 10) {
-        return (boundedLevel - 1) / 9;
+    // For levels 1-20, use linear scaling
+    if (boundedLevel <= 20) {
+        return (boundedLevel - 1) / 19;
     }
 
-    // For levels above 10, use logarithmic scaling that approaches 1.0
-    // This formula gives ~0.9 at level 10 and approaches 1.0 asymptotically
-    const ratio = 0.9 + ((Math.log(boundedLevel / 10) / Math.log(MAX_REFERENCE_LEVEL / 10)) * 0.1);
+    // For levels above 20, use logarithmic scaling that approaches 1.0
+    // This formula gives ~0.95 at level 20 and approaches 1.0 asymptotically
+    const ratio = 0.95 + ((Math.log(boundedLevel / 20) / Math.log(MAX_REFERENCE_LEVEL / 20)) * 0.05);
 
     // Clamp to 0.0-1.0 range for safety
     return Math.min(Math.max(ratio, 0), 1);

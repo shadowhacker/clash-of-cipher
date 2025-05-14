@@ -45,16 +45,40 @@ describe('symbolManager', () => {
             expect(ratio).toBeLessThanOrEqual(1);
         });
 
-        it('should follow expected progression for levels 1-10', () => {
-            // For levels 1-10, we should have linear scaling
+        it('should follow expected progression for levels 1-20', () => {
+            // For levels 1-20, we should have linear scaling
             const level5 = calculateProgressRatio(5);
             const level10 = calculateProgressRatio(10);
+            const level20 = calculateProgressRatio(20);
 
-            // Level 5 should be ~0.44 (4/9)
-            expect(level5).toBeCloseTo(4 / 9, 2);
+            // Level 5 should be ~0.21 (4/19)
+            expect(level5).toBeCloseTo(4 / 19, 2);
 
-            // Level 10 should be ~1.0
-            expect(level10).toBeCloseTo(1, 2);
+            // Level 10 should be ~0.47 (9/19)
+            expect(level10).toBeCloseTo(9 / 19, 2);
+
+            // Level 20 should be ~1.0
+            expect(level20).toBeCloseTo(1, 2);
+        });
+
+        it('should use logarithmic scaling above level 20', () => {
+            const level25 = calculateProgressRatio(25);
+            const level50 = calculateProgressRatio(50);
+            const level100 = calculateProgressRatio(100);
+
+            // All should be between 0.95 and 1
+            expect(level25).toBeGreaterThan(0.95);
+            expect(level25).toBeLessThanOrEqual(1);
+            expect(level50).toBeGreaterThan(0.95);
+            expect(level50).toBeLessThanOrEqual(1);
+            expect(level100).toBeGreaterThan(0.95);
+            expect(level100).toBeLessThanOrEqual(1);
+
+            // Should increase with level up to the cap
+            expect(level25).toBeLessThan(level50);
+            // At and above level 50, the ratio should be capped at 1
+            expect(level50).toBeCloseTo(1, 5);
+            expect(level100).toBeCloseTo(1, 5);
         });
 
         it('should handle out-of-bounds levels', () => {
