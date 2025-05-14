@@ -1,48 +1,15 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { toast } from 'sonner';
 import { useGameLaunch } from './useGameLaunch.tsx';
-import { areAllImagesLoaded, preloadAllSymbols, preloadSpecificSymbols } from '../components/SymbolPreloader';
+import {
+  areAllImagesLoaded,
+  preloadAllSymbols,
+  preloadSpecificSymbols,
+  MASTER_SYMBOLS
+} from '../utils/symbolCacheUtils';
 
 // Game constants
 export const MAX_ROUND_TIME = 10; // Maximum time for each round in seconds
-
-// Array of all available symbol image filenames
-export const MASTER_SYMBOLS = [
-  'symbol-1.png',
-  'symbol-2.png',
-  'symbol-3.png',
-  'symbol-4.png',
-  'symbol-5.png',
-  'symbol-6.png',
-  'symbol-7.png',
-  'symbol-8.png',
-  'symbol-9.png',
-  'symbol-10.png',
-  'symbol-11.png',
-  'symbol-12.png',
-  'symbol-13.png',
-  'symbol-14.png',
-  'symbol-15.png',
-  'symbol-16.png',
-  'symbol-17.png',
-  'symbol-18.png',
-  'symbol-19.png',
-  'symbol-20.png',
-  'symbol-21.png',
-  'symbol-22.png',
-  'symbol-23.png',
-  'symbol-24.png',
-  'symbol-25.png',
-  'symbol-26.png',
-  'symbol-27.png',
-  'symbol-28.png',
-  'symbol-29.png',
-  'symbol-30.png',
-  'symbol-31.png',
-  'symbol-32.png',
-  'symbol-33.png',
-  'symbol-34.png'
-];
 
 // Game states
 type GameState = 'idle' | 'showCode' | 'input' | 'result';
@@ -82,6 +49,10 @@ export const useGame = () => {
 
   // Timer reference to track and clear intervals
   const timerRef = useRef<number | null>(null);
+
+  // Function references to solve circular dependencies
+  const startInputPhaseRef = useRef<() => void>(() => { });
+  const restartSameLevelRef = useRef<() => void>(() => { });
 
   // Clear any existing timer
   const clearGameTimer = useCallback(() => {
@@ -164,6 +135,48 @@ export const useGame = () => {
     ); // Longer delay if showing wrong taps
   }, [totalScore, personalBest, clearGameTimer, showWrongTaps]);
 
+  // Start input phase (renamed from flash-done callback)
+  const startInputPhase = useCallback(() => {
+    setGameState('input');
+
+    // Immediately start the timer as requested
+    setTimeLeft(MAX_ROUND_TIME);
+    clearGameTimer();
+
+    timerRef.current = window.setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearGameTimer();
+          // Use the function reference to avoid circular dependency
+          if (typeof restartSameLevelRef.current === 'function') {
+            restartSameLevelRef.current();
+          }
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  }, [clearGameTimer]);
+
+  // Update function reference
+  startInputPhaseRef.current = startInputPhase;
+
+  // Restart the same level function (on wrong input or timeout)
+  const restartSameLevel = useCallback((): void => {
+    setUserInput([]);
+    setGameState('showCode');
+    // Show the code for 2000ms to give more time to see it
+    setTimeout(() => {
+      // Use the function reference
+      if (typeof startInputPhaseRef.current === 'function') {
+        startInputPhaseRef.current();
+      }
+    }, 2000);
+  }, []);
+
+  // Update function reference
+  restartSameLevelRef.current = restartSameLevel;
+
   // Lose a life handler - define before any functions that use it
   const loseLife = useCallback(() => {
     clearGameTimer(); // Clear any existing timer first
@@ -181,7 +194,10 @@ export const useGame = () => {
         // Only restart if we still have lives left
         setTimeout(() => {
           setShowWrongTaps(false);
-          restartSameLevel();
+          // Use the function reference
+          if (typeof restartSameLevelRef.current === 'function') {
+            restartSameLevelRef.current();
+          }
         }, 2500); // Show wrong taps for 2.5 seconds
       }
       return newLives;
@@ -192,39 +208,6 @@ export const useGame = () => {
     setIsPlayerWinner(false);
     setTimeLeft(MAX_ROUND_TIME); // Reset timer using constant
   }, [clearGameTimer, gameOver]);
-
-  // Start input phase (renamed from flash-done callback)
-  const startInputPhase = useCallback(() => {
-    setGameState('input');
-
-    // Immediately start the timer as requested
-    setTimeLeft(MAX_ROUND_TIME);
-    clearGameTimer();
-
-    timerRef.current = window.setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          clearGameTimer();
-          loseLife(); // Handle timeout
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-  }, [clearGameTimer, loseLife]);
-
-  // Restart the same level (on wrong input or timeout)
-  const restartSameLevel = useCallback((): void => {
-    setUserInput([]);
-
-    // Skip waiting for preloading, just show the code immediately
-    setGameState('showCode');
-
-    // Show the code for 2000ms to give more time to see it
-    setTimeout(() => {
-      startInputPhase();
-    }, 2000);
-  }, [startInputPhase]);
 
   // Generate a grid ensuring all code symbols are included
   const generateGrid = useCallback(

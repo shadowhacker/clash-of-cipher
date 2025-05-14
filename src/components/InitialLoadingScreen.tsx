@@ -117,7 +117,7 @@ const InitialLoadingScreen: React.FC<InitialLoadingScreenProps> = ({ onComplete 
             clearTimeout(extendedFailsafeTimeout);
             clearTimeout(longLoadTimer);
         };
-    }, [onComplete]);
+    }, [onComplete, longLoadingDetected]);
 
     if (!isLoading) return null;
 

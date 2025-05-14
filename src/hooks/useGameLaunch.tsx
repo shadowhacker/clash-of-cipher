@@ -1,74 +1,37 @@
-import React, { useState, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { preloadAllSymbols, forceMarkAllLoaded } from '../components/SymbolPreloader';
+import { useCallback, useState } from 'react';
+import { preloadAllSymbols, forceMarkAllLoaded } from '../utils/symbolCacheUtils';
+import LaunchCountdown from '../components/LaunchCountdown.tsx';
 
 interface UseGameLaunchProps {
   onLaunchComplete: () => void;
 }
 
 export const useGameLaunch = ({ onLaunchComplete }: UseGameLaunchProps) => {
-  const [showOverlay, setShowOverlay] = useState(false);
-  const [overlayContent, setOverlayContent] = useState<'loading' | 'countdown'>('loading');
-  const [countdownValue, setCountdownValue] = useState<number | string>(3);
+  const [showCountdown, setShowCountdown] = useState(false);
 
-  const launchRun = useCallback(async (): Promise<void> => {
-    // Phase 1: Loading - preload images
-    setShowOverlay(true);
-    setOverlayContent('loading');
+  // Start full game launch
+  const launchRun = useCallback(async () => {
+    // First, try to preload all images
+    await preloadAllSymbols().catch(() => {
+      // If preloading fails, just mark all as loaded and continue
+      forceMarkAllLoaded();
+    });
 
-    try {
-      // Load symbols with a timeout to prevent blocking
-      await Promise.race([
-        preloadAllSymbols(),
-        new Promise<null>(resolve => setTimeout(() => {
-          forceMarkAllLoaded(); // Mark all loaded if timeout occurs
-          resolve(null);
-        }, 2000))
-      ]);
-    } catch (error) {
-      console.error("Error preloading symbols:", error);
-      forceMarkAllLoaded(); // Mark all loaded if error occurs
-    }
+    // Show the countdown animation
+    setShowCountdown(true);
+  }, []);
 
-    // Ensure loading shows for a minimum amount of time
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    // Phase 2: Countdown
-    setOverlayContent('countdown');
-    const countdown = [3, 2, 1, 'GO!'];
-
-    for (const value of countdown) {
-      setCountdownValue(value);
-      await new Promise(resolve => setTimeout(resolve, 1000));
-    }
-
-    // Phase 3: Complete
-    setShowOverlay(false);
+  // Callback when countdown completes
+  const handleCountdownComplete = useCallback(() => {
+    setShowCountdown(false);
     onLaunchComplete();
   }, [onLaunchComplete]);
 
-  const Overlay = useCallback(() => (
-    <AnimatePresence mode="wait">
-      {showOverlay && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 flex items-center justify-center bg-black/80 z-50"
-        >
-          <motion.div
-            key={overlayContent}
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            className="text-6xl font-extrabold text-white"
-          >
-            {overlayContent === 'loading' ? 'Loading...' : countdownValue}
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  ), [showOverlay, overlayContent, countdownValue]);
+  // Component to render the countdown overlay
+  const Overlay = useCallback(() => {
+    if (!showCountdown) return null;
+    return <LaunchCountdown onComplete={handleCountdownComplete} />;
+  }, [showCountdown, handleCountdownComplete]);
 
   return {
     launchRun,
