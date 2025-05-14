@@ -1,5 +1,5 @@
 import React from 'react';
-import { useImageCache } from '../hooks/useImageCache';
+import { useImageCache, getCachedImageUrl } from '../hooks/useImageCache';
 
 interface CachedSymbolProps {
     symbol: string;
@@ -12,7 +12,8 @@ interface CachedSymbolProps {
  * Uses the image cache to avoid reloading images
  */
 const CachedSymbol: React.FC<CachedSymbolProps> = ({ symbol, index, className = '' }) => {
-    const { status } = useImageCache(`/symbols/${symbol}`);
+    const imagePath = `/symbols/${symbol}`;
+    const { status, cachedUrl } = useImageCache(imagePath);
 
     // Ensure we have something to display even if path is incorrect
     const symbolDisplayName = symbol.replace(/^symbol-/, '').replace(/\.\w+$/, '');
@@ -72,9 +73,9 @@ const CachedSymbol: React.FC<CachedSymbolProps> = ({ symbol, index, className = 
                 >
                 </div>
             ) : (
-                // Loaded state - show the actual image with fade-in effect
+                // Loaded state - show the cached image with fade-in effect
                 <img
-                    src={`/symbols/${symbol}`}
+                    src={cachedUrl} // Use cached URL (data URI) if available
                     alt={`Symbol ${symbolDisplayName}`}
                     className="w-10 h-10 object-contain"
                     style={{

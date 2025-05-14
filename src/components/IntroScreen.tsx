@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import AudioControls from './AudioControls';
-import { useImageCache, getImageLoadingStatus } from '../hooks/useImageCache';
+import { useImageCache, getImageLoadingStatus, getCachedImageUrl } from '../hooks/useImageCache';
 
 interface IntroScreenProps {
   onStartGame: () => void;
@@ -8,15 +8,23 @@ interface IntroScreenProps {
 }
 
 const IntroScreen: React.FC<IntroScreenProps> = ({ onStartGame, onShowGuide }) => {
-  // Get background image loading status
+  // Get background image loading status and cached URL
   const bgImagePath = '/images/bg-intro.png';
   const bgImageStatus = getImageLoadingStatus(bgImagePath);
-  const { status } = useImageCache(bgImagePath);
+  const { status, cachedUrl } = useImageCache(bgImagePath);
+  const [bgLoaded, setBgLoaded] = useState(bgImageStatus === 'loaded');
 
-  // Only show the background image if it's loaded
-  const bgImageStyle = status === 'loaded'
+  // Check if bg image is loaded
+  useEffect(() => {
+    if (status === 'loaded') {
+      setBgLoaded(true);
+    }
+  }, [status]);
+
+  // Prepare background style with cached image if available
+  const bgImageStyle = bgLoaded
     ? {
-      backgroundImage: `url("${bgImagePath}")`,
+      backgroundImage: `url("${cachedUrl}")`,
       backgroundPosition: 'center center',
       backgroundSize: 'auto 100%',
       backgroundRepeat: 'no-repeat'
@@ -41,7 +49,7 @@ const IntroScreen: React.FC<IntroScreenProps> = ({ onStartGame, onShowGuide }) =
       {status === 'loading' && (
         <div className="absolute top-4 left-4 flex items-center space-x-2 text-amber-400/70">
           <div className="w-3 h-3 rounded-full bg-amber-500 animate-pulse"></div>
-          <span className="text-xs">Loading assets...</span>
+          <span className="text-xs">Loading background...</span>
         </div>
       )}
 
