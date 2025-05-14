@@ -1,4 +1,4 @@
-import { SYMBOL_CONFIG } from '../config/gameConfig';
+import { SYMBOL_CONFIG, MILESTONE_INTERVALS } from '../config/gameConfig';
 import { secureRandomInt, secureShuffleArray, secureRandomSample } from './randomUtils';
 
 // Array of all available symbol image filenames
@@ -67,7 +67,7 @@ export function getSymbolPack(level: number): string[] {
  */
 export function generateCode(level: number, availableSymbols: string[]): string[] {
     // Calculate code length based on level (longer at higher levels)
-    const codeLength = 2 + Math.floor((level - 1) / 4);
+    const codeLength = 2 + Math.floor((level - 1) / MILESTONE_INTERVALS.CODE_LENGTH_INCREASE);
     // Cap at 10 symbols max for playability
     const cappedLength = Math.min(codeLength, 10);
 

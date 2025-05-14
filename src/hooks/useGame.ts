@@ -18,7 +18,9 @@ import {
   STARTING_LIVES,
   MILESTONE_INTERVALS,
   THEME_COLORS,
-  SCORING
+  SCORING,
+  MAX_LEVELS,
+  SYMBOL_CONFIG
 } from '../config/gameConfig';
 
 // Game states
@@ -166,7 +168,7 @@ export const useGame = () => {
       const retryGrid = [...newCode]; // Start with the code symbols
 
       // Fill the rest with random symbols from the available set
-      while (retryGrid.length < 16) {
+      while (retryGrid.length < SYMBOL_CONFIG.GRID_SIZE) {
         const randomSymbol = availableSymbols[Math.floor(Math.random() * availableSymbols.length)];
         retryGrid.push(randomSymbol);
       }
@@ -262,7 +264,7 @@ export const useGame = () => {
         console.error("Grid verification failed on initial level - using fallback");
         // Fallback grid creation to ensure code symbols are included
         const fallbackGrid = [...newCode];
-        while (fallbackGrid.length < 16) {
+        while (fallbackGrid.length < SYMBOL_CONFIG.GRID_SIZE) {
           fallbackGrid.push(availableSymbols[Math.floor(Math.random() * availableSymbols.length)]);
         }
         setGridSymbols(fallbackGrid.sort(() => Math.random() - 0.5));
@@ -305,6 +307,17 @@ export const useGame = () => {
     (newLevel: number): void => {
       clearGameTimer();
 
+      // Check if we've reached MAX_LEVELS - if so, show game over
+      if (newLevel > MAX_LEVELS) {
+        console.log(`Reached maximum level ${MAX_LEVELS}! Game complete.`);
+        // Display a special toast for completing all levels
+        toast.success(`Congratulations! You've completed all ${MAX_LEVELS} levels!`, {
+          duration: 5000
+        });
+        gameOver();
+        return;
+      }
+
       // Get fresh random symbols for this level
       const availableSymbols = getSymbolPack(newLevel);
       const newCode = createCodeSequence(newLevel, availableSymbols);
@@ -320,7 +333,7 @@ export const useGame = () => {
         console.error(`Grid verification failed on level ${newLevel} - using fallback`);
         // Fallback grid creation to ensure code symbols are included
         const fallbackGrid = [...newCode];
-        while (fallbackGrid.length < 16) {
+        while (fallbackGrid.length < SYMBOL_CONFIG.GRID_SIZE) {
           fallbackGrid.push(availableSymbols[Math.floor(Math.random() * availableSymbols.length)]);
         }
         setGridSymbols(fallbackGrid.sort(() => Math.random() - 0.5));
@@ -343,7 +356,8 @@ export const useGame = () => {
     },
     [
       clearGameTimer,
-      startInputPhase
+      startInputPhase,
+      gameOver
     ]
   );
 

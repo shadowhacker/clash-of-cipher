@@ -8,7 +8,7 @@ export const MAX_ROUND_TIME = 10; // Maximum time for each round in seconds
 export const STARTING_LIVES = 2; // Number of lives player starts with
 
 // Level progression
-export const MAX_LEVELS = 100; // Theoretical maximum level (game continues indefinitely)
+export const MAX_LEVELS = 10; // Theoretical maximum level (game continues indefinitely)
 export const MILESTONE_INTERVALS = {
     COLOR_CHANGE: 10, // Every 10 levels, theme color changes
     SYMBOL_PACK_CHANGE: 7, // Every 7 levels, symbol pack changes
