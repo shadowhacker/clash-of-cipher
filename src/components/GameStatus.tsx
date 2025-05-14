@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, Medal, HelpCircle } from 'lucide-react';
-import { MAX_ROUND_TIME } from '../hooks/useGame';
+import { MAX_ROUND_TIME } from '../config/gameConfig';
 
 interface GameStatusProps {
   gameState: 'idle' | 'showCode' | 'input' | 'result';

@@ -1,44 +1,7 @@
 // Removed circular import
 // import { MASTER_SYMBOLS } from '../hooks/useGame';
 import { preloadAllGameSymbols, dataUrlCache, loadingStatus } from '../hooks/useImageCache';
-
-// Array of all available symbol image filenames
-export const MASTER_SYMBOLS = [
-    'symbol-1.png',
-    'symbol-2.png',
-    'symbol-3.png',
-    'symbol-4.png',
-    'symbol-5.png',
-    'symbol-6.png',
-    'symbol-7.png',
-    'symbol-8.png',
-    'symbol-9.png',
-    'symbol-10.png',
-    'symbol-11.png',
-    'symbol-12.png',
-    'symbol-13.png',
-    'symbol-14.png',
-    'symbol-15.png',
-    'symbol-16.png',
-    'symbol-17.png',
-    'symbol-18.png',
-    'symbol-19.png',
-    'symbol-20.png',
-    'symbol-21.png',
-    'symbol-22.png',
-    'symbol-23.png',
-    'symbol-24.png',
-    'symbol-25.png',
-    'symbol-26.png',
-    'symbol-27.png',
-    'symbol-28.png',
-    'symbol-29.png',
-    'symbol-30.png',
-    'symbol-31.png',
-    'symbol-32.png',
-    'symbol-33.png',
-    'symbol-34.png'
-];
+import { MASTER_SYMBOLS } from './symbolManager';
 
 // Constants
 export const CACHE_VERSION = 'v1';

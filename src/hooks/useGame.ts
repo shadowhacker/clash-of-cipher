@@ -5,23 +5,24 @@ import {
   areAllImagesLoaded,
   preloadAllSymbols,
   preloadSpecificSymbols,
-  MASTER_SYMBOLS
 } from '../utils/symbolCacheUtils';
-
-// Game constants
-export const MAX_ROUND_TIME = 10; // Maximum time for each round in seconds
+import {
+  MASTER_SYMBOLS,
+  getSymbolPack,
+  generateCode as createCodeSequence,
+  generateGrid as createSymbolGrid,
+  verifyGrid
+} from '../utils/symbolManager';
+import {
+  MAX_ROUND_TIME,
+  STARTING_LIVES,
+  MILESTONE_INTERVALS,
+  THEME_COLORS,
+  SCORING
+} from '../config/gameConfig';
 
 // Game states
 type GameState = 'idle' | 'showCode' | 'input' | 'result';
-
-// Color themes for different level milestones
-const THEMES = [
-  'bg-amber-500',
-  'bg-emerald-500',
-  'bg-sky-500',
-  'bg-fuchsia-500',
-  'bg-rose-500'
-];
 
 // Hook for managing game state
 export const useGame = () => {
@@ -36,7 +37,7 @@ export const useGame = () => {
   const [userInput, setUserInput] = useState<string[]>([]);
   const [isPlayerWinner, setIsPlayerWinner] = useState<boolean | null>(null);
   const [showGameOverModal, setShowGameOverModal] = useState(false);
-  const [lives, setLives] = useState(2);
+  const [lives, setLives] = useState(STARTING_LIVES);
   const [timeLeft, setTimeLeft] = useState(MAX_ROUND_TIME);
   const [gridSymbols, setGridSymbols] = useState<string[]>([]);
   const [showStartScreen, setShowStartScreen] = useState(true);
@@ -65,21 +66,7 @@ export const useGame = () => {
 
   // Get current theme based on level
   const getCurrentTheme = useCallback((currentLevel: number) => {
-    return THEMES[Math.floor((currentLevel - 1) / 10) % THEMES.length];
-  }, []);
-
-  // Get current symbol pack based on level
-  const getCurrentSymbolPack = useCallback((currentLevel: number) => {
-    const packIndex = Math.floor((currentLevel - 1) / 7) % 2;
-    return packIndex === 0
-      ? MASTER_SYMBOLS.slice(0, 8)
-      : MASTER_SYMBOLS.slice(4, 12);
-  }, []);
-
-  // Calculate code length based on level
-  const getCodeLength = useCallback((currentLevel: number) => {
-    const length = 2 + Math.floor((currentLevel - 1) / 4);
-    return Math.min(length, 20); // Cap at 20 symbols
+    return THEME_COLORS[Math.floor((currentLevel - 1) / MILESTONE_INTERVALS.COLOR_CHANGE) % THEME_COLORS.length];
   }, []);
 
   // Calculate round score based on new formula
@@ -94,17 +81,17 @@ export const useGame = () => {
       const basePts = Math.pow(round, 2) * codeLen;
 
       // Speed multiplier: 1 + (secondsLeft / 10) - ranges from 1.0 to 2.0
-      const speedMult = 1 + secondsRemaining / 10;
+      const speedMult = 1 + secondsRemaining * SCORING.SPEED_BONUS_FACTOR;
 
-      // Flawless multiplier: 1.25 ** currentStreak
-      const flawlessMult = Math.pow(1.25, streak);
+      // Flawless multiplier: BASE_MULTIPLIER ** currentStreak
+      const flawlessMult = Math.pow(SCORING.BASE_MULTIPLIER, streak);
 
       // Calculate round score
       let roundScore = Math.floor(basePts * speedMult * flawlessMult);
 
-      // Jackpot round: every 20th round adds 1000 bonus points
-      if (round % 20 === 0) {
-        roundScore += 1000;
+      // Jackpot round: bonus points on milestone rounds
+      if (round % MILESTONE_INTERVALS.JACKPOT_BONUS === 0) {
+        roundScore += SCORING.JACKPOT_BONUS;
       }
 
       return {
@@ -164,8 +151,40 @@ export const useGame = () => {
 
   // Restart the same level function (on wrong input or timeout)
   const restartSameLevel = useCallback((): void => {
+    // Generate fresh symbols for the same level
+    const availableSymbols = getSymbolPack(level);
+    const newCode = createCodeSequence(level, availableSymbols);
+    setCode(newCode);
+
+    // Create a new grid ensuring all code symbols are included
+    const newGridSymbols = createSymbolGrid(level, newCode, availableSymbols);
+
+    // Verify all code symbols are in the grid (safety check)
+    if (!verifyGrid(newGridSymbols, newCode)) {
+      console.error("Grid verification failed - regenerating");
+      // If verification fails, try again with a more direct approach
+      const retryGrid = [...newCode]; // Start with the code symbols
+
+      // Fill the rest with random symbols from the available set
+      while (retryGrid.length < 16) {
+        const randomSymbol = availableSymbols[Math.floor(Math.random() * availableSymbols.length)];
+        retryGrid.push(randomSymbol);
+      }
+
+      // Shuffle the grid
+      setGridSymbols(retryGrid.sort(() => Math.random() - 0.5));
+    } else {
+      setGridSymbols(newGridSymbols);
+    }
+
+    // Preload the symbols we're about to use
+    const symbolsToPreload = [...new Set([...newCode, ...newGridSymbols])];
+    preloadSpecificSymbols(symbolsToPreload);
+
+    // Reset user input and show the code
     setUserInput([]);
     setGameState('showCode');
+
     // Show the code for 2000ms to give more time to see it
     setTimeout(() => {
       // Use the function reference
@@ -173,7 +192,7 @@ export const useGame = () => {
         startInputPhaseRef.current();
       }
     }, 2000);
-  }, []);
+  }, [level]);
 
   // Update function reference
   restartSameLevelRef.current = restartSameLevel;
@@ -213,48 +232,10 @@ export const useGame = () => {
   // Update function reference for loseLife
   loseLifeRef.current = loseLife;
 
-  // Generate a grid ensuring all code symbols are included
-  const generateGrid = useCallback(
-    (symbolPack: string[], codeSequence: string[]) => {
-      // Start with a random grid from the symbol pack
-      const result: string[] = Array.from({ length: 16 }, () => {
-        const randomIndex = Math.floor(Math.random() * symbolPack.length);
-        return symbolPack[randomIndex];
-      });
-
-      // Make sure all code symbols exist in the grid
-      codeSequence.forEach((symbol) => {
-        // Check if symbol is already in the grid
-        if (!result.includes(symbol)) {
-          // Replace a random cell with this symbol
-          const randomCellIndex = Math.floor(Math.random() * result.length);
-          result[randomCellIndex] = symbol;
-        }
-      });
-
-      return result;
-    },
-    []
-  );
-
-  // Generate a random code of symbols based on current level
-  const generateCode = useCallback(
-    (currentLevel: number) => {
-      const currentPack = getCurrentSymbolPack(currentLevel);
-      const codeLength = getCodeLength(currentLevel);
-
-      return Array.from({ length: codeLength }, () => {
-        const randomIndex = Math.floor(Math.random() * currentPack.length);
-        return currentPack[randomIndex];
-      });
-    },
-    [getCurrentSymbolPack, getCodeLength]
-  );
-
   // Calculate next milestone level
   const getNextMilestone = useCallback((currentLevel: number) => {
-    const nextColor = Math.ceil((currentLevel + 1) / 10) * 10;
-    const nextPack = Math.ceil((currentLevel + 1) / 7) * 7;
+    const nextColor = Math.ceil((currentLevel + 1) / MILESTONE_INTERVALS.COLOR_CHANGE) * MILESTONE_INTERVALS.COLOR_CHANGE;
+    const nextPack = Math.ceil((currentLevel + 1) / MILESTONE_INTERVALS.SYMBOL_PACK_CHANGE) * MILESTONE_INTERVALS.SYMBOL_PACK_CHANGE;
     return Math.min(nextColor, nextPack);
   }, []);
 
@@ -263,31 +244,40 @@ export const useGame = () => {
     onLaunchComplete: () => {
       // Start the first round after countdown
       const initialLevel = 1;
-      const newCode = generateCode(initialLevel);
-      const currentPack = getCurrentSymbolPack(initialLevel);
+
+      // Get random symbols for the first level
+      const availableSymbols = getSymbolPack(initialLevel);
+      const newCode = createCodeSequence(initialLevel, availableSymbols);
       setCode(newCode);
+
+      // Reset game state
       setUserInput([]);
       setLevel(initialLevel);
 
-      // Generate grid symbols
-      const newGridSymbols = generateGrid(currentPack, newCode);
+      // Generate grid symbols with strategic distribution
+      const newGridSymbols = createSymbolGrid(initialLevel, newCode, availableSymbols);
 
-      // Set the grid symbols right away
-      setGridSymbols(newGridSymbols);
+      // Verify and set grid symbols
+      if (!verifyGrid(newGridSymbols, newCode)) {
+        console.error("Grid verification failed on initial level - using fallback");
+        // Fallback grid creation to ensure code symbols are included
+        const fallbackGrid = [...newCode];
+        while (fallbackGrid.length < 16) {
+          fallbackGrid.push(availableSymbols[Math.floor(Math.random() * availableSymbols.length)]);
+        }
+        setGridSymbols(fallbackGrid.sort(() => Math.random() - 0.5));
+      } else {
+        setGridSymbols(newGridSymbols);
+      }
 
-      // Mark these symbols as loaded (even if they're not yet)
-      // This ensures the game flow continues
-      const symbolsToMark = [...new Set([...newCode, ...newGridSymbols])];
-      symbolsToMark.forEach(symbol => {
-        // Force preload in browser cache
-        const img = new Image();
-        img.src = `/symbols/${symbol}`;
-      });
+      // Preload symbols for smoother gameplay
+      const symbolsToPreload = [...new Set([...newCode, ...newGridSymbols])];
+      preloadSpecificSymbols(symbolsToPreload);
 
-      // Skip waiting for preloading, just show the code immediately
+      // Start the game
       setGameState('showCode');
       setShowGameOverModal(false);
-      setLives(2);
+      setLives(STARTING_LIVES);
       setTimeLeft(MAX_ROUND_TIME);
       setShowStartScreen(false);
 
@@ -314,28 +304,35 @@ export const useGame = () => {
   const startNextLevel = useCallback(
     (newLevel: number): void => {
       clearGameTimer();
-      const newCode = generateCode(newLevel);
-      const currentPack = getCurrentSymbolPack(newLevel);
+
+      // Get fresh random symbols for this level
+      const availableSymbols = getSymbolPack(newLevel);
+      const newCode = createCodeSequence(newLevel, availableSymbols);
       setCode(newCode);
       setUserInput([]);
       setLevel(newLevel);
 
-      // Generate a new grid for this level, ensuring all code symbols are included
-      const newGridSymbols = generateGrid(currentPack, newCode);
+      // Generate a grid with strategic symbol distribution
+      const newGridSymbols = createSymbolGrid(newLevel, newCode, availableSymbols);
 
-      // Set the grid symbols right away
-      setGridSymbols(newGridSymbols);
+      // Verify and set grid symbols
+      if (!verifyGrid(newGridSymbols, newCode)) {
+        console.error(`Grid verification failed on level ${newLevel} - using fallback`);
+        // Fallback grid creation to ensure code symbols are included
+        const fallbackGrid = [...newCode];
+        while (fallbackGrid.length < 16) {
+          fallbackGrid.push(availableSymbols[Math.floor(Math.random() * availableSymbols.length)]);
+        }
+        setGridSymbols(fallbackGrid.sort(() => Math.random() - 0.5));
+      } else {
+        setGridSymbols(newGridSymbols);
+      }
 
-      // Mark these symbols as loaded (even if they're not yet)
-      // This ensures the game flow continues
-      const symbolsToMark = [...new Set([...newCode, ...newGridSymbols])];
-      symbolsToMark.forEach(symbol => {
-        // Force preload in browser cache
-        const img = new Image();
-        img.src = `/symbols/${symbol}`;
-      });
+      // Preload symbols for smoother gameplay
+      const symbolsToPreload = [...new Set([...newCode, ...newGridSymbols])];
+      preloadSpecificSymbols(symbolsToPreload);
 
-      // Skip waiting for preloading, just show the code immediately
+      // Show the code
       setGameState('showCode');
       setTimeLeft(MAX_ROUND_TIME);
 
@@ -345,9 +342,6 @@ export const useGame = () => {
       }, 2000);
     },
     [
-      generateCode,
-      getCurrentSymbolPack,
-      generateGrid,
       clearGameTimer,
       startInputPhase
     ]
@@ -439,7 +433,7 @@ export const useGame = () => {
     setCode([]);
     setIsPlayerWinner(null);
     setShowGameOverModal(false);
-    setLives(2);
+    setLives(STARTING_LIVES);
     setTimeLeft(MAX_ROUND_TIME);
     setTotalScore(0);
     setCurrentStreak(0);
@@ -468,7 +462,7 @@ export const useGame = () => {
     showGameOverModal,
     lives,
     timeLeft,
-    currentSymbolPack: getCurrentSymbolPack(level),
+    currentSymbolPack: getSymbolPack(level),
     currentTheme: getCurrentTheme(level),
     gridSymbols,
     startGame,

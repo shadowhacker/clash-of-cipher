@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { MASTER_SYMBOLS } from '../utils/symbolCacheUtils';
+import { MASTER_SYMBOLS } from '../utils/symbolManager';
 
 // Create a global cache that persists across component mounts
 const imageCache: Record<string, HTMLImageElement> = {};

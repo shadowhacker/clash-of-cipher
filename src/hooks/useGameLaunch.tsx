@@ -23,15 +23,17 @@ export const useGameLaunch = ({ onLaunchComplete }: UseGameLaunchProps) => {
 
   // Callback when countdown completes
   const handleCountdownComplete = useCallback(() => {
-    setShowCountdown(false);
-    onLaunchComplete();
+    // Use requestAnimationFrame to ensure we're not updating during render
+    requestAnimationFrame(() => {
+      setShowCountdown(false);
+      onLaunchComplete();
+    });
   }, [onLaunchComplete]);
 
-  // Component to render the countdown overlay
-  const Overlay = useCallback(() => {
-    if (!showCountdown) return null;
-    return <LaunchCountdown onComplete={handleCountdownComplete} />;
-  }, [showCountdown, handleCountdownComplete]);
+  // Render function for the overlay instead of a component
+  const Overlay = () => {
+    return showCountdown ? <LaunchCountdown onComplete={handleCountdownComplete} /> : null;
+  };
 
   return {
     launchRun,
