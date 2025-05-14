@@ -1,4 +1,5 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
+import { useImageCache } from '../hooks/useImageCache';
 
 interface GuideScreenProps {
   onClose: () => void;
@@ -24,6 +25,11 @@ const scrollbarStyles = `
 const GuideScreen: React.FC<GuideScreenProps> = ({ onClose, isFirstTime, open }) => {
   // Create ref for the dialog content to track clicks
   const dialogRef = useRef<HTMLDivElement>(null);
+  const imageSrc = "/images/how-to-play.png";
+  const { status, cachedUrl } = useImageCache(imageSrc);
+
+  const loading = status === 'loading';
+  const error = status === 'error';
 
   // Handle click outside
   useEffect(() => {
@@ -55,16 +61,32 @@ const GuideScreen: React.FC<GuideScreenProps> = ({ onClose, isFirstTime, open })
         style={{ maxHeight: 'calc(100vh - 40px)' }}
       >
         <div
-          className="overflow-auto flex-grow thin-scrollbar"
+          className="overflow-auto flex-grow thin-scrollbar relative"
           style={{
             scrollbarWidth: 'thin',
             scrollbarColor: '#b45309 #fef3c7',
+            minHeight: '50vh',
           }}
         >
+          {loading && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-amber-950/10">
+              <div className="h-12 w-12 rounded-full border-4 border-amber-700 border-t-transparent animate-spin"></div>
+              <p className="mt-4 text-amber-800 font-medium">Loading guide...</p>
+            </div>
+          )}
+
+          {error && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-amber-950/10 p-4">
+              <p className="text-amber-800 font-medium text-center">
+                Could not load the guide image. Please check your connection and try again.
+              </p>
+            </div>
+          )}
+
           <img
-            src="/images/how-to-play.png"
+            src={cachedUrl}
             alt="How to Play Instructions"
-            className="w-full h-auto"
+            className={`w-full h-auto ${loading ? 'opacity-20' : 'opacity-100'}`}
           />
         </div>
 

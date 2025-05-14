@@ -105,6 +105,7 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
                 left: 0,
                 right: 0,
                 bottom: 0,
+                backgroundColor: '#5b2900',
                 backgroundImage: 'url("/images/bg-game-over.png")',
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',

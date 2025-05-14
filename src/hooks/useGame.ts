@@ -53,6 +53,7 @@ export const useGame = () => {
   // Function references to solve circular dependencies
   const startInputPhaseRef = useRef<() => void>(() => { });
   const restartSameLevelRef = useRef<() => void>(() => { });
+  const loseLifeRef = useRef<() => void>(() => { });
 
   // Clear any existing timer
   const clearGameTimer = useCallback(() => {
@@ -145,11 +146,11 @@ export const useGame = () => {
 
     timerRef.current = window.setInterval(() => {
       setTimeLeft((prev) => {
-        if (prev <= 1) {
+        if (prev <= 0) {
           clearGameTimer();
-          // Use the function reference to avoid circular dependency
-          if (typeof restartSameLevelRef.current === 'function') {
-            restartSameLevelRef.current();
+          // Call loseLife via the reference to avoid circular dependency
+          if (typeof loseLifeRef.current === 'function') {
+            loseLifeRef.current();
           }
           return 0;
         }
@@ -208,6 +209,9 @@ export const useGame = () => {
     setIsPlayerWinner(false);
     setTimeLeft(MAX_ROUND_TIME); // Reset timer using constant
   }, [clearGameTimer, gameOver]);
+
+  // Update function reference for loseLife
+  loseLifeRef.current = loseLife;
 
   // Generate a grid ensuring all code symbols are included
   const generateGrid = useCallback(

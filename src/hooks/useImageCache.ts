@@ -10,7 +10,9 @@ export const loadingStatus: Record<string, 'loading' | 'loaded' | 'error'> = {};
 
 // Important UI images to preload
 const CRITICAL_UI_IMAGES = [
-    '/images/bg-intro.png'  // Intro background image
+    '/images/bg-intro.png',  // Intro background image
+    '/images/how-to-play.png', // Help guide image
+    '/images/bg-game-over.png' // Game over background
 ];
 
 // Track overall loading progress
