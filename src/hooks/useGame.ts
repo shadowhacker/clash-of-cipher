@@ -107,6 +107,9 @@ export const useGame = () => {
   const gameOver = useCallback(() => {
     clearGameTimer();
 
+    // Ensure score is not negative at game over
+    setTotalScore(prevScore => Math.max(prevScore, 0));
+
     // With infinite levels, we no longer have a "completion" condition
     setIsPlayerWinner(false);
     setGameState('result');
@@ -228,8 +231,11 @@ export const useGame = () => {
     setShowWrongTaps(true);
 
     setLives((prevLives) => {
-      const newLives = Math.max(prevLives - 1, -1);
-      if (newLives === -1) {
+      // Decrement lives but never below 0
+      const newLives = Math.max(prevLives - 1, 0);
+
+      if (prevLives <= 0) {
+
         // Call gameOver directly here to avoid stale closure issues
         setTimeout(() => gameOver(), 0);
       } else {

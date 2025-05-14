@@ -31,16 +31,18 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ className = '', personalBest 
     playerName,
     showNamePrompt,
     setShowNamePrompt,
-    submitPlayerName
+    submitPlayerName,
+    playerRank,
+    totalPlayers
   } = useLeaderboard(personalBest);
 
-  // Find user's position in the leaderboard
-  const userRank = leaderboard.findIndex(entry => entry.device_id === deviceId) + 1;
+  // Find user's entry in the leaderboard
   const userEntry = leaderboard.find(entry => entry.device_id === deviceId);
+  const isInTop10 = leaderboard.slice(0, 10).findIndex(entry => entry.device_id === deviceId) !== -1;
 
   // Handle sharing a specific player's score
   const sharePlayerScore = (name: string, rank: number, best: number) => {
-    const shareText = `${name} is #${rank} on Cipher Clash with Round ${best}! Try: https://symbol-grid-sparkle-showdown.lovable.app/`;
+    const shareText = `${name} is #${rank} on Cipher Clash with a score of ${best}! Try: https://clash-of-cipher.lovable.app/`;
     navigator.clipboard.writeText(shareText);
     toast("Copied to clipboard!", {
       description: "Share this achievement!",
@@ -77,7 +79,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ className = '', personalBest 
                   <div className="font-semibold text-sm">🎯 Best</div>
                   <div></div>
 
-                  {leaderboard.map((entry, index) => {
+                  {leaderboard.slice(0, 10).map((entry, index) => {
                     const isCurrentPlayer = entry.device_id === deviceId;
                     return (
                       <div key={entry.id} className="contents">
@@ -114,25 +116,41 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ className = '', personalBest 
                 </div>
 
                 {/* Your position section - only shown if user has a best score but isn't in top 10 */}
-                {userRank === 0 && userEntry && (
-                  <div className="mt-4 pt-4 border-t">
-                    <div className="text-sm font-medium mb-2">Your Position</div>
-                    <div className="grid grid-cols-[auto_1fr_auto_auto] gap-2 items-center bg-amber-50 rounded-md p-2">
-                      <div className="font-medium">?</div>
-                      <div className="font-medium">{userEntry.name} (You)</div>
-                      <div className="font-medium">{userEntry.best}</div>
-                      <div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-6 w-6 p-0"
-                          onClick={() => sharePlayerScore(userEntry.name, userRank, userEntry.best)}
-                        >
-                          <Share2 className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
+                {!isInTop10 && userEntry && playerRank && (
+                  <>
+                    {/* Divider with indication that there are more players */}
+                    <div className="mt-4 pt-2 border-t text-center text-gray-500 text-sm">
+                      {playerRank > 10 && (
+                        <div className="my-2 italic">
+                          {playerRank - 10} more players...
+                        </div>
+                      )}
                     </div>
-                  </div>
+
+                    <div className="mt-2">
+                      <div className="text-sm font-medium mb-2">Your Position</div>
+                      <div className="grid grid-cols-[auto_1fr_auto_auto] gap-2 items-center bg-amber-50 rounded-md p-2">
+                        <div className="font-medium">{playerRank}</div>
+                        <div className="font-medium">{userEntry.name} (You)</div>
+                        <div className="font-medium">{userEntry.best}</div>
+                        <div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0"
+                            onClick={() => sharePlayerScore(userEntry.name, playerRank, userEntry.best)}
+                          >
+                            <Share2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </div>
+                      {totalPlayers > 0 && (
+                        <div className="text-xs text-gray-500 mt-1 text-right">
+                          Out of {totalPlayers} total players
+                        </div>
+                      )}
+                    </div>
+                  </>
                 )}
               </>
             )}
