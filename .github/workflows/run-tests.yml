@@ -38,7 +38,7 @@ jobs:
 
       - name: Archive test results
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4.6.2
         with:
           name: test-report
           path: |
@@ -60,7 +60,7 @@ jobs:
 
       - name: Upload test summary
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4.6.2
         with:
           name: test-summary
           path: test-results.md
