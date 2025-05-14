@@ -1,4 +1,4 @@
-import { SYMBOL_CONFIG } from '../config/gameConfig';
+import { SYMBOL_CONFIG, MAX_REFERENCE_LEVEL } from '../config/gameConfig';
 import { secureShuffleArray, secureRandomSample } from './randomUtils';
 import logger from './logger';
 
@@ -30,7 +30,6 @@ export function calculateProgressRatio(level: number): number {
     // With infinite levels, we'll use a logarithmic scale that approaches 1.0
     // This ensures difficulty still scales but more gradually at higher levels
     // We'll use level 50 as the reference point for "maximum" difficulty
-    const MAX_REFERENCE_LEVEL = 50;
 
     // Ensure level is at least 1
     const boundedLevel = Math.max(1, level);

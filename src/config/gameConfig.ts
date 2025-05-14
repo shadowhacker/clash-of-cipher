@@ -61,6 +61,8 @@ export const SCORING = {
     JACKPOT_BONUS: 1000, // Bonus points for jackpot rounds
 };
 
+export const MAX_REFERENCE_LEVEL = 50;
+
 /**
  * Utility functions for game mechanics
  */
