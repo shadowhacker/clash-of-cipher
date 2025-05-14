@@ -27,15 +27,15 @@ npm run test:coverage
 
 This project uses GitHub Actions to automatically run tests on every push and pull request. The workflow:
 
-1. Installs Node.js and project dependencies
-2. Installs system dependencies for canvas support
-3. Runs the full Jest test suite with coverage
-4. Runs the basic test suite
-5. Archives test results as artifacts
+- Installs Node.js and project dependencies
+- Installs system dependencies for canvas support
+- Runs the full Jest test suite with coverage
+- Runs the basic test suite
+- Archives test results as artifacts
 
 You can see the test workflow configuration in `.github/workflows/run-tests.yml`.
 
-> **Note:** The badge above is powered by GitHub Actions and requires no extra secrets or Gists.
+> **Note:** The badge above is powered by GitHub Actions and requires no extra secrets or Gists. Each test is run once per workflow execution.
 
 ## How can I edit this code?
 

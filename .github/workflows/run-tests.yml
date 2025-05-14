@@ -55,7 +55,7 @@ jobs:
           echo "\`\`\`" >> test-results.md
           echo "## Basic Tests" >> test-results.md
           echo "\`\`\`" >> test-results.md
-          npm run test:basic >> test-results.md
+          tail -n 50 ./test-report/TEST_SUMMARY.md >> test-results.md
           echo "\`\`\`" >> test-results.md
 
       - name: Upload test summary
