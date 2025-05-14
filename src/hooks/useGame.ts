@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { toast } from 'sonner';
 import { useGameLaunch } from './useGameLaunch.tsx';
+import { areAllImagesLoaded, preloadAllSymbols, preloadSpecificSymbols } from '../components/SymbolPreloader';
 
 // Game constants
 export const MAX_ROUND_TIME = 10; // Maximum time for each round in seconds
@@ -213,13 +214,16 @@ export const useGame = () => {
   }, [clearGameTimer, loseLife]);
 
   // Restart the same level (on wrong input or timeout)
-  const restartSameLevel = useCallback(() => {
+  const restartSameLevel = useCallback((): void => {
     setUserInput([]);
+
+    // Skip waiting for preloading, just show the code immediately
     setGameState('showCode');
 
+    // Show the code for 2000ms to give more time to see it
     setTimeout(() => {
       startInputPhase();
-    }, 1000);
+    }, 2000);
   }, [startInputPhase]);
 
   // Generate a grid ensuring all code symbols are included
@@ -277,11 +281,27 @@ export const useGame = () => {
       setCode(newCode);
       setUserInput([]);
       setLevel(initialLevel);
+
+      // Generate grid symbols
+      const newGridSymbols = generateGrid(currentPack, newCode);
+
+      // Set the grid symbols right away
+      setGridSymbols(newGridSymbols);
+
+      // Mark these symbols as loaded (even if they're not yet)
+      // This ensures the game flow continues
+      const symbolsToMark = [...new Set([...newCode, ...newGridSymbols])];
+      symbolsToMark.forEach(symbol => {
+        // Force preload in browser cache
+        const img = new Image();
+        img.src = `/symbols/${symbol}`;
+      });
+
+      // Skip waiting for preloading, just show the code immediately
       setGameState('showCode');
       setShowGameOverModal(false);
       setLives(2);
       setTimeLeft(MAX_ROUND_TIME);
-      setGridSymbols(generateGrid(currentPack, newCode));
       setShowStartScreen(false);
 
       // Reset score system
@@ -290,10 +310,10 @@ export const useGame = () => {
       setGems(0);
       setShowWrongTaps(false);
 
-      // Show the code for 1000ms then start input phase
+      // Show the code for 2000ms to give more time to see it
       setTimeout(() => {
         startInputPhase();
-      }, 1000);
+      }, 2000);
     }
   });
 
@@ -305,23 +325,37 @@ export const useGame = () => {
 
   // Start next level
   const startNextLevel = useCallback(
-    (newLevel: number) => {
+    (newLevel: number): void => {
       clearGameTimer();
       const newCode = generateCode(newLevel);
       const currentPack = getCurrentSymbolPack(newLevel);
       setCode(newCode);
       setUserInput([]);
       setLevel(newLevel);
+
+      // Generate a new grid for this level, ensuring all code symbols are included
+      const newGridSymbols = generateGrid(currentPack, newCode);
+
+      // Set the grid symbols right away
+      setGridSymbols(newGridSymbols);
+
+      // Mark these symbols as loaded (even if they're not yet)
+      // This ensures the game flow continues
+      const symbolsToMark = [...new Set([...newCode, ...newGridSymbols])];
+      symbolsToMark.forEach(symbol => {
+        // Force preload in browser cache
+        const img = new Image();
+        img.src = `/symbols/${symbol}`;
+      });
+
+      // Skip waiting for preloading, just show the code immediately
       setGameState('showCode');
       setTimeLeft(MAX_ROUND_TIME);
 
-      // Generate a new grid for this level, ensuring all code symbols are included
-      setGridSymbols(generateGrid(currentPack, newCode));
-
-      // Show the code for 1000ms then start input phase
+      // Show the code for 2000ms to give more time to see it
       setTimeout(() => {
         startInputPhase();
-      }, 1000);
+      }, 2000);
     },
     [
       generateCode,
@@ -378,9 +412,9 @@ export const useGame = () => {
           setGameState('result');
 
           // Auto advance to next level after 1 second
-          setTimeout(() => {
+          setTimeout(async () => {
             const nextLevel = level + 1;
-            startNextLevel(nextLevel);
+            await startNextLevel(nextLevel);
           }, 1000);
         } else {
           // User got it wrong

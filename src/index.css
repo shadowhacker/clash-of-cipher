@@ -97,5 +97,13 @@
 
   body {
     @apply bg-background text-foreground;
+    background: radial-gradient(circle, #1a0d05 0%, #0e0817 100%);
+    margin: 0;
+    padding: 0;
+  }
+
+  #root {
+    background: radial-gradient(circle, #1a0d05 0%, #0e0817 100%);
+    min-height: 100vh;
   }
 }

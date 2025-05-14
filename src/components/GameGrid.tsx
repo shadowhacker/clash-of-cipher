@@ -1,4 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import CachedSymbol from './CachedSymbol';
+import { preloadAllGameSymbols } from '../hooks/useImageCache';
+
+// Import the CACHE_BUSTER constant
+const CACHE_BUSTER = 'v1';
 
 interface GameGridProps {
   onButtonClick: (symbol: string) => void;
@@ -22,8 +27,14 @@ const GameGrid: React.FC<GameGridProps> = ({
 }) => {
   const [highlightedIndex, setHighlightedIndex] = useState<number | null>(null);
 
+  // Preload symbols when they change
+  useEffect(() => {
+    // Preload all symbols when grid changes
+    preloadAllGameSymbols();
+  }, [gridSymbols]);
+
   // Handle button click with visual feedback
-  const handleButtonClick = (symbol: string, index: number) => {
+  const handleButtonClick = (symbol: string, index: number): void => {
     setHighlightedIndex(index);
     setTimeout(() => {
       setHighlightedIndex(null);
@@ -61,7 +72,7 @@ const GameGrid: React.FC<GameGridProps> = ({
 
       {/* Show code overlay - simplified but keeping aesthetic elements */}
       {gameState === 'showCode' && (
-        <div className=" absolute inset-0 flex items-center justify-center z-10 bg-black/80 rounded-md pointer-events-none">
+        <div className="absolute inset-0 flex items-center justify-center z-10 bg-black/80 rounded-md pointer-events-none">
           <div className="flex flex-col items-center gap-4 max-w-xs justify-center shadow-2xl rounded-lg px-6 py-4">
             <p className="text-amber-400 text-2xl font-medium tracking-wider uppercase">
               Meditate on these
@@ -69,11 +80,7 @@ const GameGrid: React.FC<GameGridProps> = ({
             <div className="flex flex-wrap gap-4 justify-center text-4xl font-bold text-white">
               {code.map((symbol, idx) => (
                 <span key={idx} className="bg-amber-800/80 p-2 rounded-md border border-amber-600/70 shadow-md">
-                  <img
-                    src={`/symbols/${symbol}`}
-                    alt={`Symbol ${idx + 1}`}
-                    className="w-10 h-10 object-contain inline-block"
-                  />
+                  <CachedSymbol symbol={symbol} index={idx} />
                 </span>
               ))}
             </div>
@@ -116,11 +123,7 @@ const GameGrid: React.FC<GameGridProps> = ({
               disabled={gameState !== 'input'}
               aria-label={`Symbol ${index + 1}`}
             >
-              <img
-                src={`/symbols/${symbol}`}
-                alt={`Symbol ${index + 1}`}
-                className="w-10 h-10 object-contain"
-              />
+              <CachedSymbol symbol={symbol} index={index} />
             </button>
           );
         })}

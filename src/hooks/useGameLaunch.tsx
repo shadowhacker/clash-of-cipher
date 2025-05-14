@@ -1,6 +1,6 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MASTER_SYMBOLS } from './useGame';
+import { preloadAllSymbols, forceMarkAllLoaded } from '../components/SymbolPreloader';
 
 interface UseGameLaunchProps {
   onLaunchComplete: () => void;
@@ -10,43 +10,28 @@ export const useGameLaunch = ({ onLaunchComplete }: UseGameLaunchProps) => {
   const [showOverlay, setShowOverlay] = useState(false);
   const [overlayContent, setOverlayContent] = useState<'loading' | 'countdown'>('loading');
   const [countdownValue, setCountdownValue] = useState<number | string>(3);
-  const [imagesPreloaded, setImagesPreloaded] = useState(false);
 
-  // Preload all symbol images
-  const preloadImages = useCallback(async () => {
-    if (imagesPreloaded) return true;
-
-    const promises = MASTER_SYMBOLS.map((symbol) => {
-      return new Promise<void>((resolve) => {
-        const img = new Image();
-        img.src = `/symbols/${symbol}`;
-        img.onload = () => resolve();
-        img.onerror = () => {
-          console.error(`Failed to load symbol: ${symbol}`);
-          resolve();
-        };
-      });
-    });
-
-    await Promise.all(promises);
-    setImagesPreloaded(true);
-    return true;
-  }, [imagesPreloaded]);
-
-  const launchRun = useCallback(async () => {
+  const launchRun = useCallback(async (): Promise<void> => {
     // Phase 1: Loading - preload images
     setShowOverlay(true);
     setOverlayContent('loading');
 
-    // Wait for images to be preloaded with a minimum loading time of 1.5 seconds
-    const startTime = Date.now();
-    await preloadImages();
-
-    // Ensure loading screen shows for at least 1.5 seconds
-    const elapsedTime = Date.now() - startTime;
-    if (elapsedTime < 1500) {
-      await new Promise(resolve => setTimeout(resolve, 1500 - elapsedTime));
+    try {
+      // Load symbols with a timeout to prevent blocking
+      await Promise.race([
+        preloadAllSymbols(),
+        new Promise<null>(resolve => setTimeout(() => {
+          forceMarkAllLoaded(); // Mark all loaded if timeout occurs
+          resolve(null);
+        }, 2000))
+      ]);
+    } catch (error) {
+      console.error("Error preloading symbols:", error);
+      forceMarkAllLoaded(); // Mark all loaded if error occurs
     }
+
+    // Ensure loading shows for a minimum amount of time
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
     // Phase 2: Countdown
     setOverlayContent('countdown');
@@ -60,7 +45,7 @@ export const useGameLaunch = ({ onLaunchComplete }: UseGameLaunchProps) => {
     // Phase 3: Complete
     setShowOverlay(false);
     onLaunchComplete();
-  }, [onLaunchComplete, preloadImages]);
+  }, [onLaunchComplete]);
 
   const Overlay = useCallback(() => (
     <AnimatePresence mode="wait">

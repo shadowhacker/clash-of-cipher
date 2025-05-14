@@ -1,5 +1,6 @@
 import React from 'react';
 import AudioControls from './AudioControls';
+import { useImageCache, getImageLoadingStatus } from '../hooks/useImageCache';
 
 interface IntroScreenProps {
   onStartGame: () => void;
@@ -7,18 +8,42 @@ interface IntroScreenProps {
 }
 
 const IntroScreen: React.FC<IntroScreenProps> = ({ onStartGame, onShowGuide }) => {
+  // Get background image loading status
+  const bgImagePath = '/images/bg-intro.png';
+  const bgImageStatus = getImageLoadingStatus(bgImagePath);
+  const { status } = useImageCache(bgImagePath);
+
+  // Only show the background image if it's loaded
+  const bgImageStyle = status === 'loaded'
+    ? {
+      backgroundImage: `url("${bgImagePath}")`,
+      backgroundPosition: 'center center',
+      backgroundSize: 'auto 100%',
+      backgroundRepeat: 'no-repeat'
+    }
+    : {
+      // Fallback gradient background while loading
+      background: 'radial-gradient(circle, #1a0d05 0%, #0e0817 100%)'
+    };
+
   return (
     <div className="fixed inset-0 flex flex-col items-center overflow-hidden"
       style={{
         backgroundColor: '#0e0817',
-        backgroundImage: 'url("/images/bg-intro.png")',
-        backgroundPosition: 'center center',
-        backgroundSize: 'auto 100%',
-        backgroundRepeat: 'no-repeat'
+        transition: 'background-image 0.5s ease-in',
+        ...bgImageStyle
       }}>
       <div className="absolute top-4 right-4 z-10">
         <AudioControls />
       </div>
+
+      {/* Show loading indicator if background is still loading */}
+      {status === 'loading' && (
+        <div className="absolute top-4 left-4 flex items-center space-x-2 text-amber-400/70">
+          <div className="w-3 h-3 rounded-full bg-amber-500 animate-pulse"></div>
+          <span className="text-xs">Loading assets...</span>
+        </div>
+      )}
 
       <div className="w-full h-full flex flex-col justify-end items-center px-4" style={{ paddingBottom: '5vh' }}>
         <div className="flex-grow"></div>
