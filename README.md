@@ -1,6 +1,7 @@
 # Welcome to your Lovable project
 
-![CI](https://github.com/shadowhacker/clash-of-cipher/actions/workflows/run-tests.yml/badge.svg)
+[![CI](https://github.com/shadowhacker/clash-of-cipher/actions/workflows/run-tests.yml/badge.svg)](https://github.com/shadowhacker/clash-of-cipher/actions/workflows/run-tests.yml)
+[![Coverage](https://img.shields.io/badge/coverage-report-brightgreen)](https://shadowhacker.github.io/clash-of-cipher/coverage-report/)
 
 ## Project info
 

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { getDeviceId, getPlayerName, savePlayerName } from '@/utils/deviceStorage';
+import logger from '../utils/logger';
 
 interface LeaderboardEntry {
   id: string;
@@ -13,11 +14,13 @@ interface LeaderboardEntry {
 
 export const useLeaderboard = (personalBest: number) => {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [playerName, setPlayerName] = useState<string | null>(null);
   const [showNamePrompt, setShowNamePrompt] = useState(false);
+  const [updating, setUpdating] = useState(false);
   const [playerRank, setPlayerRank] = useState<number | null>(null);
   const [totalPlayers, setTotalPlayers] = useState<number>(0);
+  const [error, setError] = useState<string | null>(null);
 
   // Load player name and leaderboard on initial render
   useEffect(() => {
@@ -53,7 +56,7 @@ export const useLeaderboard = (personalBest: number) => {
         .limit(10);
 
       if (error) {
-        console.error('Error fetching leaderboard:', error);
+        logger.error('Error fetching leaderboard:', error);
         return;
       }
 
@@ -101,9 +104,9 @@ export const useLeaderboard = (personalBest: number) => {
         setPlayerRank(playerRank);
       }
     } catch (err) {
-      console.error('Failed to fetch leaderboard:', err);
-    } finally {
       setLoading(false);
+      setError("Failed to fetch leaderboard. Please try again later.");
+      logger.error('Failed to fetch leaderboard:', err);
     }
   }, []);
 
@@ -156,7 +159,9 @@ export const useLeaderboard = (personalBest: number) => {
         await fetchLeaderboard();
       }
     } catch (err) {
-      console.error('Failed to update leaderboard:', err);
+      setUpdating(false);
+      setError("Failed to update leaderboard. Please try again later.");
+      logger.error('Failed to update leaderboard:', err);
     }
   };
 
@@ -185,6 +190,7 @@ export const useLeaderboard = (personalBest: number) => {
     updateLeaderboardEntry,
     fetchLeaderboard,
     playerRank,
-    totalPlayers
+    totalPlayers,
+    error
   };
 };

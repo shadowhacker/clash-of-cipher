@@ -20,6 +20,7 @@ import {
   getFlashTime,
   getSymbolCountRange
 } from '../config/gameConfig';
+import logger from '../utils/logger';
 
 // Game states
 type GameState = 'idle' | 'showCode' | 'input' | 'result';
@@ -183,7 +184,7 @@ export const useGame = () => {
 
     // Verify all code symbols are in the grid (safety check)
     if (!verifyGrid(newGridSymbols, newCode)) {
-      console.error("Grid verification failed - regenerating");
+      logger.error("Grid verification failed - regenerating");
       // If verification fails, try again with a more direct approach
       const retryGrid = [...newCode]; // Start with the code symbols
 
@@ -286,7 +287,7 @@ export const useGame = () => {
 
       // Verify and set grid symbols
       if (!verifyGrid(newGridSymbols, newCode)) {
-        console.error("Grid verification failed on initial level - using fallback");
+        logger.error("Grid verification failed on initial level - using fallback");
         // Fallback grid creation to ensure code symbols are included
         const fallbackGrid = [...newCode];
         while (fallbackGrid.length < SYMBOL_CONFIG.GRID_SIZE) {
@@ -346,7 +347,7 @@ export const useGame = () => {
 
       // Verify and set grid symbols
       if (!verifyGrid(newGridSymbols, newCode)) {
-        console.error(`Grid verification failed on level ${newLevel} - using fallback`);
+        logger.error(`Grid verification failed on level ${newLevel} - using fallback`);
         // Fallback grid creation to ensure code symbols are included
         const fallbackGrid = [...newCode];
         while (fallbackGrid.length < SYMBOL_CONFIG.GRID_SIZE) {

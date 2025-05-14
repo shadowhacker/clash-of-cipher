@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useGame } from '../hooks/useGame';
 import { getPlayerName, savePlayerName } from '../utils/deviceStorage';
 import IntroScreen from '../components/IntroScreen';
@@ -16,6 +16,7 @@ import PlayerNameDialog from '../components/PlayerNameDialog';
 import Leaderboard from '../components/Leaderboard';
 import LifeWarning from '../components/LifeWarning';
 import HelpButton from '../components/HelpButton';
+import logger from '../utils/logger';
 
 const Index = () => {
   const [showGuide, setShowGuide] = useState(false);
@@ -73,20 +74,10 @@ const Index = () => {
 
   // Handle player name submission
   const handlePlayerNameSubmit = (name: string) => {
-    console.log('Name submitted:', name);
+    logger.debug('Name submitted:', name);
     savePlayerName(name);
     setShowPlayerNameDialog(false);
-
-    // If we're on the intro screen, proceed with dismissing it and starting the game
-    if (showStartScreen) {
-      console.log('On start screen, dismissing and starting game');
-      dismissStartScreen();
-      startGame();
-    } else if (gameState === 'idle') {
-      console.log('In idle state, starting game');
-      // Otherwise, just start the game if we're in idle state
-      startGame();
-    }
+    handleStartGame(); // Auto-start game after name is submitted
   };
 
   // Handle intro screen start game
@@ -117,6 +108,20 @@ const Index = () => {
   const handleGameOverClose = () => {
     resetGame();
   };
+
+  const handleStartGame = useCallback(() => {
+    if (showStartScreen) {
+      logger.debug('On start screen, dismissing and starting game');
+      dismissStartScreen();
+      startGame();
+      return;
+    }
+
+    if (gameState === 'idle') {
+      logger.debug('In idle state, starting game');
+      startGame();
+    }
+  }, [showStartScreen, gameState, dismissStartScreen, startGame]);
 
   if (showStartScreen) {
     return (

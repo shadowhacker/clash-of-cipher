@@ -1,5 +1,6 @@
 import { SYMBOL_CONFIG } from '../config/gameConfig';
 import { secureShuffleArray, secureRandomSample } from './randomUtils';
+import logger from './logger';
 
 // Array of all available symbol image filenames
 export const MASTER_SYMBOLS = [
@@ -16,7 +17,7 @@ export const MASTER_SYMBOLS = [
 
 // Validate that MASTER_SYMBOLS.length matches SYMBOL_CONFIG.TOTAL_SYMBOLS
 if (MASTER_SYMBOLS.length !== SYMBOL_CONFIG.TOTAL_SYMBOLS) {
-    console.warn(`Warning: MASTER_SYMBOLS.length (${MASTER_SYMBOLS.length}) does not match SYMBOL_CONFIG.TOTAL_SYMBOLS (${SYMBOL_CONFIG.TOTAL_SYMBOLS}). This may cause issues with symbol distribution.`);
+    logger.warn(`Warning: MASTER_SYMBOLS.length (${MASTER_SYMBOLS.length}) does not match SYMBOL_CONFIG.TOTAL_SYMBOLS (${SYMBOL_CONFIG.TOTAL_SYMBOLS}). This may cause issues with symbol distribution.`);
 }
 
 /**

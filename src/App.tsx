@@ -3,12 +3,13 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import SymbolPreloader from "./components/SymbolPreloader";
 import InitialLoadingScreen from "./components/InitialLoadingScreen";
 import { preloadAllGameSymbols, loadingProgress } from "./hooks/useImageCache";
+import logger from './utils/logger';
 
 const queryClient = new QueryClient();
 
@@ -19,32 +20,33 @@ const App = () => {
 
   // Preload symbols when app launches
   useEffect(() => {
-    // Start preloading symbols right away
-    console.log('Starting to preload all game symbols...');
-    preloadAllGameSymbols()
-      .then(() => {
-        console.log(`All symbols preloaded! Loading progress: ${loadingProgress.loaded}/${loadingProgress.total}`);
+    const loadAllSymbols = async () => {
+      try {
+        logger.info('Starting to preload all game symbols...');
+        await preloadAllGameSymbols();
+        logger.info(`All symbols preloaded! Loading progress: ${loadingProgress.loaded}/${loadingProgress.total}`);
         setSymbolsPreloaded(true);
-      })
-      .catch(error => {
-        console.error('Error preloading symbols:', error);
+      } catch (error) {
+        logger.error('Error preloading symbols:', error);
         // Still mark as preloaded to allow game to continue
         setSymbolsPreloaded(true);
-      });
+      }
+    };
+    loadAllSymbols();
   }, []);
 
   // Handle loading screen completion - only called when InitialLoadingScreen is done
-  const handleLoadingComplete = () => {
-    console.log('Loading screen animation complete');
+  const handleLoadingComplete = useCallback(() => {
+    logger.info('Loading screen animation complete');
     setLoadingComplete(true);
-  };
+  }, []);
 
   // Only mark app as ready when both conditions are met:
   // 1. Symbols are preloaded (or attempted to preload)
   // 2. Loading screen animation is complete
   useEffect(() => {
     if (symbolsPreloaded && loadingComplete) {
-      console.log('App is now fully ready to render!');
+      logger.info('App is now fully ready to render!');
       setAppReady(true);
     }
   }, [symbolsPreloaded, loadingComplete]);

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { MASTER_SYMBOLS } from '../utils/symbolManager';
+import logger from '../utils/logger';
 
 // Create a global cache that persists across component mounts
 const imageCache: Record<string, HTMLImageElement> = {};
@@ -58,7 +59,7 @@ export const preloadImage = (src: string, isCritical = false): Promise<HTMLImage
 
     // Start loading the image
     loadingStatus[src] = 'loading';
-    console.log(`Starting to load ${isCritical ? 'CRITICAL' : 'normal'} image: ${src}`);
+    logger.debug(`Starting to load ${isCritical ? 'CRITICAL' : 'normal'} image: ${src}`);
 
     // Create and store the loading promise
     loadingPromises[src] = new Promise<HTMLImageElement>((resolve, reject) => {
@@ -82,7 +83,7 @@ export const preloadImage = (src: string, isCritical = false): Promise<HTMLImage
                     }
                 }
             } catch (e) {
-                console.warn('Could not create data URL for', src);
+                logger.warn('Could not create data URL for', src);
             }
 
             loadingStatus[src] = 'loaded';
@@ -90,9 +91,9 @@ export const preloadImage = (src: string, isCritical = false): Promise<HTMLImage
             loadingProgress.loaded++;
             if (isCritical) {
                 loadingProgress.criticalLoaded++;
-                console.log(`Loaded CRITICAL image: ${src} (${loadingProgress.criticalLoaded}/${loadingProgress.criticalTotal})`);
+                logger.debug(`Loaded CRITICAL image: ${src} (${loadingProgress.criticalLoaded}/${loadingProgress.criticalTotal})`);
             } else {
-                console.log(`Loaded image: ${src} (${loadingProgress.percentage}%)`);
+                logger.debug(`Loaded image: ${src} (${loadingProgress.percentage}%)`);
             }
             resolve(img);
         };
@@ -105,7 +106,7 @@ export const preloadImage = (src: string, isCritical = false): Promise<HTMLImage
                 loadingProgress.criticalLoaded++;
             }
 
-            console.error(`Failed to load ${isCritical ? 'CRITICAL' : ''} image: ${src}`);
+            logger.error(`Failed to load ${isCritical ? 'CRITICAL' : ''} image: ${src}`);
 
             // Create a placeholder image to not break the game
             const placeholderImg = new Image();
@@ -148,7 +149,7 @@ export const getCachedImageUrl = (src: string): string => {
                 return dataUrlCache[src];
             }
         } catch (e) {
-            console.warn('Could not create data URL for', src);
+            logger.warn('Could not create data URL for', src);
         }
     }
 
@@ -163,7 +164,7 @@ export const getCachedImageUrl = (src: string): string => {
  */
 export const preloadCriticalUIImages = async (): Promise<void> => {
     try {
-        console.log(`Starting to preload ${CRITICAL_UI_IMAGES.length} CRITICAL UI images...`);
+        logger.info(`Starting to preload ${CRITICAL_UI_IMAGES.length} CRITICAL UI images...`);
 
         // Prioritize loading the intro background image - wait for ALL to complete
         // No timeout here, we MUST wait for critical images
@@ -171,15 +172,15 @@ export const preloadCriticalUIImages = async (): Promise<void> => {
             CRITICAL_UI_IMAGES.map(url =>
                 preloadImage(url, true) // Mark as critical
                     .catch(err => {
-                        console.error(`Error loading CRITICAL UI image ${url}:`, err);
+                        logger.error(`Error loading CRITICAL UI image ${url}:`, err);
                         return null;
                     })
             )
         );
 
-        console.log('✅ All critical UI images preloaded successfully');
+        logger.info('✅ All critical UI images preloaded successfully');
     } catch (error) {
-        console.error("Error preloading critical UI images:", error);
+        logger.error("Error preloading critical UI images:", error);
     }
 };
 
@@ -194,22 +195,22 @@ export const preloadAllGameSymbols = async (): Promise<void> => {
 
         // Once critical images are loaded, continue with symbols
         const symbolUrls = MASTER_SYMBOLS.map(symbol => `/symbols/${symbol}`);
-        console.log(`Starting to preload ${symbolUrls.length} game symbols...`);
+        logger.info(`Starting to preload ${symbolUrls.length} game symbols...`);
 
         // Start loading all symbols and wait for ALL to complete
         await Promise.all(
             symbolUrls.map(url =>
                 preloadImage(url)
                     .catch(err => {
-                        console.error(`Error loading ${url}:`, err);
+                        logger.error(`Error loading ${url}:`, err);
                         return null; // Continue despite errors
                     })
             )
         );
 
-        console.log('✅ All game symbols successfully preloaded');
+        logger.info('✅ All game symbols successfully preloaded');
     } catch (error) {
-        console.error("Error preloading game symbols:", error);
+        logger.error("Error preloading game symbols:", error);
     }
 };
 

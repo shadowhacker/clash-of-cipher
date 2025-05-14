@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { preloadAllGameSymbols } from '../hooks/useImageCache';
 import { restoreCachedImages, persistCachedImages } from '../utils/symbolCacheUtils';
+import logger from '../utils/logger';
 
 interface SymbolPreloaderProps {
     onComplete?: () => void;
@@ -18,13 +19,13 @@ const SymbolPreloader: React.FC<SymbolPreloaderProps> = ({ onComplete }) => {
         // Start preloading all symbols
         preloadAllGameSymbols()
             .then(() => {
-                console.log('All symbols preloaded successfully');
+                logger.info('All symbols preloaded successfully');
                 // Save to localStorage for next session
                 persistCachedImages();
                 if (onComplete) onComplete();
             })
             .catch(error => {
-                console.error('Error preloading symbols:', error);
+                logger.error('Error preloading symbols:', error);
                 if (onComplete) onComplete();
             });
     }, [onComplete]);

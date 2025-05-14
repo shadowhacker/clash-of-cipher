@@ -10,6 +10,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import logger from '../utils/logger';
 
 interface PlayerNameDialogProps {
   open: boolean;
@@ -23,7 +24,7 @@ const PlayerNameDialog: React.FC<PlayerNameDialogProps> = ({ open, onSubmit, onC
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (name.trim()) {
-      console.log('Dialog form submitted with name:', name);
+      logger.debug('Dialog form submitted with name:', name);
       onSubmit(name);
       // Reset name field after submission
       setName('');
@@ -33,7 +34,7 @@ const PlayerNameDialog: React.FC<PlayerNameDialogProps> = ({ open, onSubmit, onC
   // This will be called when the dialog is closed without form submission
   const handleOpenChange = (isOpen: boolean) => {
     if (!isOpen) {
-      console.log('Dialog closed via escape/click outside');
+      logger.debug('Dialog closed via escape/click outside');
       onClose();
       // Reset name field
       setName('');

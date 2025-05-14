@@ -2,6 +2,7 @@
 // import { MASTER_SYMBOLS } from '../hooks/useGame';
 import { preloadImage, dataUrlCache, preloadAllGameSymbols as rawPreloadAllGameSymbols } from '../hooks/useImageCache';
 import { MASTER_SYMBOLS } from './symbolManager';
+import logger from './logger';
 
 // Cache version - update when structure changes
 export const CACHE_VERSION = 'v1.0.0';
@@ -31,7 +32,7 @@ export function restoreCachedImages(): void {
         return;
     }
 
-    console.log('Restored cached symbols from localStorage');
+    logger.info('Restored cached symbols from localStorage');
 
     // For any cached symbols, mark them as loaded
     MASTER_SYMBOLS.forEach(symbol => {
@@ -61,7 +62,7 @@ export function persistCachedImages(): void {
         }
     });
 
-    console.log('Persisted symbol cache to localStorage');
+    logger.info('Persisted symbol cache to localStorage');
 }
 
 /**
@@ -112,6 +113,6 @@ export async function preloadSpecificSymbols(symbols: string[]): Promise<void> {
             )
         );
     } catch (error) {
-        console.error('Error preloading specific symbols:', error);
+        logger.error('Error preloading specific symbols:', error);
     }
 } 

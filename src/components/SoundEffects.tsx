@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
+import logger from '../utils/logger';
 
 interface SoundEffectsProps {
   gameState: 'idle' | 'showCode' | 'input' | 'result';
@@ -52,18 +53,18 @@ const SoundEffects: React.FC<SoundEffectsProps> = ({
       try {
         // For milestone levels (every 20 levels)
         if (isMilestone && isPlayerWinner && sfxVictory.current) {
-          sfxVictory.current.play().catch(err => console.error("Error playing victory sound:", err));
+          sfxVictory.current.play().catch(err => logger.error("Error playing victory sound:", err));
         }
         // For regular success
         else if (isPlayerWinner && sfxSuccess.current) {
-          sfxSuccess.current.play().catch(err => console.error("Error playing success sound:", err));
+          sfxSuccess.current.play().catch(err => logger.error("Error playing success sound:", err));
         }
         // For failure
         else if (!isPlayerWinner && sfxFail.current) {
-          sfxFail.current.play().catch(err => console.error("Error playing fail sound:", err));
+          sfxFail.current.play().catch(err => logger.error("Error playing fail sound:", err));
         }
       } catch (e) {
-        console.error("Audio playback error:", e);
+        logger.error("Audio playback error:", e);
       }
     }
   }, [gameState, isPlayerWinner, isMuted, isMilestone]);

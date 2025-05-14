@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { loadingProgress, getImageLoadingStatus } from '../hooks/useImageCache';
+import logger from '../utils/logger';
 
 interface InitialLoadingScreenProps {
     onComplete?: () => void;
@@ -62,7 +63,7 @@ const InitialLoadingScreen: React.FC<InitialLoadingScreenProps> = ({ onComplete 
             const readyToComplete = loadingProgress.percentage >= 100;
 
             if (criticalLoaded && readyToComplete) {
-                console.log('All images loaded, moving to fade-out phase');
+                logger.info('All images loaded, moving to fade-out phase');
                 clearInterval(updateProgress);
 
                 // Show 100% for at least half a second before fading
@@ -95,7 +96,7 @@ const InitialLoadingScreen: React.FC<InitialLoadingScreenProps> = ({ onComplete 
         // but ONLY if critical images are loaded
         const extendedFailsafeTimeout = setTimeout(() => {
             if (loadingProgress.criticalComplete) {
-                console.log('Extended loading timeout reached, proceeding with available images');
+                logger.info('Extended loading timeout reached, proceeding with available images');
                 clearInterval(updateProgress);
                 setProgress(100);
                 setMessage('Begin your tapasya...');
