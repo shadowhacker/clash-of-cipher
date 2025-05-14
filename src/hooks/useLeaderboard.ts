@@ -57,6 +57,7 @@ export const useLeaderboard = (personalBest: number) => {
 
       if (error) {
         logger.error('Error fetching leaderboard:', error);
+        setLoading(false);
         return;
       }
 
@@ -103,6 +104,7 @@ export const useLeaderboard = (personalBest: number) => {
         const playerRank = topScores.findIndex(entry => entry.device_id === deviceId) + 1;
         setPlayerRank(playerRank);
       }
+      setLoading(false);
     } catch (err) {
       setLoading(false);
       setError("Failed to fetch leaderboard. Please try again later.");
