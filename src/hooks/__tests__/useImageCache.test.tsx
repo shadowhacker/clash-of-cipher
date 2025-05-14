@@ -38,7 +38,11 @@ const mockCtx = {
 
 const mockToDataURL = jest.fn().mockReturnValue('data:image/png;base64,mockData');
 
-global.document.createElement = jest.fn().mockImplementation((tagName) => {
+// Store the original createElement to avoid infinite recursion
+const originalCreateElement = global.document.createElement;
+
+// Mock canvas creation only, use original implementation for other elements
+global.document.createElement = jest.fn((tagName) => {
     if (tagName === 'canvas') {
         return {
             getContext: jest.fn().mockReturnValue(mockCtx),
@@ -47,7 +51,8 @@ global.document.createElement = jest.fn().mockImplementation((tagName) => {
             toDataURL: mockToDataURL,
         };
     }
-    return document.createElement(tagName);
+    // Use the original implementation for other elements
+    return originalCreateElement.call(document, tagName);
 });
 
 // Test component to test the hook

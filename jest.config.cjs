@@ -7,7 +7,8 @@ module.exports = {
     '^.+\\.tsx?$': [
       'ts-jest',
       {
-        useESM: true
+        useESM: true,
+        tsconfig: './tsconfig.test.json'
       }
     ]
   },

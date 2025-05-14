@@ -1,10 +1,21 @@
 # Clash of Cipher - Test Summary
 
+*Last updated: 2025-05-14*
+
 This document summarizes the testing approach, methodology, and coverage for the Clash of Cipher game.
+
+## Coverage Report
+
+| Category | Coverage | Status |
+|----------|----------|--------|
+| Statements | 217/250 (87%) | 🟢 |
+| Branches | 41/56 (73%) | 🟡 |
+| Functions | 49/56 (88%) | 🟢 |
+| Lines | 217/250 (87%) | 🟢 |
 
 ## Testing Approach
 
-The testing strategy for Clash of Cipher includes both unit tests and integration tests to ensure game mechanics work correctly. 
+The testing strategy for Clash of Cipher includes both unit tests and integration tests to ensure game mechanics work correctly.
 
 Two testing approaches have been implemented:
 1. **Jest-based tests**: Comprehensive tests using the Jest framework
@@ -15,7 +26,13 @@ Two testing approaches have been implemented:
 - Run full test suite: `npm run test`
 - Run basic tests: `npm run test:basic`
 
-All tests should pass successfully.
+## Basic Test Results
+
+- Total tests: 4
+- Passed: 4 ✅
+- Failed: 0 
+- Warnings: 0 
+
 
 ## Test Coverage
 
@@ -55,17 +72,15 @@ All tests should pass successfully.
 
 ## Implementation Notes
 
-The test suite faced some challenges with Jest compatibility in an ES module environment. These have been addressed with:
+The test suite is continuously improving with CI/CD integration. Key features:
 
-1. Additional configuration in jest.config.cjs
-2. Specialized test mocks for hooks and browser APIs
-3. Basic test alternatives that don't depend on Jest
-4. Custom mocking for the Canvas API and image loading
+1. Automated test runs in GitHub Actions
+2. Coverage reports published to GitHub Pages
+3. Basic tests that work without Jest dependencies
+4. Custom mocking for browser APIs
 
-All tests now pass successfully in both the basic test runner and the full Jest test suite.
+## Known Issues
 
-## Future Improvements
+- One test for handling image loading errors is currently skipped and requires fixing
+- Some randomness tests may occasionally show warnings about duplicate grids
 
-- Add more comprehensive UI component tests
-- Expand test coverage for player scoring
-- Add performance tests for symbol loading 

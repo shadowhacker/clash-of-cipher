@@ -14,13 +14,21 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '18'
           cache: 'npm'
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
 
       - name: Install dependencies
         run: npm ci
@@ -31,10 +39,23 @@ jobs:
           sudo apt-get install -y libcairo2-dev libjpeg-dev libpango1.0-dev libgif-dev build-essential g++
 
       - name: Run Jest tests with coverage
-        run: npm run test:coverage
+        id: coverage
+        run: npm run test:coverage || echo "::set-output name=failed::true"
 
       - name: Run basic tests
-        run: npm run test:basic
+        id: basic_tests
+        run: npm run test:basic || echo "::set-output name=failed::true"
+
+      - name: Capture test output for reports
+        if: always()
+        run: |
+          mkdir -p coverage
+          # Extract the table part of the Jest output for better reporting
+          npm test -- --coverage | grep -A 20 "----------|---------|----------|---------|-------" > coverage/coverage-summary.txt || true
+
+      - name: Generate test summary
+        if: always()
+        run: npm run test:summary
 
       - name: Create beautiful test summary
         if: always()
@@ -46,82 +67,152 @@ jobs:
           # Extract coverage data in a clean format
           echo "### 📊 Overall Coverage" >> test-results.md
           echo "" >> test-results.md
-          echo "| Category | Coverage | Covered/Total |" >> test-results.md
-          echo "|----------|----------|---------------|" >> test-results.md
 
-          # Parse the lcov.info file to create a beautiful coverage summary
-          STATEMENTS=$(grep -A 1 "SF:" coverage/lcov.info | grep -v "SF:" | grep -v "\-\-" | grep "LF:" | awk -F: '{s+=$2} END {print s}')
-          COVERED_STATEMENTS=$(grep -A 1 "SF:" coverage/lcov.info | grep -v "SF:" | grep -v "\-\-" | grep "LH:" | awk -F: '{s+=$2} END {print s}')
-          BRANCHES=$(grep -A 1 "SF:" coverage/lcov.info | grep -v "SF:" | grep -v "\-\-" | grep "BRF:" | awk -F: '{s+=$2} END {print s}')
-          COVERED_BRANCHES=$(grep -A 1 "SF:" coverage/lcov.info | grep -v "SF:" | grep -v "\-\-" | grep "BRH:" | awk -F: '{s+=$2} END {print s}')
-          FUNCTIONS=$(grep -A 1 "SF:" coverage/lcov.info | grep -v "SF:" | grep -v "\-\-" | grep "FNF:" | awk -F: '{s+=$2} END {print s}')
-          COVERED_FUNCTIONS=$(grep -A 1 "SF:" coverage/lcov.info | grep -v "SF:" | grep -v "\-\-" | grep "FNH:" | awk -F: '{s+=$2} END {print s}')
-
-          # Calculate percentages
-          STMT_PCT=$(awk "BEGIN {print int(($COVERED_STATEMENTS/$STATEMENTS)*100)}")
-          BRANCH_PCT=$(awk "BEGIN {print int(($COVERED_BRANCHES/$BRANCHES)*100)}")
-          FUNC_PCT=$(awk "BEGIN {print int(($COVERED_FUNCTIONS/$FUNCTIONS)*100)}")
-
-          # Create emoji indicators
-          STMT_EMOJI="🔴"
-          if [ "$STMT_PCT" -ge 80 ]; then STMT_EMOJI="🟢"; 
-          elif [ "$STMT_PCT" -ge 50 ]; then STMT_EMOJI="🟡"; fi
-
-          BRANCH_EMOJI="🔴"
-          if [ "$BRANCH_PCT" -ge 80 ]; then BRANCH_EMOJI="🟢"; 
-          elif [ "$BRANCH_PCT" -ge 50 ]; then BRANCH_EMOJI="🟡"; fi
-
-          FUNC_EMOJI="🔴"
-          if [ "$FUNC_PCT" -ge 80 ]; then FUNC_EMOJI="🟢"; 
-          elif [ "$FUNC_PCT" -ge 50 ]; then FUNC_EMOJI="🟡"; fi
-
-          # Write the table rows
-          echo "| Statements | $STMT_EMOJI $STMT_PCT% | $COVERED_STATEMENTS/$STATEMENTS |" >> test-results.md
-          echo "| Branches | $BRANCH_EMOJI $BRANCH_PCT% | $COVERED_BRANCHES/$BRANCHES |" >> test-results.md
-          echo "| Functions | $FUNC_EMOJI $FUNC_PCT% | $COVERED_FUNCTIONS/$FUNCTIONS |" >> test-results.md
-
-          echo "" >> test-results.md
-          echo "### 📁 Files With Low Coverage" >> test-results.md
-          echo "" >> test-results.md
-          echo "| File | Type | Coverage | Details |" >> test-results.md
-          echo "|------|------|----------|---------|" >> test-results.md
-
-          # Find files with less than 50% coverage
-          FILES=$(grep "SF:" coverage/lcov.info | awk -F: '{print $2}')
-          for FILE in $FILES; do
-            NEXT_FILE=$(grep -A 50 "SF:$FILE" coverage/lcov.info | grep -m 1 -n "SF:" | cut -d: -f1)
-            if [ -z "$NEXT_FILE" ]; then
-              FILE_CONTENT=$(grep -A 100 "SF:$FILE" coverage/lcov.info)
+          # Check if jest coverage was generated
+          if [ -f "coverage/lcov.info" ]; then
+            echo "| Category | Coverage | Covered/Total |" >> test-results.md
+            echo "|----------|----------|---------------|" >> test-results.md
+            
+            # Parse the lcov.info file to create a beautiful coverage summary
+            STATEMENTS=$(grep "LF:" coverage/lcov.info | awk -F: '{sum+=$2} END {print sum}')
+            COVERED_STATEMENTS=$(grep "LH:" coverage/lcov.info | awk -F: '{sum+=$2} END {print sum}')
+            BRANCHES=$(grep "BRF:" coverage/lcov.info | awk -F: '{sum+=$2} END {print sum}')
+            COVERED_BRANCHES=$(grep "BRH:" coverage/lcov.info | awk -F: '{sum+=$2} END {print sum}')
+            FUNCTIONS=$(grep "FNF:" coverage/lcov.info | awk -F: '{sum+=$2} END {print sum}')
+            COVERED_FUNCTIONS=$(grep "FNH:" coverage/lcov.info | awk -F: '{sum+=$2} END {print sum}')
+            
+            # Calculate percentages with safety checks
+            if [ "$STATEMENTS" -gt 0 ]; then
+              STMT_PCT=$(awk "BEGIN {print int(($COVERED_STATEMENTS*100)/$STATEMENTS)}")
             else
-              FILE_CONTENT=$(grep -A $NEXT_FILE "SF:$FILE" coverage/lcov.info | head -n $(($NEXT_FILE-1)))
+              STMT_PCT=0
             fi
             
-            FILE_STATEMENTS=$(echo "$FILE_CONTENT" | grep "LF:" | awk -F: '{print $2}')
-            FILE_COVERED_STATEMENTS=$(echo "$FILE_CONTENT" | grep "LH:" | awk -F: '{print $2}')
-            FILE_PCT=$(awk "BEGIN {print int(($FILE_COVERED_STATEMENTS/$FILE_STATEMENTS)*100)}")
-            
-            if [ "$FILE_PCT" -lt 50 ]; then
-              FILENAME=$(basename "$FILE")
-              echo "| \`$FILENAME\` | Statements | $FILE_PCT% | $FILE_COVERED_STATEMENTS/$FILE_STATEMENTS |" >> test-results.md
+            if [ "$BRANCHES" -gt 0 ]; then
+              BRANCH_PCT=$(awk "BEGIN {print int(($COVERED_BRANCHES*100)/$BRANCHES)}")
+            else
+              BRANCH_PCT=0
             fi
-          done
+            
+            if [ "$FUNCTIONS" -gt 0 ]; then
+              FUNC_PCT=$(awk "BEGIN {print int(($COVERED_FUNCTIONS*100)/$FUNCTIONS)}")
+            else
+              FUNC_PCT=0
+            fi
+            
+            # Create emoji indicators
+            STMT_EMOJI="🔴"
+            if [ "$STMT_PCT" -ge 80 ]; then STMT_EMOJI="🟢"; 
+            elif [ "$STMT_PCT" -ge 50 ]; then STMT_EMOJI="🟡"; fi
+            
+            BRANCH_EMOJI="🔴"
+            if [ "$BRANCH_PCT" -ge 80 ]; then BRANCH_EMOJI="🟢"; 
+            elif [ "$BRANCH_PCT" -ge 50 ]; then BRANCH_EMOJI="🟡"; fi
+            
+            FUNC_EMOJI="🔴"
+            if [ "$FUNC_PCT" -ge 80 ]; then FUNC_EMOJI="🟢"; 
+            elif [ "$FUNC_PCT" -ge 50 ]; then FUNC_EMOJI="🟡"; fi
+            
+            # Write the table rows
+            echo "| Statements | $STMT_EMOJI $STMT_PCT% | $COVERED_STATEMENTS/$STATEMENTS |" >> test-results.md
+            echo "| Branches | $BRANCH_EMOJI $BRANCH_PCT% | $COVERED_BRANCHES/$BRANCHES |" >> test-results.md
+            echo "| Functions | $FUNC_EMOJI $FUNC_PCT% | $COVERED_FUNCTIONS/$FUNCTIONS |" >> test-results.md
+            
+            # Add formatted code coverage report
+            if [ -f "coverage/lcov-report/index.html" ]; then
+              echo "" >> test-results.md
+              echo "### 📈 Detailed Coverage Report" >> test-results.md
+              echo "" >> test-results.md
+              echo "```" >> test-results.md
+              echo "----------------------|---------|----------|---------|---------|--------------------------------------------------" >> test-results.md
+              echo "File                  | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s" >> test-results.md
+              echo "----------------------|---------|----------|---------|---------|--------------------------------------------------" >> test-results.md
+              
+              # Try to extract table from Jest console output if captured
+              if [ -f "coverage/coverage-summary.txt" ]; then
+                cat coverage/coverage-summary.txt >> test-results.md
+              else
+                # Manually build table from lcov data
+                FILES=$(grep "SF:" coverage/lcov.info | awk -F: '{print $2}')
+                echo "All files             | $STMT_PCT | $BRANCH_PCT | $FUNC_PCT | $STMT_PCT | " >> test-results.md
+                for FILE in $FILES; do
+                  FILENAME=$(basename "$FILE")
+                  DIR=$(dirname "$FILE" | sed 's/.*\/\([^\/]*\)$/\1/g')
+                  echo " $DIR/$FILENAME | - | - | - | - | " >> test-results.md
+                done
+              fi
+              
+              echo "----------------------|---------|----------|---------|---------|--------------------------------------------------" >> test-results.md
+              echo "```" >> test-results.md
+            fi
+          else
+            echo "❌ Coverage information not available - tests may have failed" >> test-results.md
+          fi
 
           echo "" >> test-results.md
           echo "## 🚀 Basic Tests" >> test-results.md
           echo "" >> test-results.md
 
+          # Check if TEST_SUMMARY.md exists
+          if [ -f "TEST_SUMMARY.md" ]; then
+            cat TEST_SUMMARY.md >> test-results.md
+          else
+            echo "❌ Basic test results not available" >> test-results.md
+          fi
+
+          # Add test status
+          echo "" >> test-results.md
+          echo "## ⚡ Test Status" >> test-results.md
+          echo "" >> test-results.md
+
+          if [ "${{ steps.coverage.outputs.failed }}" == "true" ]; then
+            echo "- ❌ Jest tests: Failed" >> test-results.md
+          else
+            echo "- ✅ Jest tests: Passed" >> test-results.md
+          fi
+
+          if [ "${{ steps.basic_tests.outputs.failed }}" == "true" ]; then
+            echo "- ❌ Basic tests: Failed" >> test-results.md
+          else
+            echo "- ✅ Basic tests: Passed" >> test-results.md
+          fi
+
       - name: Archive test artifacts
         if: always()
-        uses: actions/upload-artifact@v4.6.2
+        uses: actions/upload-artifact@v4.1.0
         with:
           name: test-report
           path: |
             coverage/
             test-results.md
+            basic-test-results.md
+          retention-days: 14
 
-      # Add GitHub Pages deployment of coverage report
+      - name: Update test summary
+        if: github.ref == 'refs/heads/main' && success()
+        run: |
+          # Set up git permissions for GitHub Actions
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          npm run report:update
+
+  deploy-report:
+    name: Deploy Coverage Report
+    needs: test
+    if: success() && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      pages: write
+
+    steps:
+      - name: Download test artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: test-report
+
       - name: Deploy coverage report to GitHub Pages
-        if: success() && github.ref == 'refs/heads/main'
         uses: peaceiris/actions-gh-pages@v4.0.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}

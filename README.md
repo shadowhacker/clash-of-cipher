@@ -2,14 +2,25 @@
 
 [![CI](https://github.com/shadowhacker/clash-of-cipher/actions/workflows/run-tests.yml/badge.svg)](https://github.com/shadowhacker/clash-of-cipher/actions/workflows/run-tests.yml)
 [![Coverage](https://img.shields.io/badge/coverage-report-brightgreen)](https://shadowhacker.github.io/clash-of-cipher/coverage-report/)
+[![GitHub Pages](https://img.shields.io/badge/GitHub%20Pages-deployed-blue)](https://shadowhacker.github.io/clash-of-cipher/)
 
 ## Project info
 
 **URL**: https://lovable.dev/projects/bde17037-8046-4120-8250-f239b886ed12
 
+## Clash of Cipher Game
+
+Clash of Cipher (also known as Dhyanam) is a memory-based game where players:
+
+1. See a code sequence of symbols
+2. Find those symbols in a grid
+3. Progress through increasingly difficult levels
+
+The game focuses on improving memory, attention, and cognitive skills in a fun, engaging way.
+
 ## Testing
 
-This project includes a complete test suite for the Clash of Cipher game mechanics. 
+This project includes a comprehensive test suite for the Clash of Cipher game mechanics.
 
 ### Running Tests Locally
 
@@ -22,6 +33,9 @@ npm run test:basic
 
 # Generate test coverage report
 npm run test:coverage
+
+# Generate test summary document
+npm run test:summary
 ```
 
 ### Continuous Integration
@@ -32,11 +46,12 @@ This project uses GitHub Actions to automatically run tests on every push and pu
 - Installs system dependencies for canvas support
 - Runs the full Jest test suite with coverage
 - Runs the basic test suite
-- Archives test results as artifacts
+- Publishes coverage reports to GitHub Pages
+- Updates the test summary document
 
 You can see the test workflow configuration in `.github/workflows/run-tests.yml`.
 
-> **Note:** The badge above is powered by GitHub Actions and requires no extra secrets or Gists. Each test is run once per workflow execution.
+View the [latest test coverage report](https://shadowhacker.github.io/clash-of-cipher/coverage-report/).
 
 ## How can I edit this code?
 

@@ -12,7 +12,9 @@
     "test": "jest --config jest.config.cjs",
     "test:watch": "jest --watch --config jest.config.cjs",
     "test:coverage": "jest --coverage --config jest.config.cjs",
-    "test:basic": "node src/utils/__tests__/runTests.js"
+    "test:basic": "node src/utils/__tests__/runTests.cjs",
+    "test:summary": "node scripts/generate-test-summary.cjs",
+    "report:update": "node scripts/update-test-summary.cjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
