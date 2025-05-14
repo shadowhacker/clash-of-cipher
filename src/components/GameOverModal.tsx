@@ -10,7 +10,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { toast } from "sonner";
 import { Share2 } from 'lucide-react';
-import { MAX_LEVELS } from '../config/gameConfig';
 
 interface GameOverModalProps {
   level: number;
@@ -32,8 +31,9 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
   onClose,
 }) => {
   const [showShareModal, setShowShareModal] = useState(false);
-  // Check if player completed all levels
-  const completedAllLevels = level >= MAX_LEVELS;
+
+  // Check for significant achievement milestones
+  const isSignificantMilestone = level % 20 === 0 && level > 0;
 
   const handleShare = () => {
     const text = onShare();
@@ -44,10 +44,10 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
   };
 
   const handleShareAgain = () => {
-    // Different share text based on whether they completed all levels
-    const text = completedAllLevels
-      ? `I achieved enlightenment with ${totalScore} points by completing all ${MAX_LEVELS} levels in Dhyanam!\nCan you match my spiritual journey? Play → https://clash-of-cipher.lovable.app/`
-      : `My tapasya broke after ${totalScore} points at Level ${level} in Dhyanam!\nCan you go further? Play → https://clash-of-cipher.lovable.app/`;
+    // Different share text based on whether they reached a significant milestone
+    const text = isSignificantMilestone
+      ? `I reached a spiritual milestone with ${totalScore.toLocaleString()} points at Level ${level} in Dhyanam!\nCan you match my spiritual journey? Play → https://clash-of-cipher.lovable.app/`
+      : `My tapasya broke after ${totalScore.toLocaleString()} points at Level ${level} in Dhyanam!\nCan you go further? Play → https://clash-of-cipher.lovable.app/`;
 
     navigator.clipboard.writeText(text);
     toast("Copied again!", {
@@ -68,14 +68,14 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
   // Copy to clipboard when share modal opens
   useEffect(() => {
     if (showShareModal) {
-      // Different share text based on whether they completed all levels
-      const text = completedAllLevels
-        ? `I achieved enlightenment with ${totalScore} points by completing all ${MAX_LEVELS} levels in Dhyanam!\nCan you match my spiritual journey? Play → https://clash-of-cipher.lovable.app/`
-        : `My tapasya broke after ${totalScore} points at Level ${level} in Dhyanam!\nCan you go further? Play → https://clash-of-cipher.lovable.app/`;
+      // Different share text based on whether they reached a significant milestone
+      const text = isSignificantMilestone
+        ? `I reached a spiritual milestone with ${totalScore.toLocaleString()} points at Level ${level} in Dhyanam!\nCan you match my spiritual journey? Play → https://clash-of-cipher.lovable.app/`
+        : `My tapasya broke after ${totalScore.toLocaleString()} points at Level ${level} in Dhyanam!\nCan you go further? Play → https://clash-of-cipher.lovable.app/`;
 
       navigator.clipboard.writeText(text);
     }
-  }, [showShareModal, totalScore, level, completedAllLevels]);
+  }, [showShareModal, totalScore, level, isSignificantMilestone]);
 
   // Helper function to determine font size based on number length
   const getScoreFontSize = (score: number) => {
@@ -96,11 +96,11 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
       <Dialog open={open} onOpenChange={handleCloseModal}>
         <DialogContent className="p-0 border-0 max-w-xl overflow-hidden bg-transparent">
           <DialogTitle className="sr-only">
-            {completedAllLevels ? 'Enlightenment Achieved' : 'Game Over'}
+            {isSignificantMilestone ? 'Milestone Reached' : 'Game Over'}
           </DialogTitle>
           <DialogDescription className="sr-only">
-            {completedAllLevels
-              ? `You've achieved enlightenment! Score: ${totalScore}, Completed all ${MAX_LEVELS} levels.`
+            {isSignificantMilestone
+              ? `You've reached a significant milestone! Score: ${totalScore}, Level: ${level}.`
               : `Your tapasya broke. Score: ${totalScore}, Level: ${level}`
             }
           </DialogDescription>
@@ -145,7 +145,7 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
 
             {/* Top header section */}
             <div className="text-center w-full mt-20 mb-auto z-10">
-              {completedAllLevels ? (
+              {isSignificantMilestone ? (
                 <>
                   <h1
                     className="text-4xl md:text-5xl font-bold mb-3"
@@ -155,7 +155,7 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
                       textShadow: '0 4px 4px rgb(0, 0, 0)'
                     }}
                   >
-                    ENLIGHTENMENT
+                    MILESTONE
                   </h1>
                   <h1
                     className="text-5xl md:text-6xl font-bold"
@@ -165,7 +165,7 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
                       textShadow: '0 4px 4px rgb(0, 0, 0)'
                     }}
                   >
-                    ACHIEVED
+                    REACHED
                   </h1>
                 </>
               ) : (
@@ -223,7 +223,7 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
                       className="text-2xl font-semibold mb-1"
                       style={{ color: '#e8934a', textShadow: '0 2px 2px rgba(0, 0, 0, 0.7)' }}
                     >
-                      {completedAllLevels ? 'MASTERY' : 'LEVEL'}
+                      LEVEL
                     </p>
                   </div>
                   <p
@@ -234,7 +234,7 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
                       maxWidth: '100%'
                     }}
                   >
-                    {completedAllLevels ? 'COMPLETE' : level}
+                    {level}
                   </p>
                 </div>
               </div>
@@ -253,7 +253,7 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
                     textShadow: '0 2px 2px rgba(0, 0, 0, 0.3)'
                   }}
                 >
-                  {completedAllLevels ? 'START NEW JOURNEY' : 'RESTART DHYANAM'}
+                  {isSignificantMilestone ? 'START NEW JOURNEY' : 'RESTART DHYANAM'}
                 </button>
 
                 <button
@@ -277,7 +277,7 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
           <DialogHeader>
             <DialogTitle className="text-center text-xl font-bold text-amber-400">
               <span className="block text-3xl mb-2">🧘</span>
-              {completedAllLevels ? 'Share Your Enlightenment!' : 'Challenge your Sangha!'}
+              {isSignificantMilestone ? 'Share Your Milestone!' : 'Challenge your Sangha!'}
             </DialogTitle>
             <DialogDescription className="text-center text-amber-300/80">
               Your score has been copied to clipboard. Share it with friends.
@@ -285,12 +285,12 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
           </DialogHeader>
           <div className="py-4 text-center">
             <p className="text-md mb-4 bg-amber-900/50 p-3 rounded-md border border-amber-800/50 text-amber-200">
-              {completedAllLevels
-                ? `I achieved enlightenment with ${totalScore.toLocaleString()} points by completing all ${MAX_LEVELS} levels in Dhyanam!`
+              {isSignificantMilestone
+                ? `I reached a spiritual milestone with ${totalScore.toLocaleString()} points at Level ${level} in Dhyanam!`
                 : `My tapasya broke after ${totalScore.toLocaleString()} points at Level ${level} in Dhyanam!`
               }
               <br />
-              {completedAllLevels
+              {isSignificantMilestone
                 ? 'Can you match my spiritual journey?'
                 : 'Can you go further?'
               } Play → https://clash-of-cipher.lovable.app/

@@ -3,13 +3,21 @@ import {
     calculateProgressRatio,
     calculateUniqueSymbolCount,
     getSymbolPack,
-    calculateCodeLength,
     generateCode,
     calculateCorrectSymbolCopies,
     generateGrid,
     verifyGrid
 } from '../symbolManager';
-import { SYMBOL_CONFIG, CODE_LENGTH, MAX_LEVELS } from '../../config/gameConfig';
+import { SYMBOL_CONFIG } from '../../config/gameConfig';
+
+// Reference level constants for testing
+const TEST_LEVELS = {
+    MIN: 1,       // Minimum level
+    LOW: 5,       // Low level
+    MID: 25,      // Mid level 
+    HIGH: 50,     // High level
+    VERY_HIGH: 100 // Very high level
+};
 
 describe('symbolManager', () => {
     describe('MASTER_SYMBOLS', () => {
@@ -27,40 +35,51 @@ describe('symbolManager', () => {
 
     describe('calculateProgressRatio', () => {
         it('should return 0 for level 1', () => {
-            expect(calculateProgressRatio(1)).toBe(0);
+            expect(calculateProgressRatio(TEST_LEVELS.MIN)).toBe(0);
         });
 
-        it('should return 1 for MAX_LEVELS', () => {
-            expect(calculateProgressRatio(MAX_LEVELS)).toBe(1);
+        it('should return close to 1 for very high levels', () => {
+            // With the logarithmic scale, very high levels should approach 1 asymptotically
+            const ratio = calculateProgressRatio(TEST_LEVELS.VERY_HIGH);
+            expect(ratio).toBeGreaterThan(0.95);
+            expect(ratio).toBeLessThanOrEqual(1);
         });
 
-        it('should return a linear progression for intermediate levels', () => {
-            // For 10 levels, level 6 should be 0.5 (halfway)
-            // Formula: (level - 1) / (MAX_LEVELS - 1)
-            const level = Math.floor(MAX_LEVELS / 2) + 1;
-            const expected = (level - 1) / (MAX_LEVELS - 1);
-            expect(calculateProgressRatio(level)).toBe(expected);
+        it('should follow expected progression for levels 1-10', () => {
+            // For levels 1-10, we should have linear scaling
+            const level5 = calculateProgressRatio(5);
+            const level10 = calculateProgressRatio(10);
+
+            // Level 5 should be ~0.44 (4/9)
+            expect(level5).toBeCloseTo(4 / 9, 2);
+
+            // Level 10 should be ~1.0
+            expect(level10).toBeCloseTo(1, 2);
         });
 
         it('should handle out-of-bounds levels', () => {
-            expect(calculateProgressRatio(0)).toBe(0); // Should clamp to min
-            expect(calculateProgressRatio(MAX_LEVELS + 10)).toBe(1); // Should clamp to max
+            expect(calculateProgressRatio(0)).toBe(0); // Should handle level 0
+
+            // Higher levels should approach but never exceed 1
+            const veryHighRatio = calculateProgressRatio(1000);
+            expect(veryHighRatio).toBeGreaterThan(0.99);
+            expect(veryHighRatio).toBeLessThanOrEqual(1);
         });
     });
 
     describe('calculateUniqueSymbolCount', () => {
         it('should return minimum symbols for level 1', () => {
-            expect(calculateUniqueSymbolCount(1)).toBe(SYMBOL_CONFIG.MIN_GRID_SYMBOLS);
+            expect(calculateUniqueSymbolCount(TEST_LEVELS.MIN)).toBe(SYMBOL_CONFIG.MIN_GRID_SYMBOLS);
         });
 
-        it('should return maximum symbols for MAX_LEVELS', () => {
-            expect(calculateUniqueSymbolCount(MAX_LEVELS)).toBe(SYMBOL_CONFIG.MAX_GRID_SYMBOLS);
+        it('should return close to maximum symbols for high levels', () => {
+            const result = calculateUniqueSymbolCount(TEST_LEVELS.HIGH);
+            expect(result).toBeCloseTo(SYMBOL_CONFIG.MAX_GRID_SYMBOLS, 0);
         });
 
         it('should calculate intermediate levels correctly', () => {
             // Test a mid-level value
-            const midLevel = Math.floor(MAX_LEVELS / 2);
-            const result = calculateUniqueSymbolCount(midLevel);
+            const result = calculateUniqueSymbolCount(TEST_LEVELS.MID);
 
             // Should be between min and max
             expect(result).toBeGreaterThanOrEqual(SYMBOL_CONFIG.MIN_GRID_SYMBOLS);
@@ -70,7 +89,7 @@ describe('symbolManager', () => {
 
     describe('getSymbolPack', () => {
         it('should return the correct number of symbols for a given level', () => {
-            const level = 3;
+            const level = TEST_LEVELS.LOW;
             const expectedCount = calculateUniqueSymbolCount(level);
             const result = getSymbolPack(level);
 
@@ -78,7 +97,7 @@ describe('symbolManager', () => {
         });
 
         it('should return symbols from the master symbols list', () => {
-            const result = getSymbolPack(1);
+            const result = getSymbolPack(TEST_LEVELS.MIN);
 
             result.forEach(symbol => {
                 expect(MASTER_SYMBOLS).toContain(symbol);
@@ -86,55 +105,33 @@ describe('symbolManager', () => {
         });
     });
 
-    describe('calculateCodeLength', () => {
-        it('should return minimum code length for level 1', () => {
-            expect(calculateCodeLength(1)).toBe(CODE_LENGTH.MIN);
-        });
-
-        it('should return maximum code length for MAX_LEVELS', () => {
-            expect(calculateCodeLength(MAX_LEVELS)).toBe(CODE_LENGTH.MAX);
-        });
-
-        it('should calculate intermediate levels correctly', () => {
-            // Test a mid-level value
-            const midLevel = Math.floor(MAX_LEVELS / 2);
-            const result = calculateCodeLength(midLevel);
-
-            // Should be between min and max
-            expect(result).toBeGreaterThanOrEqual(CODE_LENGTH.MIN);
-            expect(result).toBeLessThanOrEqual(CODE_LENGTH.MAX);
-        });
-    });
-
     describe('generateCode', () => {
-        it('should generate a code with correct length for the level', () => {
-            const level = 3;
+        it('should generate a code using symbols from the provided list', () => {
+            const level = TEST_LEVELS.LOW;
             const symbols = ['symbol-1.png', 'symbol-2.png', 'symbol-3.png', 'symbol-4.png', 'symbol-5.png'];
-            const expectedLength = calculateCodeLength(level);
 
             const result = generateCode(level, symbols);
 
-            expect(result.length).toBe(expectedLength);
-        });
+            // Should have at least one symbol and be a reasonable length
+            expect(result.length).toBeGreaterThan(0);
+            expect(result.length).toBeLessThanOrEqual(symbols.length);
 
-        it('should only use symbols from the provided list', () => {
-            const symbols = ['symbol-1.png', 'symbol-2.png', 'symbol-3.png'];
-            const result = generateCode(1, symbols);
-
+            // Check that all symbols in code are from available symbols
             result.forEach(symbol => {
                 expect(symbols).toContain(symbol);
             });
         });
 
-        it('should handle when availableSymbols is smaller than required code length', () => {
-            // Set level where code length would be larger than available symbols
-            const highLevel = MAX_LEVELS;
+        it('should handle when availableSymbols is a small set', () => {
+            // Small symbol list
             const smallSymbols = ['symbol-1.png', 'symbol-2.png']; // Only 2 symbols
 
-            const result = generateCode(highLevel, smallSymbols);
+            const result = generateCode(TEST_LEVELS.HIGH, smallSymbols);
 
-            // Should return all available symbols
+            // Should return a reasonable subset
+            expect(result.length).toBeGreaterThan(0);
             expect(result.length).toBeLessThanOrEqual(smallSymbols.length);
+
             result.forEach(symbol => {
                 expect(smallSymbols).toContain(symbol);
             });
@@ -143,8 +140,8 @@ describe('symbolManager', () => {
 
     describe('calculateCorrectSymbolCopies', () => {
         it('should return maximum copies for level 1', () => {
-            const codeLength = CODE_LENGTH.MIN;
-            const result = calculateCorrectSymbolCopies(1, codeLength);
+            const codeLength = 2; // Use a small default value
+            const result = calculateCorrectSymbolCopies(TEST_LEVELS.MIN, codeLength);
 
             // It may be capped by grid size / (codeLength * 2)
             const maxPossibleCopies = Math.floor(SYMBOL_CONFIG.GRID_SIZE / (codeLength * 2));
@@ -153,16 +150,16 @@ describe('symbolManager', () => {
             expect(result).toBe(expected);
         });
 
-        it('should return minimum copies for MAX_LEVELS', () => {
-            const codeLength = CODE_LENGTH.MAX;
-            const result = calculateCorrectSymbolCopies(MAX_LEVELS, codeLength);
+        it('should return minimum copies for high levels', () => {
+            const codeLength = 5; // Use a reasonable value for high levels
+            const result = calculateCorrectSymbolCopies(TEST_LEVELS.HIGH, codeLength);
 
             expect(result).toBe(SYMBOL_CONFIG.MIN_CORRECT_SYMBOL_COPIES);
         });
 
         it('should adjust based on code length', () => {
             // For same level, longer code should have fewer copies per symbol
-            const level = 5;
+            const level = TEST_LEVELS.LOW;
             const shortCode = 2;
             const longCode = 6;
 

@@ -1,4 +1,4 @@
-import { SYMBOL_CONFIG, MILESTONE_INTERVALS, MAX_LEVELS, CODE_LENGTH } from '../config/gameConfig';
+import { SYMBOL_CONFIG, MILESTONE_INTERVALS } from '../config/gameConfig';
 import { secureRandomInt, secureShuffleArray, secureRandomSample } from './randomUtils';
 
 // Array of all available symbol image filenames
@@ -22,16 +22,29 @@ if (MASTER_SYMBOLS.length !== SYMBOL_CONFIG.TOTAL_SYMBOLS) {
 /**
  * Calculate a progress ratio (0.0 to 1.0) based on current level
  * This is the core difficulty scaling function used throughout the game
- * @param level - Current game level (1 to MAX_LEVELS)
+ * @param level - Current game level
  * @returns Difficulty ratio from 0.0 (easiest) to 1.0 (hardest)
  */
 export function calculateProgressRatio(level: number): number {
-    // Ensure level is within bounds
-    const boundedLevel = Math.max(1, Math.min(level, MAX_LEVELS));
+    // With infinite levels, we'll use a logarithmic scale that approaches 1.0
+    // This ensures difficulty still scales but more gradually at higher levels
+    // We'll use level 50 as the reference point for "maximum" difficulty
+    const MAX_REFERENCE_LEVEL = 50;
 
-    // Calculate a linear progress ratio from 0.0 to 1.0 
-    // Level 1 = 0.0, MAX_LEVELS = 1.0
-    return (boundedLevel - 1) / (MAX_LEVELS - 1);
+    // Ensure level is at least 1
+    const boundedLevel = Math.max(1, level);
+
+    // For levels 1-10, use linear scaling
+    if (boundedLevel <= 10) {
+        return (boundedLevel - 1) / 9;
+    }
+
+    // For levels above 10, use logarithmic scaling that approaches 1.0
+    // This formula gives ~0.9 at level 10 and approaches 1.0 asymptotically
+    const ratio = 0.9 + ((Math.log(boundedLevel / 10) / Math.log(MAX_REFERENCE_LEVEL / 10)) * 0.1);
+
+    // Clamp to 0.0-1.0 range for safety
+    return Math.min(Math.max(ratio, 0), 1);
 }
 
 /**
@@ -62,32 +75,18 @@ export function getSymbolPack(level: number): string[] {
 }
 
 /**
- * Calculate how many symbols should be in the code sequence based on level
- * @param level - Current game level
- * @returns Length of code sequence
- */
-export function calculateCodeLength(level: number): number {
-    const { MIN, MAX } = CODE_LENGTH;
-    const progressRatio = calculateProgressRatio(level);
-
-    // Linear progression from minimum to maximum code length
-    const codeLength = MIN + Math.floor((MAX - MIN) * progressRatio);
-
-    // Ensure code length is within bounds
-    return Math.min(Math.max(codeLength, MIN), MAX);
-}
-
-/**
  * Generate a code sequence for the player to memorize
  * @param level - Current game level
  * @param availableSymbols - Symbols available for this level
  * @returns Array of symbol filenames forming the code
  */
 export function generateCode(level: number, availableSymbols: string[]): string[] {
-    const codeLength = calculateCodeLength(level);
+    // For backward compatibility, we'll default to a small sequence length
+    // but this is now overridden in useGame's generateLevelCode function
+    const defaultCodeLength = Math.min(3, availableSymbols.length);
 
     // Always use a fresh random code
-    return secureRandomSample(availableSymbols, codeLength);
+    return secureRandomSample(availableSymbols, defaultCodeLength);
 }
 
 /**

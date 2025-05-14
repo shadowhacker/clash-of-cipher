@@ -8,12 +8,22 @@ export const MAX_ROUND_TIME = 10; // Maximum time for each round in seconds
 export const STARTING_LIVES = 2; // Number of lives player starts with
 
 // Level progression
-export const MAX_LEVELS = 10; // Maximum level - difficulty scales evenly across these levels
+// Infinite levels - removed MAX_LEVELS
 
-// Code sequence parameters
-export const CODE_LENGTH = {
-    MIN: 2,     // Minimum code length (at level 1)
-    MAX: 10     // Maximum code length (at max level)
+// Flash/Show code time configuration
+export const SYMBOL_FLASH_TIME = {
+    MAX: 2.0,    // Maximum flash time (seconds)
+    MIN: 1.2,    // Minimum flash time (seconds)
+    CYCLE: 20,   // Level cycle for flash time oscillation
+};
+
+// Symbol count progression by level
+export const SYMBOL_COUNT = {
+    LEVEL_10_RANGE: [1, 2] as [number, number],   // Symbol count range for levels 1-10
+    LEVEL_20_RANGE: [2, 3] as [number, number],   // Symbol count range for levels 11-20
+    LEVEL_30_RANGE: [3, 4] as [number, number],   // Symbol count range for levels 21-30
+    LEVEL_50_RANGE: [4, 5] as [number, number],   // Symbol count range for levels 31-50
+    MAX_COUNT: 5,             // Maximum symbol count (after level 50)
 };
 
 // Symbol distribution
@@ -52,4 +62,28 @@ export const SCORING = {
     BASE_MULTIPLIER: 1.25, // Flawless streak multiplier
     SPEED_BONUS_FACTOR: 0.1, // Speed bonus per second remaining
     JACKPOT_BONUS: 1000, // Bonus points for jackpot rounds
+};
+
+/**
+ * Utility functions for game mechanics
+ */
+
+// Calculate flash time based on level with oscillating pattern
+export const getFlashTime = (level: number): number => {
+    const phase = Math.floor((level - 1) / SYMBOL_FLASH_TIME.CYCLE) % 2;  // 0 = down, 1 = up
+    const index = (level - 1) % SYMBOL_FLASH_TIME.CYCLE;
+    const step = (SYMBOL_FLASH_TIME.MAX - SYMBOL_FLASH_TIME.MIN) / (SYMBOL_FLASH_TIME.CYCLE - 1);
+
+    return phase === 0
+        ? SYMBOL_FLASH_TIME.MAX - (step * index)  // decreasing
+        : SYMBOL_FLASH_TIME.MIN + (step * index); // increasing
+};
+
+// Get symbol count range based on level
+export const getSymbolCountRange = (level: number): [number, number] => {
+    if (level <= 10) return SYMBOL_COUNT.LEVEL_10_RANGE;
+    if (level <= 20) return SYMBOL_COUNT.LEVEL_20_RANGE;
+    if (level <= 30) return SYMBOL_COUNT.LEVEL_30_RANGE;
+    if (level <= 50) return SYMBOL_COUNT.LEVEL_50_RANGE;
+    return [SYMBOL_COUNT.MAX_COUNT, SYMBOL_COUNT.MAX_COUNT];
 }; 

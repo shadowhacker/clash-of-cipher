@@ -1,35 +1,36 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { MAX_LEVELS } from '../config/gameConfig';
 
 interface SoundEffectsProps {
   gameState: 'idle' | 'showCode' | 'input' | 'result';
   isPlayerWinner: boolean | null;
-  level: number; // Add level to check for victory condition
+  level: number;
+  totalScore: number; // Add totalScore to check for milestone achievements
 }
 
 const SoundEffects: React.FC<SoundEffectsProps> = ({
   gameState,
   isPlayerWinner,
-  level
+  level,
+  totalScore
 }) => {
   // Sound effects using useRef for better performance
   const sfxSuccess = useRef<HTMLAudioElement | null>(null);
   const sfxFail = useRef<HTMLAudioElement | null>(null);
-  const sfxVictory = useRef<HTMLAudioElement | null>(null); // New victory sound
+  const sfxVictory = useRef<HTMLAudioElement | null>(null); // Victory sound for milestones
   const audioInitialized = useRef<boolean>(false);
   const [isMuted, setIsMuted] = useState(() => {
     const savedMute = localStorage.getItem('cipher-clash-muted');
     return savedMute === 'true';
   });
 
-  // Check if player completed all levels
-  const completedAllLevels = level >= MAX_LEVELS;
+  // Play victory sound for notable milestones (levels divisible by 20)
+  const isMilestone = level > 0 && level % 20 === 0;
 
   // Initialize sound effects
   useEffect(() => {
     sfxSuccess.current = new Audio('/snd/success.mp3');
     sfxFail.current = new Audio('/snd/fail.mp3');
-    sfxVictory.current = new Audio('/snd/victory.mp3'); // Add a victory sound file
+    sfxVictory.current = new Audio('/snd/victory.mp3');
   }, []);
 
   // Listen for mute change events
@@ -49,8 +50,8 @@ const SoundEffects: React.FC<SoundEffectsProps> = ({
   useEffect(() => {
     if (gameState === 'result' && !isMuted) {
       try {
-        // For game victory (all levels completed)
-        if (completedAllLevels && sfxVictory.current) {
+        // For milestone levels (every 20 levels)
+        if (isMilestone && isPlayerWinner && sfxVictory.current) {
           sfxVictory.current.play().catch(err => console.error("Error playing victory sound:", err));
         }
         // For regular success
@@ -65,7 +66,7 @@ const SoundEffects: React.FC<SoundEffectsProps> = ({
         console.error("Audio playback error:", e);
       }
     }
-  }, [gameState, isPlayerWinner, isMuted, completedAllLevels]);
+  }, [gameState, isPlayerWinner, isMuted, isMilestone]);
 
   // Component doesn't render anything, just handles audio
   return null;

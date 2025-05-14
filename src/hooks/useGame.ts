@@ -2,25 +2,23 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { toast } from 'sonner';
 import { useGameLaunch } from './useGameLaunch.tsx';
 import {
-  areAllImagesLoaded,
-  preloadAllSymbols,
   preloadSpecificSymbols,
 } from '../utils/symbolCacheUtils';
 import {
-  MASTER_SYMBOLS,
   getSymbolPack,
-  generateCode as createCodeSequence,
   generateGrid as createSymbolGrid,
   verifyGrid
 } from '../utils/symbolManager';
+import { secureRandomSample } from '../utils/randomUtils';
 import {
   MAX_ROUND_TIME,
   STARTING_LIVES,
   MILESTONE_INTERVALS,
   THEME_COLORS,
   SCORING,
-  MAX_LEVELS,
-  SYMBOL_CONFIG
+  SYMBOL_CONFIG,
+  getFlashTime,
+  getSymbolCountRange
 } from '../config/gameConfig';
 
 // Game states
@@ -109,14 +107,8 @@ export const useGame = () => {
   const gameOver = useCallback(() => {
     clearGameTimer();
 
-    // Don't set isPlayerWinner to false if we've completed all levels
-    // This prevents the "broken" sound effect from playing
-    const isVictory = level >= MAX_LEVELS;
-
-    if (!isVictory) {
-      setIsPlayerWinner(false);
-    }
-
+    // With infinite levels, we no longer have a "completion" condition
+    setIsPlayerWinner(false);
     setGameState('result');
 
     // Update personal best if total score is higher
@@ -131,7 +123,7 @@ export const useGame = () => {
       },
       showWrongTaps ? 2500 : 1000
     ); // Longer delay if showing wrong taps
-  }, [totalScore, personalBest, clearGameTimer, showWrongTaps, level]);
+  }, [totalScore, personalBest, clearGameTimer, showWrongTaps]);
 
   // Start input phase (renamed from flash-done callback)
   const startInputPhase = useCallback(() => {
@@ -159,11 +151,28 @@ export const useGame = () => {
   // Update function reference
   startInputPhaseRef.current = startInputPhase;
 
-  // Restart the same level function (on wrong input or timeout)
+  // Generate code for the current level
+  const generateLevelCode = useCallback((level: number) => {
+    // Get fresh random symbols for this level
+    const availableSymbols = getSymbolPack(level);
+
+    // Get symbol count range for current level
+    const [minCount, maxCount] = getSymbolCountRange(level);
+
+    // Choose a random symbol count within the range for this level
+    const symbolCount = Math.floor(Math.random() * (maxCount - minCount + 1)) + minCount;
+
+    // Generate a code with the determined number of symbols
+    // Note: We're overriding the default code length calculation here
+    const newCode = secureRandomSample(availableSymbols, symbolCount);
+
+    return { newCode, availableSymbols };
+  }, []);
+
+  // Update startSameLevel function
   const restartSameLevel = useCallback((): void => {
     // Generate fresh symbols for the same level
-    const availableSymbols = getSymbolPack(level);
-    const newCode = createCodeSequence(level, availableSymbols);
+    const { newCode, availableSymbols } = generateLevelCode(level);
     setCode(newCode);
 
     // Create a new grid ensuring all code symbols are included
@@ -195,14 +204,17 @@ export const useGame = () => {
     setUserInput([]);
     setGameState('showCode');
 
-    // Show the code for 2000ms to give more time to see it
+    // Get flash time for current level
+    const flashTimeForLevel = getFlashTime(level);
+
+    // Show the code for the calculated flash time (in milliseconds)
     setTimeout(() => {
       // Use the function reference
       if (typeof startInputPhaseRef.current === 'function') {
         startInputPhaseRef.current();
       }
-    }, 2000);
-  }, [level]);
+    }, flashTimeForLevel * 1000);
+  }, [level, generateLevelCode]);
 
   // Update function reference
   restartSameLevelRef.current = restartSameLevel;
@@ -256,8 +268,7 @@ export const useGame = () => {
       const initialLevel = 1;
 
       // Get random symbols for the first level
-      const availableSymbols = getSymbolPack(initialLevel);
-      const newCode = createCodeSequence(initialLevel, availableSymbols);
+      const { newCode, availableSymbols } = generateLevelCode(initialLevel);
       setCode(newCode);
 
       // Reset game state
@@ -297,10 +308,13 @@ export const useGame = () => {
       setGems(0);
       setShowWrongTaps(false);
 
-      // Show the code for 2000ms to give more time to see it
+      // Get flash time for initial level
+      const flashTimeForLevel = getFlashTime(initialLevel);
+
+      // Show the code for the calculated flash time (in milliseconds)
       setTimeout(() => {
         startInputPhase();
-      }, 2000);
+      }, flashTimeForLevel * 1000);
     }
   });
 
@@ -315,25 +329,9 @@ export const useGame = () => {
     (newLevel: number): void => {
       clearGameTimer();
 
-      // Check if we've reached MAX_LEVELS - if so, show game over
-      if (newLevel > MAX_LEVELS) {
-        console.log(`Reached maximum level ${MAX_LEVELS}! Game complete.`);
-        // Display a special toast for completing all levels
-        toast.success(`🎉 Enlightenment Achieved! You've mastered all ${MAX_LEVELS} levels!`, {
-          duration: 5000
-        });
-
-        // Set player as winner first to ensure victory sound plays
-        setIsPlayerWinner(true);
-
-        // Then show game over
-        gameOver();
-        return;
-      }
-
-      // Get fresh random symbols for this level
-      const availableSymbols = getSymbolPack(newLevel);
-      const newCode = createCodeSequence(newLevel, availableSymbols);
+      // With infinite levels, we no longer need the MAX_LEVELS check
+      // Generate level code
+      const { newCode, availableSymbols } = generateLevelCode(newLevel);
       setCode(newCode);
       setUserInput([]);
       setLevel(newLevel);
@@ -362,15 +360,18 @@ export const useGame = () => {
       setGameState('showCode');
       setTimeLeft(MAX_ROUND_TIME);
 
-      // Show the code for 2000ms to give more time to see it
+      // Get flash time for the new level
+      const flashTimeForLevel = getFlashTime(newLevel);
+
+      // Show the code for the calculated flash time (in milliseconds)
       setTimeout(() => {
         startInputPhase();
-      }, 2000);
+      }, flashTimeForLevel * 1000);
     },
     [
       clearGameTimer,
       startInputPhase,
-      gameOver
+      generateLevelCode
     ]
   );
 
@@ -446,11 +447,8 @@ export const useGame = () => {
 
   // Copy "share my best" text to clipboard
   const shareScore = useCallback(() => {
-    // Different text based on if the player completed all levels
-    const isGameComplete = level >= MAX_LEVELS;
-    const text = isGameComplete
-      ? `I achieved enlightenment with ${totalScore} points by completing all ${MAX_LEVELS} levels in Dhyanam!\nCan you match my spiritual journey? Play → https://clash-of-cipher.lovable.app/`
-      : `I just scored ${totalScore} points on Round ${level} of Dhyanam!\nThink you can beat me? Play → https://clash-of-cipher.lovable.app/`;
+    // With infinite levels, we'll focus on level achievement rather than completion
+    const text = `I just scored ${totalScore} points on Level ${level} of Dhyanam!\nThink you can beat me? Play → https://clash-of-cipher.lovable.app/`;
 
     navigator.clipboard.writeText(text);
     return text;

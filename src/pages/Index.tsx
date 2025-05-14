@@ -159,6 +159,7 @@ const Index = () => {
         gameState={gameState}
         isPlayerWinner={isPlayerWinner}
         level={level}
+        totalScore={totalScore}
       />
 
       <div className="w-full max-w-md relative">

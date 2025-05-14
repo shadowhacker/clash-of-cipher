@@ -1,4 +1,4 @@
-import { getSymbolPack, generateCode, generateGrid, MASTER_SYMBOLS } from '../../utils/symbolManager';
+import { getSymbolPack, generateCode, generateGrid, MASTER_SYMBOLS, calculateUniqueSymbolCount } from '../../utils/symbolManager';
 import { secureRandomInt, secureShuffleArray } from '../../utils/randomUtils';
 import { SYMBOL_CONFIG } from '../../config/gameConfig';
 
@@ -129,17 +129,3 @@ describe('Random Distribution Tests', () => {
         });
     });
 });
-
-// Helper function to calculate unique symbol count
-function calculateUniqueSymbolCount(level) {
-    const MIN_SYMBOLS = SYMBOL_CONFIG.MIN_GRID_SYMBOLS;
-    const MAX_SYMBOLS = SYMBOL_CONFIG.MAX_GRID_SYMBOLS;
-    const LEVELS = MAX_LEVELS || 10;
-
-    // Level 1 has MIN_SYMBOLS, max level has MAX_SYMBOLS
-    const progress = Math.min(1, Math.max(0, (level - 1) / (LEVELS - 1)));
-    return Math.floor(MIN_SYMBOLS + progress * (MAX_SYMBOLS - MIN_SYMBOLS));
-}
-
-// Helper constant for tests
-const MAX_LEVELS = 10;

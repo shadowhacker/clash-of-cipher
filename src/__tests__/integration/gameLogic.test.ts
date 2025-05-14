@@ -2,28 +2,50 @@ import {
     SYMBOL_CONFIG,
     MAX_ROUND_TIME,
     STARTING_LIVES,
-    CODE_LENGTH,
-    MAX_LEVELS
+    SYMBOL_FLASH_TIME,
+    SYMBOL_COUNT,
+    getFlashTime,
+    getSymbolCountRange
 } from '../../config/gameConfig';
 import {
     MASTER_SYMBOLS,
     calculateProgressRatio,
     calculateUniqueSymbolCount,
     getSymbolPack,
-    calculateCodeLength,
     generateCode,
     calculateCorrectSymbolCopies,
     generateGrid,
     verifyGrid
 } from '../../utils/symbolManager';
 import { preloadAllSymbols, areAllImagesLoaded, loadedImages } from '../../utils/symbolCacheUtils';
+// Import for testing
+import * as symbolCacheUtils from '../../utils/symbolCacheUtils';
+
+// Define test level ranges
+const TEST_LEVELS = {
+    RANGE_1: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],  // First difficulty range
+    RANGE_2: [11, 15, 20],                     // Second range
+    RANGE_3: [21, 25, 30],                     // Third range
+    RANGE_4: [31, 40, 50],                     // Fourth range
+    HIGH: [60, 75, 100]                        // Beyond level-based scaling
+};
 
 describe('Game Logic Integration Tests', () => {
     // Test the entire game level progression
     describe('Level Progression', () => {
-        it('should scale difficulty appropriately across all levels', () => {
-            // Test all levels from 1 to MAX_LEVELS
-            for (let level = 1; level <= MAX_LEVELS; level++) {
+        it('should scale difficulty appropriately across progressive levels', () => {
+            // Test a sampling of levels across different ranges
+            const testLevels = [
+                ...TEST_LEVELS.RANGE_1,
+                ...TEST_LEVELS.RANGE_2,
+                ...TEST_LEVELS.RANGE_3,
+                ...TEST_LEVELS.RANGE_4,
+                ...TEST_LEVELS.HIGH
+            ];
+
+            for (let i = 0; i < testLevels.length; i++) {
+                const level = testLevels[i];
+
                 // Check progression ratio
                 const progressRatio = calculateProgressRatio(level);
                 expect(progressRatio).toBeGreaterThanOrEqual(0);
@@ -34,26 +56,68 @@ describe('Game Logic Integration Tests', () => {
                 expect(uniqueSymbols).toBeGreaterThanOrEqual(SYMBOL_CONFIG.MIN_GRID_SYMBOLS);
                 expect(uniqueSymbols).toBeLessThanOrEqual(SYMBOL_CONFIG.MAX_GRID_SYMBOLS);
 
-                // Check code length increases with level
-                const codeLen = calculateCodeLength(level);
-                expect(codeLen).toBeGreaterThanOrEqual(CODE_LENGTH.MIN);
-                expect(codeLen).toBeLessThanOrEqual(CODE_LENGTH.MAX);
+                // Get code for this level (based on available symbols)
+                const availableSymbols = getSymbolPack(level);
+                const codeSymbols = generateCode(level, availableSymbols);
 
-                // Higher levels should have longer codes
-                if (level > 1) {
-                    const prevCodeLen = calculateCodeLength(level - 1);
-                    // Code length either increases or stays the same
-                    expect(codeLen).toBeGreaterThanOrEqual(prevCodeLen);
-                }
+                // Code length is now determined by symbol count ranges for the level
+                const [minCount, maxCount] = getSymbolCountRange(level);
+                expect(codeSymbols.length).toBeGreaterThanOrEqual(1);
+                expect(codeSymbols.length).toBeLessThanOrEqual(maxCount);
 
                 // As level increases, we should see fewer copies of correct symbols
-                if (level < MAX_LEVELS) {
-                    const nextCopies = calculateCorrectSymbolCopies(level + 1, codeLen);
-                    const currentCopies = calculateCorrectSymbolCopies(level, codeLen);
-                    // Copies either decrease or stay the same as level increases
-                    expect(nextCopies).toBeLessThanOrEqual(currentCopies);
+                if (i < testLevels.length - 1) {
+                    const nextLevel = testLevels[i + 1];
+                    if (nextLevel > level) {
+                        const codeLen = codeSymbols.length;
+                        const nextCopies = calculateCorrectSymbolCopies(nextLevel, codeLen);
+                        const currentCopies = calculateCorrectSymbolCopies(level, codeLen);
+                        // Copies either decrease or stay the same as level increases
+                        expect(nextCopies).toBeLessThanOrEqual(currentCopies);
+                    }
                 }
             }
+        });
+
+        it('should calculate flash time correctly with oscillating pattern', () => {
+            // Test flash time values at key points
+
+            // At level 1, flash time should be at maximum
+            expect(getFlashTime(1)).toBeCloseTo(SYMBOL_FLASH_TIME.MAX, 2);
+
+            // At level 10, flash time should be near minimum
+            expect(getFlashTime(10)).toBeCloseTo(SYMBOL_FLASH_TIME.MIN, 2);
+
+            // At level 20, flash time should be back to maximum
+            expect(getFlashTime(20)).toBeCloseTo(SYMBOL_FLASH_TIME.MAX, 2);
+
+            // At level 30, flash time should be near minimum again
+            expect(getFlashTime(30)).toBeCloseTo(SYMBOL_FLASH_TIME.MIN, 2);
+
+            // Verify oscillating pattern continues
+            expect(getFlashTime(40)).toBeCloseTo(SYMBOL_FLASH_TIME.MAX, 2);
+        });
+
+        it('should provide correct symbol count ranges for different level bands', () => {
+            // Test level 5 is in the first band
+            const range1 = getSymbolCountRange(5);
+            expect(range1).toEqual(SYMBOL_COUNT.LEVEL_10_RANGE);
+
+            // Test level 15 is in the second band
+            const range2 = getSymbolCountRange(15);
+            expect(range2).toEqual(SYMBOL_COUNT.LEVEL_20_RANGE);
+
+            // Test level 25 is in the third band
+            const range3 = getSymbolCountRange(25);
+            expect(range3).toEqual(SYMBOL_COUNT.LEVEL_30_RANGE);
+
+            // Test level 40 is in the fourth band
+            const range4 = getSymbolCountRange(40);
+            expect(range4).toEqual(SYMBOL_COUNT.LEVEL_50_RANGE);
+
+            // Test level 60 is beyond defined bands and should use max count
+            const range5 = getSymbolCountRange(60);
+            expect(range5).toEqual([SYMBOL_COUNT.MAX_COUNT, SYMBOL_COUNT.MAX_COUNT]);
         });
     });
 
@@ -68,7 +132,13 @@ describe('Game Logic Integration Tests', () => {
 
             // 2. Generate a code for the player to memorize
             const codeSymbols = generateCode(level, availableSymbols);
-            expect(codeSymbols.length).toBe(calculateCodeLength(level));
+
+            // Code length can vary, but should be a reasonable size for this level
+            expect(codeSymbols.length).toBeGreaterThanOrEqual(1);
+
+            // Check against the symbol count range for this level
+            const [minCount, maxCount] = getSymbolCountRange(level);
+            expect(codeSymbols.length).toBeLessThanOrEqual(maxCount);
 
             // 3. Generate a grid with these symbols
             const grid = generateGrid(level, codeSymbols, availableSymbols);
@@ -190,7 +260,7 @@ describe('Game Logic Integration Tests', () => {
     describe('Symbol Loading', () => {
         it('should preload all game symbols before starting', async () => {
             // Mock the preloadAllSymbols function to mark all images as loaded
-            jest.spyOn(require('../../utils/symbolCacheUtils'), 'preloadAllSymbols').mockImplementation(async () => {
+            jest.spyOn(symbolCacheUtils, 'preloadAllSymbols').mockImplementation(async () => {
                 // Directly mark all symbols as loaded for this test
                 MASTER_SYMBOLS.forEach(symbol => {
                     loadedImages[symbol] = true;

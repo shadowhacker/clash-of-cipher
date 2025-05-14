@@ -11,7 +11,7 @@ interface HowToPlayGuideProps {
 
 const HowToPlayGuide: React.FC<HowToPlayGuideProps> = ({ open, onClose }) => {
   const isMobile = useIsMobile();
-  
+
   const content = (
     <div className="space-y-6 py-4">
       <div>
@@ -19,7 +19,7 @@ const HowToPlayGuide: React.FC<HowToPlayGuideProps> = ({ open, onClose }) => {
         <ul className="space-y-3 list-disc pl-5">
           <li>
             <span className="font-medium">Memorise the symbols</span>
-            <p className="text-sm text-muted-foreground">Symbols flash for 1 second. Remember their order!</p>
+            <p className="text-sm text-muted-foreground">Symbols flash briefly. Focus and remember their order!</p>
           </li>
           <li>
             <span className="font-medium">Repeat the sequence</span>
@@ -49,7 +49,7 @@ const HowToPlayGuide: React.FC<HowToPlayGuideProps> = ({ open, onClose }) => {
       </div>
       <div className="border-t pt-4">
         <p className="text-center text-muted-foreground">
-          Challenge yourself to remember longer sequences<br/>and see how far you can go!
+          Challenge yourself to remember longer sequences<br />and see how far you can go!
         </p>
       </div>
     </div>
