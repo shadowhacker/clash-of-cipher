@@ -117,8 +117,11 @@ export const useLeaderboard = (personalBest: number) => {
   const updateLeaderboardEntry = async (name: string, score: number) => {
     const deviceId = getDeviceId();
     setUpdating(true);
+    setError(null); // Clear any previous errors
 
     try {
+      logger.info(`Attempting to update leaderboard for ${name} with score ${score}`);
+      
       // First, check if an entry already exists for this device
       const { data: existingEntries, error: fetchError } = await supabase
         .from('leaderboard')
@@ -129,24 +132,35 @@ export const useLeaderboard = (personalBest: number) => {
       if (fetchError) {
         logger.error('Error checking existing leaderboard entry:', fetchError);
         setUpdating(false);
+        setError("Failed to check leaderboard records. Please try again later.");
         return;
       }
 
+      logger.debug('Existing entries found:', existingEntries);
       let updated = false;
 
       if (existingEntries && existingEntries.length > 0) {
         const currentEntry = existingEntries[0];
+        logger.debug(`Current best score: ${currentEntry.best}, New score: ${score}`);
 
         // Only update if the new score is higher than the existing one
         if (score > currentEntry.best) {
-          const { error: updateError } = await supabase
+          logger.info(`New high score detected! Updating from ${currentEntry.best} to ${score}`);
+          
+          const updateData = {
+            name,
+            best: score,
+            updated_at: new Date().toISOString()
+          };
+          
+          logger.debug('Update data:', updateData);
+          logger.debug('Updating entry ID:', currentEntry.id);
+          
+          const { data: updateResult, error: updateError } = await supabase
             .from('leaderboard')
-            .update({
-              name,
-              best: score,
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', currentEntry.id);
+            .update(updateData)
+            .eq('id', currentEntry.id)
+            .select();
 
           if (updateError) {
             logger.error('Error updating leaderboard entry:', updateError);
@@ -155,18 +169,27 @@ export const useLeaderboard = (personalBest: number) => {
             return;
           }
 
+          logger.info('Update successful:', updateResult);
           updated = true;
-          logger.info(`Updated leaderboard entry for ${name} with score ${score}`);
+        } else {
+          logger.info(`Score ${score} is not higher than current best ${currentEntry.best}. No update needed.`);
         }
       } else {
         // No existing entry for this device, create a new one
-        const { error: insertError } = await supabase
+        logger.info(`No existing entry found for device ${deviceId}. Creating new entry.`);
+        
+        const newEntry = {
+          name,
+          best: score,
+          device_id: deviceId
+        };
+        
+        logger.debug('New entry data:', newEntry);
+        
+        const { data: insertResult, error: insertError } = await supabase
           .from('leaderboard')
-          .insert([{
-            name,
-            best: score,
-            device_id: deviceId
-          }]);
+          .insert([newEntry])
+          .select();
 
         if (insertError) {
           logger.error('Error creating leaderboard entry:', insertError);
@@ -175,20 +198,22 @@ export const useLeaderboard = (personalBest: number) => {
           return;
         }
 
+        logger.info('Insert successful:', insertResult);
         updated = true;
-        logger.info(`Created new leaderboard entry for ${name} with score ${score}`);
       }
 
       // Only fetch leaderboard if we updated something
       if (updated) {
+        logger.info('Refreshing leaderboard after update');
         // Fetch immediately to show updated results
         await fetchLeaderboard();
       }
+      
       setUpdating(false);
     } catch (err) {
+      logger.error('Failed to update leaderboard:', err);
       setUpdating(false);
       setError("Failed to update leaderboard. Please try again later.");
-      logger.error('Failed to update leaderboard:', err);
     }
   };
 
