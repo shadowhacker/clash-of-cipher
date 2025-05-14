@@ -216,8 +216,8 @@ export const useGame = () => {
     setShowWrongTaps(true);
 
     setLives((prevLives) => {
-      const newLives = Math.max(prevLives - 1, 0);
-      if (newLives === 0) {
+      const newLives = Math.max(prevLives - 1, -1);
+      if (newLives === -1) {
         // Call gameOver directly here to avoid stale closure issues
         setTimeout(() => gameOver(), 0);
       } else {
