@@ -31,7 +31,7 @@ const SoundEffects: React.FC<SoundEffectsProps> = ({
     const loadSounds = async () => {
       try {
         // Preload all game sounds
-        await preloadSounds(['success', 'fail', 'victory', 'intro']);
+        await preloadSounds(['success', 'failure', 'victory', 'intro']);
         logger.info('Sound effects preloaded');
       } catch (err) {
         logger.error('Error preloading sound effects:', err);
@@ -43,7 +43,7 @@ const SoundEffects: React.FC<SoundEffectsProps> = ({
     // Subscribe to sound updates
     const unsubscribe = subscribeSounds(async (sounds) => {
       // When sounds update, preload them again
-      await preloadSounds(['success', 'fail', 'victory', 'intro']);
+      await preloadSounds(['success', 'failure', 'victory', 'intro']);
       logger.info('Sound effects updated and preloaded');
     });
     
@@ -71,15 +71,15 @@ const SoundEffects: React.FC<SoundEffectsProps> = ({
       try {
         // For milestone levels (every 20 levels)
         if (isMilestone && isPlayerWinner) {
-          playSound('victory', SOUND_EFFECT_VOLUME).catch(err => logger.error("Error playing victory sound:", err));
+          playSound('victory').catch(err => logger.error("Error playing victory sound:", err));
         }
         // For regular success
         else if (isPlayerWinner) {
-          playSound('success', SOUND_EFFECT_VOLUME).catch(err => logger.error("Error playing success sound:", err));
+          playSound('success').catch(err => logger.error("Error playing success sound:", err));
         }
         // For failure
         else if (!isPlayerWinner) {
-          playSound('fail', SOUND_EFFECT_VOLUME).catch(err => logger.error("Error playing fail sound:", err));
+          playSound('failure').catch(err => logger.error("Error playing failure sound:", err));
         }
       } catch (e) {
         logger.error("Audio playback error:", e);

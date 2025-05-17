@@ -3,10 +3,9 @@ import logger from './logger';
 
 // Default sound paths (fallback if Supabase fails)
 const DEFAULT_SOUNDS = {
-  success: '/snd/success.mp3',
-  fail: '/snd/fail.mp3',
-  victory: '/snd/victory.mp3',
-  intro: 'https://vppefmbjgvfwqqwomfeb.supabase.co/storage/v1/object/public/sounds/intro_sound.mp3'
+  intro: 'https://vppefmbjgvfwqqwomfeb.supabase.co/storage/v1/object/public/sounds//intro_sound.mp3',
+  success: 'https://vppefmbjgvfwqqwomfeb.supabase.co/storage/v1/object/public/sounds//success_bell.mp3',
+  failure: 'https://vppefmbjgvfwqqwomfeb.supabase.co/storage/v1/object/public/sounds//failure_bell.mp3'
 };
 
 // Cache for sound URLs
@@ -124,11 +123,27 @@ export async function getSounds(forceRefresh = false): Promise<Record<string, st
   if (soundsPromise && !forceRefresh) return soundsPromise;
   
   soundsPromise = (async () => {
-    const sounds = await fetchSoundsFromSupabase();
-    cachedSounds = sounds;
-    // Notify subscribers
-    subscribers.forEach(fn => fn(sounds));
-    return sounds;
+    try {
+      // Fetch the latest sounds_json from Supabase
+      const { data, error } = await supabase
+        .from('sounds')
+        .select('sounds_json')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+      if (error) throw error;
+      if (data && data.sounds_json) {
+        cachedSounds = data.sounds_json;
+        return cachedSounds;
+      }
+      // Fallback to defaults if not found
+      cachedSounds = DEFAULT_SOUNDS;
+      return cachedSounds;
+    } catch (err) {
+      logger.error('Failed to fetch sounds from Supabase:', err);
+      cachedSounds = DEFAULT_SOUNDS;
+      return cachedSounds;
+    }
   })();
   
   return soundsPromise;
