@@ -2,9 +2,29 @@ import { SYMBOL_CONFIG, MAX_REFERENCE_LEVEL, getRepeatCopiesRange } from '../con
 import { secureShuffleArray, secureRandomSample } from './randomUtils';
 import logger from './logger';
 import { useRemoteConfig } from '../hooks/useRemoteConfig';
+import { supabase } from '@/integrations/supabase/client';
 
-// Array of all available symbol image filenames
-export const MASTER_SYMBOLS = [
+// --- Auto-updating master symbols logic ---
+let cachedSymbols: string[] | null = null;
+let symbolsPromise: Promise<string[]> | null = null;
+const subscribers: ((symbols: string[]) => void)[] = [];
+
+async function fetchSymbolsFromSupabase(): Promise<string[]> {
+  // Try to fetch from Supabase symbols table
+  try {
+    const { data, error } = await supabase
+      .from('symbols')
+      .select('symbols_json')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+    if (error || !data || !data.symbols_json?.symbols) throw error;
+    
+    // Return the symbols directly - they already have full URLs
+    return data.symbols_json.symbols;
+  } catch (err) {
+    // Fallback to local default if fetch fails
+    return [
     'symbol-1.png', 'symbol-2.png', 'symbol-3.png', 'symbol-4.png',
     'symbol-5.png', 'symbol-6.png', 'symbol-7.png', 'symbol-8.png',
     'symbol-9.png', 'symbol-10.png', 'symbol-11.png', 'symbol-12.png',
@@ -15,11 +35,38 @@ export const MASTER_SYMBOLS = [
     'symbol-29.png', 'symbol-30.png', 'symbol-31.png', 'symbol-32.png',
     'symbol-33.png', 'symbol-34.png'
 ];
-
-// Validate that MASTER_SYMBOLS.length matches SYMBOL_CONFIG.TOTAL_SYMBOLS
-if (MASTER_SYMBOLS.length !== SYMBOL_CONFIG.TOTAL_SYMBOLS) {
-    logger.warn(`Warning: MASTER_SYMBOLS.length (${MASTER_SYMBOLS.length}) does not match SYMBOL_CONFIG.TOTAL_SYMBOLS (${SYMBOL_CONFIG.TOTAL_SYMBOLS}). This may cause issues with symbol distribution.`);
+  }
 }
+
+export async function getMasterSymbols(forceRefresh = false): Promise<string[]> {
+  if (cachedSymbols && !forceRefresh) return cachedSymbols;
+  if (symbolsPromise && !forceRefresh) return symbolsPromise;
+  symbolsPromise = (async () => {
+    const symbols = await fetchSymbolsFromSupabase();
+    cachedSymbols = symbols;
+    // Notify subscribers
+    subscribers.forEach(fn => fn(symbols));
+    return symbols;
+  })();
+  return symbolsPromise;
+}
+
+export function subscribeMasterSymbols(cb: (symbols: string[]) => void) {
+  subscribers.push(cb);
+  // Immediately call with cached if available
+  if (cachedSymbols) cb(cachedSymbols);
+  // Return unsubscribe
+  return () => {
+    const idx = subscribers.indexOf(cb);
+    if (idx !== -1) subscribers.splice(idx, 1);
+  };
+}
+
+// Optionally, poll for updates every X seconds (auto-update)
+const AUTO_UPDATE_INTERVAL = 60 * 1000; // 1 minute
+setInterval(() => {
+  getMasterSymbols(true);
+}, AUTO_UPDATE_INTERVAL);
 
 /**
  * Calculate a progress ratio (0.0 to 1.0) based on current level
@@ -69,10 +116,11 @@ export function calculateUniqueSymbolCount(level: number): number {
  * @param level - Current game level
  * @returns Array of symbols for this level
  */
-export function getSymbolPack(level: number): string[] {
+export async function getSymbolPack(level: number): Promise<string[]> {
+    const masterSymbols = await getMasterSymbols();
     // Each level uses a rotating selection from the master symbols
     // Always use a fresh random selection for variety
-    return secureRandomSample(MASTER_SYMBOLS, calculateUniqueSymbolCount(level));
+    return secureRandomSample(masterSymbols, calculateUniqueSymbolCount(level));
 }
 
 /**
@@ -130,6 +178,17 @@ export function generateGrid(
     roundLogic: any[] | null = null
 ): string[] {
     const { GRID_SIZE } = SYMBOL_CONFIG;
+
+    // Safety check - ensure availableSymbols is a valid array
+    if (!Array.isArray(availableSymbols) || availableSymbols.length === 0) {
+        console.error("Invalid availableSymbols in generateGrid:", availableSymbols);
+        // Return a safe fallback grid of just code symbols repeated
+        const safeGrid = [...codeSymbols];
+        while (safeGrid.length < GRID_SIZE) {
+            safeGrid.push(codeSymbols[Math.floor(Math.random() * codeSymbols.length)]);
+        }
+        return safeGrid;
+    }
 
     // 1. Create a set of remaining available symbols (excluding code symbols)
     const remainingSymbols = availableSymbols.filter(sym => !codeSymbols.includes(sym));

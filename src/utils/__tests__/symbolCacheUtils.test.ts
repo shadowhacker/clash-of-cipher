@@ -9,14 +9,16 @@ import {
     preloadAllSymbols,
     preloadSpecificSymbols
 } from '../symbolCacheUtils';
-import { MASTER_SYMBOLS } from '../symbolManager';
+import { getMasterSymbols } from '../symbolManager';
+import { dataUrlCache, preloadAllGameSymbols, preloadImage } from '../../hooks/useImageCache';
 
 // Mock dataUrlCache from useImageCache hook
 jest.mock('../../hooks/useImageCache', () => ({
     dataUrlCache: {},
-    preloadAllGameSymbols: jest.fn().mockImplementation(() => {
+    preloadAllGameSymbols: jest.fn().mockImplementation(async () => {
         // Mark all symbols as loaded in loadedImages
-        MASTER_SYMBOLS.forEach(symbol => {
+        const symbols = await getMasterSymbols();
+        symbols.forEach(symbol => {
             loadedImages[symbol] = true;
         });
         return Promise.resolve();
@@ -68,20 +70,21 @@ describe('symbolCacheUtils', () => {
     });
 
     describe('areAllImagesLoaded', () => {
-        it('should return false when no images are loaded', () => {
-            const result = areAllImagesLoaded();
+        it('should return false when no images are loaded', async () => {
+            const result = await areAllImagesLoaded();
             if (result !== false) {
                 throw new Error(`Expected areAllImagesLoaded() to return false, but got ${result}`);
             }
         });
 
-        it('should return true when all images are loaded', () => {
+        it('should return true when all images are loaded', async () => {
             // Mark all images as loaded
-            MASTER_SYMBOLS.forEach(symbol => {
+            const symbols = await getMasterSymbols();
+            symbols.forEach(symbol => {
                 loadedImages[symbol] = true;
             });
 
-            const result = areAllImagesLoaded();
+            const result = await areAllImagesLoaded();
             if (result !== true) {
                 throw new Error(`Expected areAllImagesLoaded() to return true, but got ${result}`);
             }
@@ -89,31 +92,32 @@ describe('symbolCacheUtils', () => {
     });
 
     describe('forceMarkAllLoaded', () => {
-        it('should mark all images as loaded', () => {
+        it('should mark all images as loaded', async () => {
             // Initially none are loaded
-            if (areAllImagesLoaded() !== false) {
+            if (await areAllImagesLoaded() !== false) {
                 throw new Error('Expected initial areAllImagesLoaded() to be false');
             }
 
             // Call function
-            forceMarkAllLoaded();
+            await forceMarkAllLoaded();
 
             // All should be marked as loaded
-            if (areAllImagesLoaded() !== true) {
+            if (await areAllImagesLoaded() !== true) {
                 throw new Error('Expected areAllImagesLoaded() to be true after forceMarkAllLoaded()');
             }
         });
     });
 
     describe('basic cache functions', () => {
-        it('should restore cached images when version matches', () => {
+        it('should restore cached images when version matches', async () => {
             // Setup mock data
-            const testSymbol = MASTER_SYMBOLS[0];
+            const symbols = await getMasterSymbols();
+            const testSymbol = symbols[0];
             mockLocalStorage.data['clash-cache-version'] = CACHE_VERSION;
             mockLocalStorage.data[`${CACHE_KEY_PREFIX}${testSymbol}`] = 'mock-data-url';
 
             // Call function
-            restoreCachedImages();
+            await restoreCachedImages();
 
             // Image should be marked as loaded
             if (loadedImages[testSymbol] !== true) {
@@ -121,9 +125,10 @@ describe('symbolCacheUtils', () => {
             }
         });
 
-        it('should clear old cache on version mismatch', () => {
+        it('should clear old cache on version mismatch', async () => {
             // Setup mock data with old version
-            const testSymbol = MASTER_SYMBOLS[0];
+            const symbols = await getMasterSymbols();
+            const testSymbol = symbols[0];
             mockLocalStorage.data['clash-cache-version'] = 'old-version';
             mockLocalStorage.data[`${CACHE_KEY_PREFIX}${testSymbol}`] = 'mock-data-url';
 
@@ -134,7 +139,7 @@ describe('symbolCacheUtils', () => {
             jest.spyOn(Object, 'keys').mockImplementation(() => mockKeys);
 
             // Call function
-            restoreCachedImages();
+            await restoreCachedImages();
 
             // Should have attempted to remove items
             if (mockLocalStorage.removeItem.mock.calls.length === 0) {
@@ -158,14 +163,14 @@ describe('symbolCacheUtils', () => {
             jest.spyOn(Object, 'keys').mockRestore();
         });
 
-        it('should persist data URLs to localStorage', () => {
+        it('should persist data URLs to localStorage', async () => {
             // Setup mock dataUrlCache
-            const { dataUrlCache } = require('../../hooks/useImageCache');
-            const testSymbol = MASTER_SYMBOLS[0];
+            const symbols = await getMasterSymbols();
+            const testSymbol = symbols[0];
             dataUrlCache[`/symbols/${testSymbol}`] = 'mock-data-url';
 
             // Call function
-            persistCachedImages();
+            await persistCachedImages();
 
             // Should have saved to localStorage
             let versionSet = false;
@@ -192,37 +197,35 @@ describe('symbolCacheUtils', () => {
     describe('async preloading functions', () => {
         it('preloadAllSymbols should load all symbols', async () => {
             // Get the mock function
-            const { preloadAllGameSymbols } = require('../../hooks/useImageCache');
-            const initialCallCount = preloadAllGameSymbols.mock.calls.length;
+            const initialCallCount = (preloadAllGameSymbols as jest.Mock).mock.calls.length;
 
             // Call function and wait for completion
             await preloadAllSymbols();
 
             // Should have called the preload function
-            const finalCallCount = preloadAllGameSymbols.mock.calls.length;
+            const finalCallCount = (preloadAllGameSymbols as jest.Mock).mock.calls.length;
             if (finalCallCount <= initialCallCount) {
                 throw new Error('Expected preloadAllGameSymbols to be called');
             }
 
             // All symbols should be marked as loaded
-            if (areAllImagesLoaded() !== true) {
+            if (await areAllImagesLoaded() !== true) {
                 throw new Error('Expected all images to be marked as loaded');
             }
         });
 
         it('preloadSpecificSymbols should load only specified symbols', async () => {
             // Setup
-            const symbols = [MASTER_SYMBOLS[0], MASTER_SYMBOLS[1]];
+            const symbols = [getMasterSymbols()[0], getMasterSymbols()[1]];
 
             // Get the mock function
-            const { preloadImage } = require('../../hooks/useImageCache');
-            const initialCallCount = preloadImage.mock.calls.length;
+            const initialCallCount = (preloadImage as jest.Mock).mock.calls.length;
 
             // Call function
             await preloadSpecificSymbols(symbols);
 
             // Verify preloadImage was called for each symbol
-            const finalCallCount = preloadImage.mock.calls.length;
+            const finalCallCount = (preloadImage as jest.Mock).mock.calls.length;
             if (finalCallCount - initialCallCount !== symbols.length) {
                 throw new Error(`Expected preloadImage to be called ${symbols.length} times but was called ${finalCallCount - initialCallCount} times`);
             }

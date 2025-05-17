@@ -12,7 +12,7 @@ interface CachedSymbolProps {
  * Uses the image cache to avoid reloading images
  */
 const CachedSymbol: React.FC<CachedSymbolProps> = ({ symbol, index, className = '' }) => {
-    const imagePath = `/symbols/${symbol}`;
+    const imagePath = `${symbol}`;
     const { status, cachedUrl } = useImageCache(imagePath);
 
     // Ensure we have something to display even if path is incorrect
