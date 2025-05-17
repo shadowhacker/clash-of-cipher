@@ -1,56 +1,35 @@
 import React from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
-import { X } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface HowToPlayGuideProps {
   open: boolean;
   onClose: () => void;
+  isFirstTime?: boolean;
 }
 
-const HowToPlayGuide: React.FC<HowToPlayGuideProps> = ({ open, onClose }) => {
+const HowToPlayGuide: React.FC<HowToPlayGuideProps> = ({ open, onClose, isFirstTime = false }) => {
   const isMobile = useIsMobile();
 
   const content = (
-    <div className="space-y-6 py-4">
+    <div className="space-y-6 py-4 px-1">
       <div>
-        <h3 className="font-semibold text-lg mb-2">How to Play</h3>
-        <ul className="space-y-3 list-disc pl-5">
-          <li>
-            <span className="font-medium">Memorise the symbols</span>
-            <p className="text-sm text-muted-foreground">Symbols flash briefly. Focus and remember their order!</p>
-          </li>
-          <li>
-            <span className="font-medium">Repeat the sequence</span>
-            <p className="text-sm text-muted-foreground">Tap the symbols in the same order within 10 seconds.</p>
-          </li>
-          <li>
-            <span className="font-medium">Earn points each round</span>
-            <p className="text-sm text-muted-foreground">
-              – Higher rounds = bigger base points<br />
-              – Finish faster = x1–x2 speed bonus<br />
-              – Keep a perfect streak = +25% per flawless round
-            </p>
-          </li>
-          <li>
-            <span className="font-medium">Watch your lives</span>
-            <p className="text-sm text-muted-foreground">You get 2 lives. A mistake or timeout costs one life.</p>
-          </li>
-          <li>
-            <span className="font-medium">Collect gems</span>
-            <p className="text-sm text-muted-foreground">Gems drop every 10 rounds. Jackpot every 20!</p>
-          </li>
-          <li>
-            <span className="font-medium">Set records</span>
-            <p className="text-sm text-muted-foreground">Share your score and climb the Hall of Heroes.</p>
-          </li>
-        </ul>
-      </div>
-      <div className="border-t pt-4">
-        <p className="text-center text-muted-foreground">
-          Challenge yourself to remember longer sequences<br />and see how far you can go!
-        </p>
+        <h3 className="font-bold text-xl mb-4 text-center text-primary">How to Play</h3>
+        <div className="space-y-5">
+          <div className="bg-primary/10 p-3 rounded-lg">
+            <h4 className="font-bold mb-2">1. Watch</h4>
+            <p>Symbols will flash on the screen one by one. Pay close attention!</p>
+          </div>
+          <div className="bg-primary/10 p-3 rounded-lg">
+            <h4 className="font-bold mb-2">2. Memorize</h4>
+            <p>Remember the order in which the symbols appear.</p>
+          </div>
+          <div className="bg-primary/10 p-3 rounded-lg">
+            <h4 className="font-bold mb-2">3. Repeat</h4>
+            <p>Tap the symbols in the <b>EXACT SAME ORDER</b> as you saw them.</p>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -70,7 +49,7 @@ const HowToPlayGuide: React.FC<HowToPlayGuideProps> = ({ open, onClose }) => {
 
   return (
     <Sheet open={open} onOpenChange={onClose}>
-      <SheetContent side="right" className="w-[280px]">
+      <SheetContent side="right" className="max-w-md">
         <SheetHeader>
           <SheetTitle>How to Play</SheetTitle>
         </SheetHeader>

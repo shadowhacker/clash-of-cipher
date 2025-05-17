@@ -1,5 +1,5 @@
-import React, { useRef, useEffect, useState } from 'react';
-import { useImageCache } from '../hooks/useImageCache';
+import React, { useRef, useEffect } from 'react';
+import TextGuide from './TextGuide';
 
 interface GuideScreenProps {
   onClose: () => void;
@@ -25,11 +25,6 @@ const scrollbarStyles = `
 const GuideScreen: React.FC<GuideScreenProps> = ({ onClose, isFirstTime, open }) => {
   // Create ref for the dialog content to track clicks
   const dialogRef = useRef<HTMLDivElement>(null);
-  const imageSrc = "/images/how-to-play.png";
-  const { status, cachedUrl } = useImageCache(imageSrc);
-
-  const loading = status === 'loading';
-  const error = status === 'error';
 
   // Handle click outside
   useEffect(() => {
@@ -60,43 +55,24 @@ const GuideScreen: React.FC<GuideScreenProps> = ({ onClose, isFirstTime, open })
         className="bg-amber-100 rounded-xl overflow-hidden w-full max-w-md flex flex-col shadow-2xl"
         style={{ maxHeight: 'calc(100vh - 40px)' }}
       >
-        <div
-          className="overflow-auto flex-grow thin-scrollbar relative"
-          style={{
-            scrollbarWidth: 'thin',
-            scrollbarColor: '#b45309 #fef3c7',
-            minHeight: '50vh',
-          }}
-        >
-          {loading && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-amber-950/10">
-              <div className="h-12 w-12 rounded-full border-4 border-amber-700 border-t-transparent animate-spin"></div>
-              <p className="mt-4 text-amber-800 font-medium">Loading guide...</p>
-            </div>
-          )}
-
-          {error && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-amber-950/10 p-4">
-              <p className="text-amber-800 font-medium text-center">
-                Could not load the guide image. Please check your connection and try again.
-              </p>
-            </div>
-          )}
-
-          <img
-            src={cachedUrl}
-            alt="How to Play Instructions"
-            className={`w-full h-auto ${loading ? 'opacity-20' : 'opacity-100'}`}
-          />
+        <div className="bg-amber-700 py-2 px-4">
+          <h2 className="text-amber-50 text-xl font-bold text-center">Game Guide</h2>
         </div>
 
-        <div className="p-4 bg-amber-100 sticky bottom-0">
+        <div className="overflow-auto thin-scrollbar" style={{ scrollbarWidth: 'thin', scrollbarColor: '#b45309 #fef3c7' }}>
+          <TextGuide onSwitchToImage={() => {}} />
+        </div>
+
+        <div className="p-4 bg-amber-700 sticky bottom-0">
           <button
             onClick={onClose}
-            className="w-full py-3 bg-amber-700 hover:bg-amber-800 text-amber-100 font-semibold rounded-lg transition-colors"
+            className="w-full py-3 bg-amber-100 hover:bg-amber-200 text-amber-800 font-bold rounded-lg transition-colors"
           >
             Back to Game
           </button>
+          <p className="text-amber-100 text-xs text-center mt-2">
+            (You can access this guide anytime by clicking the ? icon)
+          </p>
         </div>
       </div>
     </div>

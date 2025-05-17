@@ -21,6 +21,7 @@ import {
   getSymbolCountRange
 } from '../config/gameConfig';
 import logger from '../utils/logger';
+import { copyToClipboard } from '../utils/clipboardUtils';
 
 // Game states
 type GameState = 'idle' | 'showCode' | 'input' | 'result';
@@ -456,7 +457,11 @@ export const useGame = () => {
     // With infinite levels, we'll focus on level achievement rather than completion
     const text = `I just scored ${totalScore} points on Level ${level} of Dhyanam!\nThink you can beat me? Play → https://clash-of-cipher.lovable.app/`;
 
-    navigator.clipboard.writeText(text);
+    // Use the clipboard utility instead of direct navigator.clipboard
+    copyToClipboard(text).catch(err => {
+      logger.error('Failed to copy score to clipboard:', err);
+    });
+    
     return text;
   }, [totalScore, level]);
 

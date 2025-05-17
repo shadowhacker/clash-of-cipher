@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { getDeviceId, getPlayerName, savePlayerName } from '@/utils/deviceStorage';
@@ -49,12 +48,12 @@ export const useLeaderboard = (personalBest: number) => {
     const deviceId = getDeviceId();
 
     try {
-      // Get top 10 scores
+      // Get top 100 scores instead of 10
       const { data: topScores, error } = await supabase
         .from('leaderboard')
         .select('*')
         .order('best', { ascending: false })
-        .limit(10);
+        .limit(100);
 
       if (error) {
         logger.error('Error fetching leaderboard:', error);
@@ -64,11 +63,11 @@ export const useLeaderboard = (personalBest: number) => {
 
       setLeaderboard(topScores || []);
 
-      // Check if player is in top 10
-      const playerInTopTen = topScores?.some(entry => entry.device_id === deviceId);
+      // Check if player is in top 100
+      const playerInTopEntries = topScores?.some(entry => entry.device_id === deviceId);
 
-      if (!playerInTopTen) {
-        // Get player rank if not in top 10
+      if (!playerInTopEntries) {
+        // Get player rank if not in top 100
         const { data: userEntry } = await supabase
           .from('leaderboard')
           .select('*')
@@ -101,7 +100,7 @@ export const useLeaderboard = (personalBest: number) => {
           }
         }
       } else {
-        // Player is in top 10, find their rank
+        // Player is in top 100, find their rank
         const playerRank = topScores.findIndex(entry => entry.device_id === deviceId) + 1;
         setPlayerRank(playerRank);
       }
