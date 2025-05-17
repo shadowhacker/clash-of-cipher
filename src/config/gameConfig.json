@@ -1,6 +1,6 @@
 {
   "MAX_ROUND_TIME": 10,
-  "STARTING_LIVES": 4,
+  "STARTING_LIVES": 2,
   "ROUND_LOGIC": [
     {
       "level_start": 1,
@@ -57,4 +57,4 @@
     "JACKPOT_BONUS": 1000
   },
   "MAX_REFERENCE_LEVEL": 50
-} 
+}
