@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import logger from '../utils/logger';
+import useBackButton from '../hooks/useBackButton';
 
 interface PlayerNameDialogProps {
   open: boolean;
@@ -20,6 +21,9 @@ interface PlayerNameDialogProps {
 
 const PlayerNameDialog: React.FC<PlayerNameDialogProps> = ({ open, onSubmit, onClose }) => {
   const [name, setName] = useState('');
+
+  // Use the back button hook to handle mobile back button presses
+  useBackButton(open, onClose);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

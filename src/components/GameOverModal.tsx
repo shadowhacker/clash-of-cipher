@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from "sonner";
 import { Share2, Home } from 'lucide-react';
 import { copyToClipboard } from '@/utils/clipboardUtils';
+import useBackButton from '../hooks/useBackButton';
 
 interface GameOverModalProps {
   level: number;
@@ -34,6 +35,9 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
   onBackToHome,
 }) => {
   const [showShareModal, setShowShareModal] = useState(false);
+
+  // Use the back button hook to handle mobile back button presses
+  useBackButton(open, onClose);
 
   // Check for significant achievement milestones
   const isSignificantMilestone = level % 20 === 0 && level > 0;
@@ -79,7 +83,6 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
   const handleBackToHome = () => {
     if (onBackToHome) {
       onClose(); // First close the modal
-      onBackToHome(); // Then go back to home screen
     }
   };
 

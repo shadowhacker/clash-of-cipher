@@ -3,6 +3,7 @@ import React from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import { useIsMobile } from '@/hooks/use-mobile';
+import useBackButton from '../hooks/useBackButton';
 
 interface HowToPlayGuideProps {
   open: boolean;
@@ -13,6 +14,9 @@ interface HowToPlayGuideProps {
 const HowToPlayGuide: React.FC<HowToPlayGuideProps> = ({ open, onClose, isFirstTime = false }) => {
   const isMobile = useIsMobile();
   const { config, loading } = useRemoteConfig();
+
+  // Use the back button hook to handle mobile back button presses
+  useBackButton(open, onClose);
   const rules = config?.rules_text || [
     '1. Watch the symbols and remember their order.',
     '2. Tap the symbols in the same order.',
