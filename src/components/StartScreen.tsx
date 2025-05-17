@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { useRemoteConfig } from '../hooks/useRemoteConfig';
 import { Loader2 } from 'lucide-react';
