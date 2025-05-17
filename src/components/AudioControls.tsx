@@ -102,28 +102,6 @@ const AudioControls: React.FC<AudioControlsProps> = ({ className = '' }) => {
 
   return (
     <div className="flex space-x-2">
-      <GameButton
-        onClick={toggleMute}
-        icon={isMuted ? (
-          <VolumeX className="w-5 h-5" />
-        ) : (
-          <Volume2 className="w-5 h-5" />
-        )}
-        label={isMuted ? "Unmute sounds" : "Mute sounds"}
-        className={className}
-      />
-      
-      <GameButton
-        onClick={toggleMusicMute}
-        icon={isMusicMuted ? (
-          <Music2 className="w-5 h-5" />
-        ) : (
-          <Music className="w-5 h-5" />
-        )}
-        label={isMusicMuted ? "Unmute music" : "Mute music"}
-        className={className}
-      />
-      
       <Popover>
         <PopoverTrigger asChild>
           <div>
