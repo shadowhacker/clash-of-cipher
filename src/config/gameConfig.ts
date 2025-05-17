@@ -15,7 +15,8 @@ export async function initializeConfig() {
     const remoteConfig = await fetchGameConfig();
     if (remoteConfig) {
       // Update the active config with the remote data
-      activeConfig = remoteConfig;
+      // Use type assertion to tell TypeScript this has the same structure as defaultConfig
+      activeConfig = remoteConfig as typeof defaultConfig;
       console.log('Using remote config from Supabase:', remoteConfig);
       return remoteConfig;
     }
@@ -62,14 +63,14 @@ export const CONFIG_DEFAULTS = activeConfig;
 export function getRoundLogicBracket(level: number, roundLogic: any[] | null) {
   // If explicit roundLogic is provided, use it
   if (roundLogic && roundLogic.length) {
-    return roundLogic.find((r) => 
+    return roundLogic.find((r) =>
       level >= r.level_start && level <= r.level_end
     );
   }
-  
+
   // Otherwise use the active config
   const currentRoundLogic = activeConfig.ROUND_LOGIC;
-  return currentRoundLogic.find((r) => 
+  return currentRoundLogic.find((r) =>
     level >= r.level_start && level <= r.level_end
   );
 }
@@ -79,7 +80,7 @@ export const getFlashTime = (level: number): number => {
   // Use local config when no remote config is available
   const bracket = getRoundLogicBracket(level, null);
   if (!bracket) return 1.5; // fallback
-  
+
   // Get random value in the flash_time range
   const [min, max] = bracket.flash_time;
   return min + Math.random() * (max - min);
@@ -90,7 +91,7 @@ export const getSymbolCountRange = (level: number): [number, number] => {
   // Use local config when no remote config is available
   const bracket = getRoundLogicBracket(level, null);
   if (!bracket) return [1, 2]; // fallback
-  
+
   return bracket.icon_count;
 };
 
@@ -99,7 +100,7 @@ export function getRemoteFlashTime(level: number, roundLogic: any[]): number {
   // Find the matching round logic bracket
   const bracket = getRoundLogicBracket(level, roundLogic);
   if (!bracket) return 1.5; // fallback
-  
+
   // Use a random value in the flash_time range
   const [min, max] = bracket.flash_time;
   return min + Math.random() * (max - min);
@@ -117,4 +118,4 @@ export function getRepeatCopiesRange(level: number, roundLogic: any[] | null): [
   const bracket = getRoundLogicBracket(level, roundLogic);
   if (!bracket) return [1, 3]; // fallback
   return bracket.repeat_copies;
-} 
+}

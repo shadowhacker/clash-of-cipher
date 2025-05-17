@@ -133,24 +133,6 @@ const StartScreen: React.FC<StartScreenProps> = ({ onStart, onHowToPlay }) => {
               )}
             </Button>
           </div>
-          
-          {/* Config status message */}
-          <div className="mt-4 text-center text-amber-300 text-base font-medium" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
-            {loading ? (
-              'Connecting to server...'
-            ) : error ? (
-              <div className="flex flex-col gap-2">
-                <span className="text-amber-400">Unable to connect to server</span>
-                <button 
-                  onClick={() => refreshConfig()} 
-                  className="text-sm bg-amber-800 hover:bg-amber-700 text-amber-200 py-1 px-2 rounded-md mx-auto">
-                  Retry connection
-                </button>
-              </div>
-            ) : (
-              config?.referral_text || 'Game configuration loaded successfully'
-            )}
-          </div>
         </div>
       </div>
     </div>
