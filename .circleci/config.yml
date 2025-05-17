@@ -53,15 +53,17 @@ jobs:
       - attach_workspace:
           at: .
       - run:
-          name: Switch to Java 17
+          name: Set JAVA_HOME to Java 17
           command: |
-            sudo update-alternatives --set java /usr/lib/jvm/java-17-openjdk-amd64/bin/java
-            sudo update-alternatives --set javac /usr/lib/jvm/java-17-openjdk-amd64/bin/javac
-      - run:
-          name: Android Release Build
-          command: |
+            export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+            export PATH=$JAVA_HOME/bin:$PATH
+            echo "JAVA_HOME set to $JAVA_HOME"
+            java -version
+            javac -version
+            # Run Gradle with Java 17
             cd android
-            ./gradlew assembleRelease
+            $JAVA_HOME/bin/java -version
+            ../android/gradlew assembleRelease
       - store_artifacts:
           path: android/app/build/outputs/apk/release/app-release.apk
           destination: android/app-release.apk
