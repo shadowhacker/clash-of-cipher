@@ -1,76 +1,70 @@
 version: 2.1
 
 executors:
-  android-executor:
+  node-executor:
     docker:
       - image: cimg/node:18.20
     working_directory: ~/app
 
+  android-executor:
+    docker:
+      - image: cimg/android:2023.01
+    working_directory: ~/app
+
   ios-executor:
     macos:
-      xcode: "15.0.0"  # Requires CircleCI macOS plan
+      xcode: "15.0.0"
     working_directory: ~/app
 
 jobs:
   setup:
-    executor: android-executor
+    executor: node-executor
     steps:
       - checkout
-
       - run:
           name: Restore capacitor.config.ts from env
           command: |
             echo "$CAPACITOR_CONFIG_B64" | base64 -d > capacitor.config.ts
-
       - run:
           name: Install Node Dependencies & Capacitor Platforms
           command: |
             npm ci
             npm install @capacitor/core @capacitor/cli @capacitor/android @capacitor/ios --save-dev
-
       - run:
           name: Add Capacitor Platforms (android/ios)
           command: |
             npx cap add android
             npx cap add ios
-
       - run:
           name: Build Web App
           command: npm run build
-
       - run:
           name: Capacitor Sync & Copy
           command: |
             npx cap sync
             npx cap copy
-
       - persist_to_workspace:
           root: .
           paths:
             - .
-
   android-build:
     executor: android-executor
     steps:
       - attach_workspace:
           at: .
-
       - run:
           name: Android Release Build
           command: |
             cd android
             ./gradlew assembleRelease
-
       - store_artifacts:
           path: android/app/build/outputs/apk/release/app-release.apk
           destination: android/app-release.apk
-
   ios-build:
     executor: ios-executor
     steps:
       - attach_workspace:
           at: .
-
       - run:
           name: Install Node + CocoaPods + Capacitor CLI
           command: |
@@ -79,7 +73,6 @@ jobs:
             npm install @capacitor/core @capacitor/cli @capacitor/android @capacitor/ios --save-dev
             npx cap sync
             cd ios && pod install
-
       - run:
           name: Build iOS Archive
           command: |
@@ -89,7 +82,6 @@ jobs:
                        -configuration Release \
                        -sdk iphoneos \
                        -archivePath build/App.xcarchive archive
-
       - run:
           name: Export IPA
           command: |
@@ -98,11 +90,9 @@ jobs:
                        -archivePath build/App.xcarchive \
                        -exportOptionsPlist ExportOptions.plist \
                        -exportPath build/ios
-
       - store_artifacts:
           path: ios/build/ios
           destination: ios-output
-
 workflows:
   version: 2
   capacitor-build:
