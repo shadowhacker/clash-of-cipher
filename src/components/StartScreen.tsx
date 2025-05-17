@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
+import { useRemoteConfig } from '../hooks/useRemoteConfig';
+import { Loader2 } from 'lucide-react';
 
 interface StartScreenProps {
   onStart: () => void;
@@ -30,24 +32,35 @@ const StartScreen: React.FC<StartScreenProps> = ({ onStart, onHowToPlay }) => {
   const [ctaEnabled, setCtaEnabled] = useState(false);
   const [progress, setProgress] = useState(0);
   const animationFrame = useRef<number | null>(null);
+  const { config, loading, error, refreshConfig } = useRemoteConfig();
 
+  // Wait for config to load before enabling CTA
   useEffect(() => {
-    setCtaEnabled(false);
+    if (!loading && config) {
+      setCtaEnabled(true);
+    }
+  }, [loading, config]);
+
+  // Handle initial animation
+  useEffect(() => {
     setProgress(0);
     let start: number | null = null;
+    
     const animate = (timestamp: number) => {
       if (!start) start = timestamp;
       const elapsed = timestamp - start;
       const percent = Math.min(elapsed / ANIMATION_DURATION, 1);
       setProgress(percent);
+      
       if (percent < 1) {
         animationFrame.current = requestAnimationFrame(animate);
       } else {
         setProgress(1); // Ensure visually 100%
-        setTimeout(() => setCtaEnabled(true), 50); // Enable after fill is visually complete
       }
     };
+    
     animationFrame.current = requestAnimationFrame(animate);
+    
     return () => {
       if (animationFrame.current) cancelAnimationFrame(animationFrame.current);
     };
@@ -61,10 +74,10 @@ const StartScreen: React.FC<StartScreenProps> = ({ onStart, onHowToPlay }) => {
         <div className="absolute -bottom-20 -right-20 w-56 h-56 bg-indigo-900/20 rounded-full blur-2xl animate-pulse" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-tr from-amber-900/10 via-indigo-900/10 to-amber-800/10 rounded-full blur-3xl" />
 
-        <h1 className="text-5xl font-extrabold mb-2 text-amber-400 flex items-center justify-center gap-2 drop-shadow-xl tracking-tight" style={{letterSpacing: '-0.03em'}}>
+        <h1 className="text-5xl font-extrabold mb-2 text-amber-400 flex items-center justify-center gap-2 drop-shadow-xl tracking-tight" style={{letterSpacing: '-0.03em', fontFamily: 'Rajdhani, sans-serif', fontWeight: 700}}>
           <span className="text-6xl animate-spin-slow">🧘</span> Dhyanam
         </h1>
-        <p className="mb-7 text-lg text-amber-200 font-semibold italic drop-shadow-sm">The ancient memory practice of spiritual mastery</p>
+        <p className="mb-7 text-lg text-amber-200 font-semibold italic drop-shadow-sm" style={{fontFamily: 'Rajdhani, sans-serif'}}>The ancient memory practice of spiritual mastery</p>
 
         {/* How to Play Card */}
         <div className="mb-10 bg-gradient-to-br from-amber-900/80 via-amber-800/70 to-amber-700/60 rounded-2xl p-6 shadow-xl border-2 border-amber-700/70 relative">
@@ -96,28 +109,48 @@ const StartScreen: React.FC<StartScreenProps> = ({ onStart, onHowToPlay }) => {
             <Button
               onClick={onStart}
               className={`w-full h-16 text-xl font-extrabold rounded-2xl transition-all duration-300 tracking-wide shadow-xl overflow-hidden relative ${ctaEnabled ? 'bg-amber-500 hover:bg-amber-600 text-white' : 'bg-amber-900 text-amber-400 cursor-not-allowed opacity-80'}`}
-              disabled={!ctaEnabled}
-              style={{letterSpacing: '0.04em'}}
-            >
-              <span className="relative z-10">{ctaEnabled ? 'BEGIN YOUR TAPASYA' : 'Please wait...'}</span>
+              disabled={loading || !ctaEnabled}
+              style={{letterSpacing: '0.04em'}}>
+              <span className="relative z-10 flex items-center justify-center gap-2">
+                {loading ? (
+                  <>
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    <span>Loading game data...</span>
+                  </>
+                ) : error ? (
+                  'Start with offline mode'
+                ) : (
+                  ctaEnabled ? 'BEGIN YOUR TAPASYA' : 'Please wait...'
+                )}
+              </span>
+              
               {/* Progress fill animation */}
-              {!ctaEnabled && (
+              {progress < 1 && (
                 <span
-                  className="absolute left-0 top-0 h-full bg-amber-400/80 transition-all duration-300"
+                  className="absolute left-0 top-0 h-full bg-amber-400/40 transition-all duration-300"
                   style={{ width: `${progress * 100}%`, zIndex: 1, borderRadius: '1rem' }}
                 />
               )}
             </Button>
           </div>
-
-          {/* How to Play CTA - more prominent, no '?' icon */}
-          <Button
-            onClick={onHowToPlay}
-            className="w-full mt-5 py-4 text-lg font-extrabold rounded-2xl bg-indigo-900 text-amber-200 border-2 border-indigo-800 shadow-lg hover:bg-indigo-800 hover:text-amber-100 transition-all tracking-wide"
-            style={{ fontSize: '1.18rem', letterSpacing: '0.01em' }}
-          >
-            How to Play (Full Guide)
-          </Button>
+          
+          {/* Config status message */}
+          <div className="mt-4 text-center text-amber-300 text-base font-medium" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
+            {loading ? (
+              'Connecting to server...'
+            ) : error ? (
+              <div className="flex flex-col gap-2">
+                <span className="text-amber-400">Unable to connect to server</span>
+                <button 
+                  onClick={() => refreshConfig()} 
+                  className="text-sm bg-amber-800 hover:bg-amber-700 text-amber-200 py-1 px-2 rounded-md mx-auto">
+                  Retry connection
+                </button>
+              </div>
+            ) : (
+              config?.referral_text || 'Game configuration loaded successfully'
+            )}
+          </div>
         </div>
       </div>
     </div>

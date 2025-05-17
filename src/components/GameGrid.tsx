@@ -86,9 +86,9 @@ const GameGrid: React.FC<GameGridProps> = ({
       <div className="flex flex-col h-[340px] xs:h-[380px] sm:h-[420px]">
         {/* Show code overlay - simplified but keeping aesthetic elements */}
         {gameState === 'showCode' && (
-          <div className="absolute inset-0 flex items-center justify-center z-10 bg-black/80 rounded-md pointer-events-none">
+          <div className="absolute inset-0 flex items-center justify-center z-10 rounded-md pointer-events-none" style={{ background: 'rgba(0,0,0,0.92)' }}>
             <div className="flex flex-col items-center gap-4 max-w-xs justify-center shadow-2xl rounded-lg px-6 py-4">
-              <p className="text-amber-400 text-2xl font-medium tracking-wider uppercase">
+              <p className="text-amber-400 text-base sm:text-lg font-medium tracking-wider uppercase" style={{ fontFamily: 'Hind Madurai, sans-serif', fontWeight: 400, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }}>
                 Memorise these symbols
               </p>
               <div className="flex flex-wrap gap-4 justify-center text-4xl font-bold text-white">

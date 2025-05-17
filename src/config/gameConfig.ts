@@ -2,100 +2,119 @@
  * Master Game Configuration File
  * Contains all configurable game parameters in one place
  */
+import defaultConfig from './gameConfig.json';
+import { fetchGameConfig } from '../utils/supabaseConfig';
 
-// Game timing and progression
-export const MAX_ROUND_TIME = 10; // Maximum time for each round in seconds
-export const STARTING_LIVES = 2; // Number of lives player starts with
+// Store the config that will be used
+let activeConfig = defaultConfig;
 
-// Flash/Show code time configuration
-export const SYMBOL_FLASH_TIME = {
-    MAX_HIGH: 2.0,    // Maximum flash time for easier rounds (seconds)
-    MIN_HIGH: 1.5,    // Minimum flash time for easier rounds (seconds)
-    MAX_LOW: 1.5,     // Maximum flash time for harder rounds (seconds)
-    MIN_LOW: 1.2,     // Minimum flash time for harder rounds (seconds)
-    CYCLE: 20,        // Level cycle for flash time oscillation
-};
+// Function to initialize config from Supabase
+export async function initializeConfig() {
+  try {
+    // Attempt to fetch from Supabase
+    const remoteConfig = await fetchGameConfig();
+    if (remoteConfig) {
+      // Update the active config with the remote data
+      activeConfig = remoteConfig;
+      console.log('Using remote config from Supabase:', remoteConfig);
+      return remoteConfig;
+    }
+  } catch (error) {
+    console.error('Error initializing remote config, using default:', error);
+  }
+  return defaultConfig;
+}
 
-// Symbol count progression by level
-export const SYMBOL_COUNT = {
-    LEVEL_30_RANGE: [1, 2] as [number, number],   // Symbol count range for levels 1-30
-    LEVEL_50_RANGE: [2, 3] as [number, number],   // Symbol count range for levels 31-50
-    MAX_RANGE: [3, 4] as [number, number],        // Symbol count range for levels 51+
-};
+// Call initialization (the result can be awaited elsewhere if needed)
+initializeConfig();
 
-// Symbol distribution
-export const SYMBOL_CONFIG = {
-    TOTAL_SYMBOLS: 34,     // Total number of available symbols (must match MASTER_SYMBOLS.length)
-    MIN_GRID_SYMBOLS: 8,   // Minimum unique symbols in grid (early levels)
-    MAX_GRID_SYMBOLS: 16,  // Maximum unique symbols in grid (later levels)
-    GRID_SIZE: 16,         // Number of cells in the grid (4x4)
+// Export the active config as a function to always get the latest
+export const getConfig = () => activeConfig;
 
-    // Correct symbol distribution
-    // At level 1, there will be this many copies of each correct symbol
-    MAX_CORRECT_SYMBOL_COPIES: 6,
+// Export static values as functions to always get the latest values
+export const getMaxRoundTime = () => activeConfig.MAX_ROUND_TIME;
+export const getStartingLives = () => activeConfig.STARTING_LIVES;
+export const getThemeColors = () => activeConfig.THEME_COLORS;
+export const getMilestoneIntervals = () => activeConfig.MILESTONE_INTERVALS;
+export const getScoring = () => activeConfig.SCORING;
+export const getSymbolConfig = () => activeConfig.SYMBOL_CONFIG;
+export const getMaxReferenceLevel = () => activeConfig.MAX_REFERENCE_LEVEL;
+export const getRoundLogic = () => activeConfig.ROUND_LOGIC;
 
-    // At max level, ensure at least this many copies of each correct symbol
-    MIN_CORRECT_SYMBOL_COPIES: 1
-};
+// For backward compatibility, export direct references too
+// These won't update when remote config loads
+export const MAX_ROUND_TIME = defaultConfig.MAX_ROUND_TIME;
+export const STARTING_LIVES = defaultConfig.STARTING_LIVES;
+export const THEME_COLORS = defaultConfig.THEME_COLORS;
+export const MILESTONE_INTERVALS = defaultConfig.MILESTONE_INTERVALS;
+export const SCORING = defaultConfig.SCORING;
+export const SYMBOL_CONFIG = defaultConfig.SYMBOL_CONFIG;
+export const MAX_REFERENCE_LEVEL = defaultConfig.MAX_REFERENCE_LEVEL;
 
-// Color themes for level milestones
-export const MILESTONE_INTERVALS = {
-    COLOR_CHANGE: 10,      // Every 10 levels, theme color changes
-    SYMBOL_PACK_CHANGE: 7, // Every 7 levels, symbol pack changes
-    JACKPOT_BONUS: 20      // Every 20 levels, player gets jackpot bonus
-};
-
-// Color themes for different level milestones
-export const THEME_COLORS = [
-    'bg-amber-500',
-    'bg-emerald-500',
-    'bg-sky-500',
-    'bg-fuchsia-500',
-    'bg-rose-500',
-];
-
-// Scoring system
-export const SCORING = {
-    BASE_MULTIPLIER: 1.25, // Flawless streak multiplier
-    SPEED_BONUS_FACTOR: 0.1, // Speed bonus per second remaining
-    JACKPOT_BONUS: 1000, // Bonus points for jackpot rounds
-};
-
-export const MAX_REFERENCE_LEVEL = 50;
+// For backward compatibility, we alias CONFIG_DEFAULTS to the getter
+export const CONFIG_DEFAULTS = activeConfig;
 
 /**
- * Utility functions for game mechanics
+ * Utility functions for game mechanics using the new ROUND_LOGIC structure
  */
 
-// Calculate flash time based on level with oscillating pattern
+// Get the appropriate round logic bracket for a given level
+export function getRoundLogicBracket(level: number, roundLogic: any[] | null) {
+  // If explicit roundLogic is provided, use it
+  if (roundLogic && roundLogic.length) {
+    return roundLogic.find((r) => 
+      level >= r.level_start && level <= r.level_end
+    );
+  }
+  
+  // Otherwise use the active config
+  const currentRoundLogic = activeConfig.ROUND_LOGIC;
+  return currentRoundLogic.find((r) => 
+    level >= r.level_start && level <= r.level_end
+  );
+}
+
+// Calculate flash time based on level and round logic
 export const getFlashTime = (level: number): number => {
-    // Determine which 20-level bracket we're in (0-indexed)
-    const bracket = Math.floor((level - 1) / SYMBOL_FLASH_TIME.CYCLE);
-    
-    // Determine if we're in an "easy" or "hard" bracket
-    // Even brackets (0, 2, 4...) use higher times (1.5-2.0s)
-    // Odd brackets (1, 3, 5...) use lower times (1.2-1.5s)
-    const isEasyBracket = bracket % 2 === 0;
-    
-    // Position within the current 20-level bracket (0-19)
-    const positionInBracket = (level - 1) % SYMBOL_FLASH_TIME.CYCLE;
-    
-    if (isEasyBracket) {
-        // Easy bracket: oscillate between 1.5-2.0 seconds
-        const step = (SYMBOL_FLASH_TIME.MAX_HIGH - SYMBOL_FLASH_TIME.MIN_HIGH) / (SYMBOL_FLASH_TIME.CYCLE - 1);
-        // Start high (2.0s), gradually decrease to low (1.5s)
-        return SYMBOL_FLASH_TIME.MAX_HIGH - (step * positionInBracket);
-    } else {
-        // Hard bracket: oscillate between 1.2-1.5 seconds
-        const step = (SYMBOL_FLASH_TIME.MAX_LOW - SYMBOL_FLASH_TIME.MIN_LOW) / (SYMBOL_FLASH_TIME.CYCLE - 1);
-        // Start high (1.5s), gradually decrease to low (1.2s)
-        return SYMBOL_FLASH_TIME.MAX_LOW - (step * positionInBracket);
-    }
+  // Use local config when no remote config is available
+  const bracket = getRoundLogicBracket(level, null);
+  if (!bracket) return 1.5; // fallback
+  
+  // Get random value in the flash_time range
+  const [min, max] = bracket.flash_time;
+  return min + Math.random() * (max - min);
 };
 
 // Get symbol count range based on level
 export const getSymbolCountRange = (level: number): [number, number] => {
-    if (level <= 30) return SYMBOL_COUNT.LEVEL_30_RANGE;
-    if (level <= 50) return SYMBOL_COUNT.LEVEL_50_RANGE;
-    return SYMBOL_COUNT.MAX_RANGE;
-}; 
+  // Use local config when no remote config is available
+  const bracket = getRoundLogicBracket(level, null);
+  if (!bracket) return [1, 2]; // fallback
+  
+  return bracket.icon_count;
+};
+
+// Utility to get flash time for a level from remote roundLogic
+export function getRemoteFlashTime(level: number, roundLogic: any[]): number {
+  // Find the matching round logic bracket
+  const bracket = getRoundLogicBracket(level, roundLogic);
+  if (!bracket) return 1.5; // fallback
+  
+  // Use a random value in the flash_time range
+  const [min, max] = bracket.flash_time;
+  return min + Math.random() * (max - min);
+}
+
+// Utility to get symbol count range for a level from remote roundLogic
+export function getRemoteSymbolCountRange(level: number, roundLogic: any[]): [number, number] {
+  const bracket = getRoundLogicBracket(level, roundLogic);
+  if (!bracket) return [1, 2]; // fallback
+  return bracket.icon_count;
+}
+
+// Get repeat copies range for a level from round logic
+export function getRepeatCopiesRange(level: number, roundLogic: any[] | null): [number, number] {
+  const bracket = getRoundLogicBracket(level, roundLogic);
+  if (!bracket) return [1, 3]; // fallback
+  return bracket.repeat_copies;
+} 

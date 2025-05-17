@@ -11,23 +11,32 @@ import {
 } from '../utils/symbolManager';
 import { secureRandomSample } from '../utils/randomUtils';
 import {
-  MAX_ROUND_TIME,
-  STARTING_LIVES,
-  MILESTONE_INTERVALS,
-  THEME_COLORS,
-  SCORING,
-  SYMBOL_CONFIG,
+  getMaxRoundTime,
+  getStartingLives,
+  getMilestoneIntervals,
+  getThemeColors,
+  getScoring,
+  getSymbolConfig,
   getFlashTime,
-  getSymbolCountRange
-} from '../config/gameConfig';
+  getSymbolCountRange,
+  getRemoteFlashTime,
+  getRemoteSymbolCountRange,
+  // For backward compatibility
+  MAX_ROUND_TIME,
+  STARTING_LIVES
+} from '../config/gameConfig.ts';
 import logger from '../utils/logger';
 import { copyToClipboard } from '../utils/clipboardUtils';
+import { useRemoteConfig } from '../hooks/useRemoteConfig';
 
 // Game states
 type GameState = 'idle' | 'showCode' | 'input' | 'result';
 
 // Hook for managing game state
 export const useGame = () => {
+  // Remote config - loaded on the start screen before game begins
+  const { roundLogic, loading: configLoading, error: configError, isInitialized } = useRemoteConfig();
+
   // Game state
   const [gameState, setGameState] = useState<GameState>('idle');
   const [level, setLevel] = useState(1);
@@ -39,8 +48,8 @@ export const useGame = () => {
   const [userInput, setUserInput] = useState<string[]>([]);
   const [isPlayerWinner, setIsPlayerWinner] = useState<boolean | null>(null);
   const [showGameOverModal, setShowGameOverModal] = useState(false);
-  const [lives, setLives] = useState(STARTING_LIVES);
-  const [timeLeft, setTimeLeft] = useState(MAX_ROUND_TIME);
+  const [lives, setLives] = useState(getStartingLives()); // Use getter for dynamic value
+  const [timeLeft, setTimeLeft] = useState(getMaxRoundTime()); // Use getter for dynamic value
   const [gridSymbols, setGridSymbols] = useState<string[]>([]);
   const [showStartScreen, setShowStartScreen] = useState(true);
 
@@ -66,9 +75,69 @@ export const useGame = () => {
     }
   }, []);
 
+  // Initialize game launch hook - only after config is loaded
+  const { launchRun, Overlay } = useGameLaunch({
+    onLaunchComplete: () => {
+      // Start the first round after countdown
+      const initialLevel = 1;
+
+      // Get random symbols for the first level
+      const { newCode, availableSymbols } = generateLevelCode(initialLevel);
+      setCode(newCode);
+
+      // Reset game state
+      setUserInput([]);
+      setLevel(initialLevel);
+
+      // Generate grid symbols with strategic distribution
+      const newGridSymbols = createSymbolGrid(initialLevel, newCode, availableSymbols, roundLogic);
+
+      // Verify and set grid symbols
+      if (!verifyGrid(newGridSymbols, newCode)) {
+        logger.error("Grid verification failed on initial level - using fallback");
+        // Fallback grid creation to ensure code symbols are included
+        const fallbackGrid = [...newCode];
+        while (fallbackGrid.length < getSymbolConfig().GRID_SIZE) {
+          fallbackGrid.push(availableSymbols[Math.floor(Math.random() * availableSymbols.length)]);
+        }
+        setGridSymbols(fallbackGrid.sort(() => Math.random() - 0.5));
+      } else {
+        setGridSymbols(newGridSymbols);
+      }
+
+      // Preload symbols for smoother gameplay
+      const symbolsToPreload = [...new Set([...newCode, ...newGridSymbols])];
+      preloadSpecificSymbols(symbolsToPreload);
+
+      // Start the game
+      setGameState('showCode');
+      setShowGameOverModal(false);
+      setLives(getStartingLives());
+      setTimeLeft(getMaxRoundTime());
+      setShowStartScreen(false);
+
+      // Reset score system
+      setTotalScore(0);
+      setCurrentStreak(0);
+      setGems(0);
+      setShowWrongTaps(false);
+
+      // Get flash time for initial level
+      const flashTimeForLevel = roundLogic ? getRemoteFlashTime(initialLevel, roundLogic) : getFlashTime(initialLevel);
+
+      // Show the code for the calculated flash time (in milliseconds)
+      setTimeout(() => {
+        startInputPhase();
+      }, flashTimeForLevel * 1000);
+    }
+  });
+
   // Get current theme based on level
   const getCurrentTheme = useCallback((currentLevel: number) => {
-    return THEME_COLORS[Math.floor((currentLevel - 1) / MILESTONE_INTERVALS.COLOR_CHANGE) % THEME_COLORS.length];
+    // Access theme colors from the dynamic getter
+    const themeColors = getThemeColors();
+    const milestones = getMilestoneIntervals();
+    return themeColors[Math.floor((currentLevel - 1) / milestones.COLOR_CHANGE) % themeColors.length];
   }, []);
 
   // Calculate round score based on new formula
@@ -79,21 +148,25 @@ export const useGame = () => {
       secondsRemaining: number,
       streak: number
     ) => {
+      // Access scoring config from the dynamic getter
+      const scoring = getScoring();
+      const milestones = getMilestoneIntervals();
+
       // Base points: (roundNumber ** 2) * codeLength
       const basePts = Math.pow(round, 2) * codeLen;
 
       // Speed multiplier: 1 + (secondsLeft / 10) - ranges from 1.0 to 2.0
-      const speedMult = 1 + secondsRemaining * SCORING.SPEED_BONUS_FACTOR;
+      const speedMult = 1 + secondsRemaining * scoring.SPEED_BONUS_FACTOR;
 
       // Flawless multiplier: BASE_MULTIPLIER ** currentStreak
-      const flawlessMult = Math.pow(SCORING.BASE_MULTIPLIER, streak);
+      const flawlessMult = Math.pow(scoring.BASE_MULTIPLIER, streak);
 
       // Calculate round score
       let roundScore = Math.floor(basePts * speedMult * flawlessMult);
 
       // Jackpot round: bonus points on milestone rounds
-      if (round % MILESTONE_INTERVALS.JACKPOT_BONUS === 0) {
-        roundScore += SCORING.JACKPOT_BONUS;
+      if (round % milestones.JACKPOT_BONUS === 0) {
+        roundScore += scoring.JACKPOT_BONUS;
       }
 
       return {
@@ -104,6 +177,56 @@ export const useGame = () => {
     },
     []
   );
+
+  // Generate code for the current level
+  const generateLevelCode = useCallback((level: number) => {
+    // Get fresh random symbols for this level
+    const availableSymbols = getSymbolPack(level);
+    // Get symbol count range for current level from remote config
+    const [minCount, maxCount] = roundLogic ? getRemoteSymbolCountRange(level, roundLogic) : getSymbolCountRange(level);
+    // Choose a random symbol count within the range for this level
+    const symbolCount = Math.floor(Math.random() * (maxCount - minCount + 1)) + minCount;
+    // Generate a code with the determined number of symbols
+    const newCode = secureRandomSample(availableSymbols, symbolCount);
+    return { newCode, availableSymbols };
+  }, [roundLogic]);
+
+  // Start input phase (renamed from flash-done callback)
+  const startInputPhase = useCallback(() => {
+    setGameState('input');
+
+    // Immediately start the timer as requested
+    setTimeLeft(getMaxRoundTime());
+    clearGameTimer();
+
+    timerRef.current = window.setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 0) {
+          clearGameTimer();
+          // Call loseLife via the reference to avoid circular dependency
+          if (typeof loseLifeRef.current === 'function') {
+            loseLifeRef.current();
+          }
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  }, [clearGameTimer]);
+
+  // Update startGame to use launchRun - but only if config is loaded
+  const startGame = useCallback(() => {
+    if (!isInitialized) {
+      logger.warn('Attempted to start game before config was initialized');
+      return;
+    }
+    
+    clearGameTimer();
+    launchRun();
+  }, [clearGameTimer, launchRun, isInitialized]);
+
+  // Expose configuration loading state to UI
+  const configReady = isInitialized && !configLoading;
 
   // Game over function
   const gameOver = useCallback(() => {
@@ -130,58 +253,14 @@ export const useGame = () => {
     ); // Longer delay if showing wrong taps
   }, [totalScore, personalBest, clearGameTimer, showWrongTaps]);
 
-  // Start input phase (renamed from flash-done callback)
-  const startInputPhase = useCallback(() => {
-    setGameState('input');
-
-    // Immediately start the timer as requested
-    setTimeLeft(MAX_ROUND_TIME);
-    clearGameTimer();
-
-    timerRef.current = window.setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 0) {
-          clearGameTimer();
-          // Call loseLife via the reference to avoid circular dependency
-          if (typeof loseLifeRef.current === 'function') {
-            loseLifeRef.current();
-          }
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-  }, [clearGameTimer]);
-
-  // Update function reference
-  startInputPhaseRef.current = startInputPhase;
-
-  // Generate code for the current level
-  const generateLevelCode = useCallback((level: number) => {
-    // Get fresh random symbols for this level
-    const availableSymbols = getSymbolPack(level);
-
-    // Get symbol count range for current level
-    const [minCount, maxCount] = getSymbolCountRange(level);
-
-    // Choose a random symbol count within the range for this level
-    const symbolCount = Math.floor(Math.random() * (maxCount - minCount + 1)) + minCount;
-
-    // Generate a code with the determined number of symbols
-    // Note: We're overriding the default code length calculation here
-    const newCode = secureRandomSample(availableSymbols, symbolCount);
-
-    return { newCode, availableSymbols };
-  }, []);
-
-  // Update startSameLevel function
+  // Define the restartSameLevel function before assigning it to ref
   const restartSameLevel = useCallback((): void => {
     // Generate fresh symbols for the same level
     const { newCode, availableSymbols } = generateLevelCode(level);
     setCode(newCode);
 
     // Create a new grid ensuring all code symbols are included
-    const newGridSymbols = createSymbolGrid(level, newCode, availableSymbols);
+    const newGridSymbols = createSymbolGrid(level, newCode, availableSymbols, roundLogic);
 
     // Verify all code symbols are in the grid (safety check)
     if (!verifyGrid(newGridSymbols, newCode)) {
@@ -190,7 +269,7 @@ export const useGame = () => {
       const retryGrid = [...newCode]; // Start with the code symbols
 
       // Fill the rest with random symbols from the available set
-      while (retryGrid.length < SYMBOL_CONFIG.GRID_SIZE) {
+      while (retryGrid.length < getSymbolConfig().GRID_SIZE) {
         const randomSymbol = availableSymbols[Math.floor(Math.random() * availableSymbols.length)];
         retryGrid.push(randomSymbol);
       }
@@ -210,7 +289,7 @@ export const useGame = () => {
     setGameState('showCode');
 
     // Get flash time for current level
-    const flashTimeForLevel = getFlashTime(level);
+    const flashTimeForLevel = roundLogic ? getRemoteFlashTime(level, roundLogic) : getFlashTime(level);
 
     // Show the code for the calculated flash time (in milliseconds)
     setTimeout(() => {
@@ -222,6 +301,9 @@ export const useGame = () => {
   }, [level, generateLevelCode]);
 
   // Update function reference
+  startInputPhaseRef.current = startInputPhase;
+
+  // Update function reference - This was causing the error as the function was referenced before definition
   restartSameLevelRef.current = restartSameLevel;
 
   // Lose a life handler - define before any functions that use it
@@ -256,7 +338,7 @@ export const useGame = () => {
     // Add a pause to make life loss more noticeable
     setGameState('result');
     setIsPlayerWinner(false);
-    setTimeLeft(MAX_ROUND_TIME); // Reset timer using constant
+    setTimeLeft(getMaxRoundTime()); // Reset timer using constant
   }, [clearGameTimer, gameOver]);
 
   // Update function reference for loseLife
@@ -264,73 +346,10 @@ export const useGame = () => {
 
   // Calculate next milestone level
   const getNextMilestone = useCallback((currentLevel: number) => {
-    const nextColor = Math.ceil((currentLevel + 1) / MILESTONE_INTERVALS.COLOR_CHANGE) * MILESTONE_INTERVALS.COLOR_CHANGE;
-    const nextPack = Math.ceil((currentLevel + 1) / MILESTONE_INTERVALS.SYMBOL_PACK_CHANGE) * MILESTONE_INTERVALS.SYMBOL_PACK_CHANGE;
+    const nextColor = Math.ceil((currentLevel + 1) / getMilestoneIntervals().COLOR_CHANGE) * getMilestoneIntervals().COLOR_CHANGE;
+    const nextPack = Math.ceil((currentLevel + 1) / getMilestoneIntervals().SYMBOL_PACK_CHANGE) * getMilestoneIntervals().SYMBOL_PACK_CHANGE;
     return Math.min(nextColor, nextPack);
   }, []);
-
-  // Initialize game launch hook
-  const { launchRun, Overlay } = useGameLaunch({
-    onLaunchComplete: () => {
-      // Start the first round after countdown
-      const initialLevel = 1;
-
-      // Get random symbols for the first level
-      const { newCode, availableSymbols } = generateLevelCode(initialLevel);
-      setCode(newCode);
-
-      // Reset game state
-      setUserInput([]);
-      setLevel(initialLevel);
-
-      // Generate grid symbols with strategic distribution
-      const newGridSymbols = createSymbolGrid(initialLevel, newCode, availableSymbols);
-
-      // Verify and set grid symbols
-      if (!verifyGrid(newGridSymbols, newCode)) {
-        logger.error("Grid verification failed on initial level - using fallback");
-        // Fallback grid creation to ensure code symbols are included
-        const fallbackGrid = [...newCode];
-        while (fallbackGrid.length < SYMBOL_CONFIG.GRID_SIZE) {
-          fallbackGrid.push(availableSymbols[Math.floor(Math.random() * availableSymbols.length)]);
-        }
-        setGridSymbols(fallbackGrid.sort(() => Math.random() - 0.5));
-      } else {
-        setGridSymbols(newGridSymbols);
-      }
-
-      // Preload symbols for smoother gameplay
-      const symbolsToPreload = [...new Set([...newCode, ...newGridSymbols])];
-      preloadSpecificSymbols(symbolsToPreload);
-
-      // Start the game
-      setGameState('showCode');
-      setShowGameOverModal(false);
-      setLives(STARTING_LIVES);
-      setTimeLeft(MAX_ROUND_TIME);
-      setShowStartScreen(false);
-
-      // Reset score system
-      setTotalScore(0);
-      setCurrentStreak(0);
-      setGems(0);
-      setShowWrongTaps(false);
-
-      // Get flash time for initial level
-      const flashTimeForLevel = getFlashTime(initialLevel);
-
-      // Show the code for the calculated flash time (in milliseconds)
-      setTimeout(() => {
-        startInputPhase();
-      }, flashTimeForLevel * 1000);
-    }
-  });
-
-  // Update startGame to use launchRun
-  const startGame = useCallback(() => {
-    clearGameTimer();
-    launchRun();
-  }, [clearGameTimer, launchRun]);
 
   // Start next level
   const startNextLevel = useCallback(
@@ -344,14 +363,14 @@ export const useGame = () => {
       setLevel(newLevel);
 
       // Generate a grid with strategic symbol distribution
-      const newGridSymbols = createSymbolGrid(newLevel, newCode, availableSymbols);
+      const newGridSymbols = createSymbolGrid(newLevel, newCode, availableSymbols, roundLogic);
 
       // Verify and set grid symbols
       if (!verifyGrid(newGridSymbols, newCode)) {
         logger.error(`Grid verification failed on level ${newLevel} - using fallback`);
         // Fallback grid creation to ensure code symbols are included
         const fallbackGrid = [...newCode];
-        while (fallbackGrid.length < SYMBOL_CONFIG.GRID_SIZE) {
+        while (fallbackGrid.length < getSymbolConfig().GRID_SIZE) {
           fallbackGrid.push(availableSymbols[Math.floor(Math.random() * availableSymbols.length)]);
         }
         setGridSymbols(fallbackGrid.sort(() => Math.random() - 0.5));
@@ -365,10 +384,10 @@ export const useGame = () => {
 
       // Show the code
       setGameState('showCode');
-      setTimeLeft(MAX_ROUND_TIME);
+      setTimeLeft(getMaxRoundTime());
 
       // Get flash time for the new level
-      const flashTimeForLevel = getFlashTime(newLevel);
+      const flashTimeForLevel = roundLogic ? getRemoteFlashTime(newLevel, roundLogic) : getFlashTime(newLevel);
 
       // Show the code for the calculated flash time (in milliseconds)
       setTimeout(() => {
@@ -474,8 +493,8 @@ export const useGame = () => {
     setCode([]);
     setIsPlayerWinner(null);
     setShowGameOverModal(false);
-    setLives(STARTING_LIVES);
-    setTimeLeft(MAX_ROUND_TIME);
+    setLives(getStartingLives());
+    setTimeLeft(getMaxRoundTime());
     setTotalScore(0);
     setCurrentStreak(0);
     setShowWrongTaps(false);
@@ -517,6 +536,7 @@ export const useGame = () => {
     currentStreak,
     gems,
     showWrongTaps,
-    Overlay
+    Overlay,
+    configReady
   };
 };

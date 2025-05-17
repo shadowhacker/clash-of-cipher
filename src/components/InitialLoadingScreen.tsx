@@ -139,8 +139,8 @@ const InitialLoadingScreen: React.FC<InitialLoadingScreenProps> = ({ onComplete 
             transition={{ duration: 0.5 }}
         >
             <div className="flex flex-col items-center max-w-md px-6 py-8">
-                <h1 className="text-4xl font-bold text-amber-400 mb-6">Dhyanam</h1>
-                <p className="text-amber-300/80 text-center mb-8">
+                <h1 className="text-4xl font-bold text-amber-400 mb-6" style={{ fontFamily: 'Rajdhani, sans-serif', fontWeight: 700, letterSpacing: '-0.03em' }}>Dhyanam</h1>
+                <p className="text-amber-300/80 text-center mb-8" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
                     {message}
                 </p>
 

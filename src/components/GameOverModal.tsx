@@ -169,7 +169,8 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
                     className="text-4xl md:text-5xl font-bold mb-3"
                     style={{
                       color: '#e9a142',
-                      fontFamily: 'serif',
+                      fontFamily: 'Gloock, serif',
+                      fontWeight: 500,
                       textShadow: '0 4px 4px rgb(0, 0, 0)'
                     }}
                   >
@@ -179,7 +180,8 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
                     className="text-5xl md:text-6xl font-bold"
                     style={{
                       color: '#e9a142',
-                      fontFamily: 'serif',
+                      fontFamily: 'Gloock, serif',
+                      fontWeight: 500,
                       textShadow: '0 4px 4px rgb(0, 0, 0)'
                     }}
                   >
@@ -192,7 +194,8 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
                     className="text-4xl md:text-5xl font-bold mb-3"
                     style={{
                       color: '#e9a142',
-                      fontFamily: 'serif',
+                      fontFamily: 'Gloock, serif',
+                      fontWeight: 500,
                       textShadow: '0 4px 4px rgb(0, 0, 0)'
                     }}
                   >
@@ -202,7 +205,8 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
                     className="text-5xl md:text-6xl font-bold"
                     style={{
                       color: '#e9a142',
-                      fontFamily: 'serif',
+                      fontFamily: 'Gloock, serif',
+                      fontWeight: 500,
                       textShadow: '0 4px 4px rgb(0, 0, 0)'
                     }}
                   >
@@ -268,7 +272,9 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
                     border: '4px solid #873b11',
                     borderRadius: '16px',
                     boxShadow: '0 0 25px rgba(105, 49, 15, 0.5)',
-                    textShadow: '0 2px 2px rgba(0, 0, 0, 0.3)'
+                    textShadow: '0 2px 2px rgba(0, 0, 0, 0.3)',
+                    fontFamily: 'Rajdhani, sans-serif',
+                    fontWeight: 500
                   }}
                 >
                   {isSignificantMilestone ? 'START NEW JOURNEY' : 'RESTART DHYANAM'}
@@ -284,7 +290,9 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
                       border: '2px solid #873b11',
                       borderRadius: '16px',
                       boxShadow: '0 0 15px rgba(105, 49, 15, 0.3)',
-                      textShadow: '0 2px 2px rgba(0, 0, 0, 0.3)'
+                      textShadow: '0 2px 2px rgba(0, 0, 0, 0.3)',
+                      fontFamily: 'Rajdhani, sans-serif',
+                      fontWeight: 500
                     }}
                   >
                     BACK TO HOME
@@ -296,7 +304,9 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
                   className="flex items-center justify-center w-full max-w-md py-3 font-bold text-lg transition-opacity hover:opacity-80 mt-2"
                   style={{
                     color: '#e8934a',
-                    textShadow: '0 2px 2px rgba(0, 0, 0, 0.5)'
+                    textShadow: '0 2px 2px rgba(0, 0, 0, 0.5)',
+                    fontFamily: 'Rajdhani, sans-serif',
+                    fontWeight: 500
                   }}
                 >
                   <span className="mr-2">💬</span> CHALLENGE YOUR SANGHA

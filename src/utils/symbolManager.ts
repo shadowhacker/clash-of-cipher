@@ -1,6 +1,7 @@
-import { SYMBOL_CONFIG, MAX_REFERENCE_LEVEL } from '../config/gameConfig';
+import { SYMBOL_CONFIG, MAX_REFERENCE_LEVEL, getRepeatCopiesRange } from '../config/gameConfig';
 import { secureShuffleArray, secureRandomSample } from './randomUtils';
 import logger from './logger';
+import { useRemoteConfig } from '../hooks/useRemoteConfig';
 
 // Array of all available symbol image filenames
 export const MASTER_SYMBOLS = [
@@ -89,37 +90,29 @@ export function generateCode(level: number, availableSymbols: string[]): string[
  * Calculate the number of copies of each correct symbol to include in the grid
  * @param level - Current game level
  * @param codeLength - Length of the code sequence
+ * @param roundLogic - Optional round logic from remote config
  * @returns Number of copies of each correct symbol
  */
-export function calculateCorrectSymbolCopies(level: number, codeLength: number): number {
-    const { MAX_CORRECT_SYMBOL_COPIES, MIN_CORRECT_SYMBOL_COPIES, GRID_SIZE } = SYMBOL_CONFIG;
-    const progressRatio = calculateProgressRatio(level);
+export function calculateCorrectSymbolCopies(level: number, codeLength: number, roundLogic: any[] | null = null): number {
+    const { GRID_SIZE } = SYMBOL_CONFIG;
 
     // Calculate ideal maximum copies based on grid size and code length
     // This ensures we don't try to add too many copies at early levels
     const maxPossibleCopies = Math.floor(GRID_SIZE / (codeLength * 2));
-    const adjustedMaxCopies = Math.min(MAX_CORRECT_SYMBOL_COPIES, maxPossibleCopies);
-
-    // For levels 1-30, keep the original logic with more copies
-    if (level <= 30) {
-        // Linear reduction from max copies to min copies as difficulty increases
-        const rawCopies = adjustedMaxCopies - ((adjustedMaxCopies - MIN_CORRECT_SYMBOL_COPIES) * progressRatio * 0.6);
-        // Round to nearest integer and ensure at least minimum copies
-        return Math.max(Math.round(rawCopies), MIN_CORRECT_SYMBOL_COPIES);
-    } 
-    // For levels 31-50, start reducing copies more aggressively
-    else if (level <= 50) {
-        // Faster reduction rate for these levels
-        const rawCopies = adjustedMaxCopies - ((adjustedMaxCopies - MIN_CORRECT_SYMBOL_COPIES) * progressRatio * 0.8);
-        return Math.max(Math.round(rawCopies), MIN_CORRECT_SYMBOL_COPIES);
-    }
-    // For levels 51+, make it much harder by reducing copies significantly
-    else {
-        // For high levels, use minimum copies plus a small chance of an extra copy
-        // This makes the game significantly harder
-        const extraCopyChance = Math.random() < 0.3 ? 1 : 0; // 30% chance of an extra copy
-        return MIN_CORRECT_SYMBOL_COPIES + extraCopyChance;
-    }
+    
+    // Get copy range from the round logic if available
+    const [minCopies, maxCopies] = getRepeatCopiesRange(level, roundLogic);
+    
+    // Adjust max copies to not exceed what's physically possible
+    const adjustedMaxCopies = Math.min(maxCopies, maxPossibleCopies);
+    
+    // For early levels, use more copies (closer to max)
+    // For later levels, use fewer copies (closer to min)
+    const progressRatio = calculateProgressRatio(level);
+    const rawCopies = adjustedMaxCopies - ((adjustedMaxCopies - minCopies) * progressRatio);
+    
+    // Round to nearest integer and ensure at least minimum copies
+    return Math.max(Math.round(rawCopies), minCopies);
 }
 
 /**
@@ -127,12 +120,14 @@ export function calculateCorrectSymbolCopies(level: number, codeLength: number):
  * @param level - Current game level
  * @param codeSymbols - Symbols that must appear in the grid
  * @param availableSymbols - All symbols available for this level
+ * @param roundLogic - Optional round logic from remote config
  * @returns Grid of symbols
  */
 export function generateGrid(
     level: number,
     codeSymbols: string[],
-    availableSymbols: string[]
+    availableSymbols: string[],
+    roundLogic: any[] | null = null
 ): string[] {
     const { GRID_SIZE } = SYMBOL_CONFIG;
 
@@ -140,7 +135,7 @@ export function generateGrid(
     const remainingSymbols = availableSymbols.filter(sym => !codeSymbols.includes(sym));
 
     // 2. Calculate how many copies of each code symbol to include
-    const copiesPerSymbol = calculateCorrectSymbolCopies(level, codeSymbols.length);
+    const copiesPerSymbol = calculateCorrectSymbolCopies(level, codeSymbols.length, roundLogic);
 
     // 3. Create initial grid with guaranteed code symbols
     let initialGrid: string[] = [];

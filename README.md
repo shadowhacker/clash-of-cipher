@@ -120,3 +120,30 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+
+## Supabase Configuration
+
+This game now supports dynamic configuration via Supabase. To enable this feature:
+
+1. Create a `.env` file in the project root (copy from `.env.example` if available)
+2. Add your Supabase credentials:
+   ```
+   VITE_SUPABASE_URL=your_supabase_url_here
+   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key_here
+   ```
+3. Create a `game_config` table in your Supabase project with the following schema:
+   - `id` (uuid, primary key)
+   - `config_name` (text, e.g., "default")
+   - `config_json` (jsonb)
+   - `created_at` (timestamp with timezone)
+   - `updated_at` (timestamp with timezone)
+
+4. Insert the default config:
+   ```sql
+   INSERT INTO public.game_config (config_name, config_json) 
+   VALUES ('default', '{"MAX_ROUND_TIME": 10, "STARTING_LIVES": 2, "ROUND_LOGIC": [...]}');
+   ```
+
+The JSON structure should match the format in `src/config/gameConfig.json`.
+
+If Supabase credentials are not provided, the game will fall back to using the local configuration file.

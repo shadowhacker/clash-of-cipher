@@ -52,7 +52,8 @@ const Index = () => {
     totalScore,
     currentStreak,
     showWrongTaps,
-    Overlay
+    Overlay,
+    configReady
   } = useGame();
 
   // Theme classes for buttons - update to prefer amber as the default
@@ -82,71 +83,60 @@ const Index = () => {
     }
   }, [showStartScreen]);
 
-  // Handle player name submission
-  const handlePlayerNameSubmit = (name: string) => {
-    logger.debug('Name submitted:', name);
+  const handleGuideClose = useCallback(() => {
+    setShowGuide(false);
+    // Mark as seen on first play
+    if (isFirstTimePlay) {
+      localStorage.setItem('hasSeenGuide', 'true');
+      setIsFirstTimePlay(false);
+    }
+  }, [isFirstTimePlay]);
+
+  const handleHowToPlayClose = useCallback(() => {
+    setShowHowToPlay(false);
+    // Mark as seen on first play
+    if (isFirstTimePlay) {
+      localStorage.setItem('hasSeenGuide', 'true');
+      setIsFirstTimePlay(false);
+    }
+  }, [isFirstTimePlay]);
+
+  const handleShowLeaderboard = useCallback(() => {
+    setShowLeaderboard(true);
+  }, []);
+
+  const handleCloseLeaderboard = useCallback(() => {
+    setShowLeaderboard(false);
+  }, []);
+
+  const handleShowGuide = useCallback(() => {
+    setShowGuide(true);
+  }, []);
+
+  const handleShowHowToPlay = useCallback(() => {
+    setShowHowToPlay(true);
+  }, []);
+
+  const handlePlayerNameSubmit = useCallback((name: string) => {
     savePlayerName(name);
     setShowPlayerNameDialog(false);
-    handleStartGame(); // Auto-start game after name is submitted
-  };
+  }, []);
 
-  // Handle intro screen start game
-  const handleIntroStartGame = () => {
-    const playerName = getPlayerName();
-    if (!playerName) {
-      // We need to get the player name first
-      setShowPlayerNameDialog(true);
-    } else if (isFirstTimePlay) {
-      // For first-time users, show the how-to-play guide first
-      setShowHowToPlay(true);
+  // Handle start game from intro screens
+  const handleIntroStartGame = useCallback(() => {
+    // Check if we need to show the guide first for first-time users
+    if (isFirstTimePlay) {
+      if (configReady) {
+        setShowHowToPlay(true);
+      }
     } else {
-      // Already have a name and not first time, proceed directly
-      dismissStartScreen();
-      startGame();
+      handleStartGame();
     }
-  };
+  }, [isFirstTimePlay, configReady]);
 
-  // Handle intro screen show guide
-  const handleIntroShowGuide = () => {
+  const handleIntroShowGuide = useCallback(() => {
     setShowGuide(true);
-  };
-
-  // Handle guide screen close for first-time users
-  const handleGuideClose = () => {
-    setShowGuide(false);
-    // Mark as seen if this is the first time
-    if (isFirstTimePlay) {
-      localStorage.setItem('hasSeenGuide', 'true');
-      setIsFirstTimePlay(false);
-    }
-  };
-
-  // Handle how-to-play guide close
-  const handleHowToPlayClose = () => {
-    setShowHowToPlay(false);
-    // Mark as seen if this is the first time
-    if (isFirstTimePlay) {
-      localStorage.setItem('hasSeenGuide', 'true');
-      setIsFirstTimePlay(false);
-    }
-    // Proceed to the game
-    dismissStartScreen();
-    startGame();
-  };
-
-  // Handle game over modal close
-  const handleGameOverClose = () => {
-    resetGame();
-  };
-
-  // Handle back to home from game over
-  const handleBackToHome = () => {
-    resetGame();
-    // We need to navigate back to the start screen
-    // Since we don't have direct access to setShowStartScreen,
-    // we'll use the game's state management system
-    window.location.reload(); // This is a simple way to reset to the initial state
-  };
+  }, []);
 
   const handleStartGame = useCallback(() => {
     if (showStartScreen) {
@@ -211,7 +201,7 @@ const Index = () => {
       <div className="w-full max-w-md relative">
         {/* Header section with title and controls */}
         <div className="flex justify-between items-center mb-5">
-          <h1 className="text-3xl font-bold text-center text-amber-400">🧘 Dhyanam</h1>
+          <h1 className="text-3xl font-bold text-center text-amber-400" style={{ fontFamily: 'Rajdhani, sans-serif', fontWeight: 700, letterSpacing: '-0.03em' }}>🧘 Dhyanam</h1>
           <div className="flex items-center space-x-2">
             <AudioControls />
             <Leaderboard personalBest={personalBest} />
@@ -303,8 +293,11 @@ const Index = () => {
           onRestart={startGame}
           onShare={shareScore}
           totalScore={totalScore}
-          onClose={handleGameOverClose}
-          onBackToHome={handleBackToHome}
+          onClose={resetGame}
+          onBackToHome={() => {
+            resetGame();
+            window.location.reload();
+          }}
         />
 
         <GuideScreen

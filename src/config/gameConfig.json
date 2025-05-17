@@ -1,0 +1,60 @@
+{
+  "MAX_ROUND_TIME": 10,
+  "STARTING_LIVES": 4,
+  "ROUND_LOGIC": [
+    {
+      "level_start": 1,
+      "level_end": 20,
+      "flash_time": [1.5, 2.0],
+      "icon_count": [1, 2],
+      "repeat_copies": [3, 6]
+    },
+    {
+      "level_start": 21,
+      "level_end": 40,
+      "flash_time": [1.2, 1.5],
+      "icon_count": [1, 2],
+      "repeat_copies": [2, 4]
+    },
+    {
+      "level_start": 41,
+      "level_end": 50,
+      "flash_time": [1.5, 2.0],
+      "icon_count": [2, 3],
+      "repeat_copies": [1, 3]
+    },
+    {
+      "level_start": 51,
+      "level_end": 999,
+      "flash_time": [1.2, 1.5],
+      "icon_count": [3, 4],
+      "repeat_copies": [1, 1]
+    }
+  ],
+  "SYMBOL_CONFIG": {
+    "TOTAL_SYMBOLS": 34,
+    "MIN_GRID_SYMBOLS": 8,
+    "MAX_GRID_SYMBOLS": 16,
+    "GRID_SIZE": 16,
+    "MAX_CORRECT_SYMBOL_COPIES": 6,
+    "MIN_CORRECT_SYMBOL_COPIES": 1
+  },
+  "MILESTONE_INTERVALS": {
+    "COLOR_CHANGE": 10,
+    "SYMBOL_PACK_CHANGE": 7,
+    "JACKPOT_BONUS": 20
+  },
+  "THEME_COLORS": [
+    "bg-amber-500",
+    "bg-emerald-500",
+    "bg-sky-500",
+    "bg-fuchsia-500",
+    "bg-rose-500"
+  ],
+  "SCORING": {
+    "BASE_MULTIPLIER": 1.25,
+    "SPEED_BONUS_FACTOR": 0.1,
+    "JACKPOT_BONUS": 1000
+  },
+  "MAX_REFERENCE_LEVEL": 50
+} 
