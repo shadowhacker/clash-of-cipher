@@ -35,14 +35,15 @@ const StartScreen: React.FC<StartScreenProps> = ({ onStart, onHowToPlay }) => {
   const { config, loading, error, refreshConfig } = useRemoteConfig();
 
   // Wait for config to load before enabling CTA
-  useEffect(() => {
-    if (!loading && config) {
-      setCtaEnabled(true);
-    }
-  }, [loading, config]);
+  // useEffect(() => {
+  //   if (!loading && config) {
+  //     setCtaEnabled(true);
+  //   }
+  // }, [loading, config]);
 
   // Handle initial animation
   useEffect(() => {
+    setCtaEnabled(false);
     setProgress(0);
     let start: number | null = null;
     
@@ -56,6 +57,7 @@ const StartScreen: React.FC<StartScreenProps> = ({ onStart, onHowToPlay }) => {
         animationFrame.current = requestAnimationFrame(animate);
       } else {
         setProgress(1); // Ensure visually 100%
+        setTimeout(() => setCtaEnabled(true), 50); // Enable after fill is visually complete
       }
     };
     
