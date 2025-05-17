@@ -18,17 +18,15 @@ jobs:
       - checkout
 
       - run:
+          name: Restore capacitor.config.ts from env
+          command: |
+            echo "$CAPACITOR_CONFIG_B64" | base64 -d > capacitor.config.ts
+
+      - run:
           name: Install Node Dependencies & Capacitor Platforms
           command: |
             npm ci
             npm install @capacitor/core @capacitor/cli @capacitor/android @capacitor/ios --save-dev
-
-      - run:
-          name: Initialize Capacitor (if needed)
-          command: |
-            if [ ! -f capacitor.config.json ]; then
-              npx cap init "MyApp" "com.example.myapp" --web-dir=dist --npm-client=npm;
-            fi
 
       - run:
           name: Add Capacitor Platforms (android/ios)
