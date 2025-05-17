@@ -19,7 +19,7 @@ const AudioControls: React.FC<AudioControlsProps> = ({ className = '' }) => {
     const savedMute = localStorage.getItem('cipher-clash-muted');
     return savedMute === 'true';
   });
-  
+
   const [isMusicMuted, setIsMusicMuted] = useState(() => {
     // Check localStorage for existing preference
     const savedMusicMute = localStorage.getItem('cipher-clash-music-muted');
@@ -70,16 +70,16 @@ const AudioControls: React.FC<AudioControlsProps> = ({ className = '' }) => {
 
   return (
     <div className="flex space-x-2">
-      <GameButton
-        onClick={toggleMute}
-        icon={isMuted ? (
-          <VolumeX className="w-5 h-5" />
-        ) : (
-          <Volume2 className="w-5 h-5" />
-        )}
-        label={isMuted ? "Unmute sounds" : "Mute sounds"}
-        className={className}
-      />
+    <GameButton
+      onClick={toggleMute}
+      icon={isMuted ? (
+        <VolumeX className="w-5 h-5" />
+      ) : (
+        <Volume2 className="w-5 h-5" />
+      )}
+      label={isMuted ? "Unmute sounds" : "Mute sounds"}
+      className={className}
+    />
       
       <GameButton
         onClick={toggleMusicMute}

@@ -129,7 +129,7 @@ export async function preloadSpecificSymbols(symbols: string[]): Promise<void> {
             symbols.map(async (url) => {
                 await preloadImage(url);
                 loadedImages[url] = true;
-            })
+                    })
         );
     } catch (error) {
         logger.error('Error preloading specific symbols:', error);

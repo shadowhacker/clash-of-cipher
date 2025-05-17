@@ -172,14 +172,10 @@ const Index = () => {
   }
 
   return (
-    <div
-      className="min-h-screen flex flex-col items-center justify-center p-4 relative"
-      style={{
-        background: 'linear-gradient(to bottom, #1a0d05, #0e0817)',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center'
-      }}
-    >
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 relative">
+      {/* Dark overlay to ensure UI elements are readable against the background image */}
+      <div className="absolute inset-0 bg-black bg-opacity-60 z-0"></div>
+      
       {/* Theme Manager (handles body background) */}
       <ThemeManager currentTheme={currentTheme} />
 
@@ -191,7 +187,7 @@ const Index = () => {
         totalScore={totalScore}
       />
 
-      <div className="w-full max-w-md relative">
+      <div className="w-full max-w-md relative z-10">
         {/* Header section with title and controls */}
         <div className="flex justify-between items-center mb-5">
           <h1 className="text-3xl font-bold text-center text-amber-400" style={{ fontFamily: 'Rajdhani, sans-serif', fontWeight: 700, letterSpacing: '-0.03em' }}>🧘 Dhyanam</h1>

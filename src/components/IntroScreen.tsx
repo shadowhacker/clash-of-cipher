@@ -9,8 +9,8 @@ interface IntroScreenProps {
 const IntroScreen: React.FC<IntroScreenProps> = ({ onStartGame, onShowGuide }) => {
   // Use a gradient background instead of an image
   const bgStyle = {
-    background: 'radial-gradient(circle, #1a0d05 0%, #0e0817 100%)'
-  };
+      background: 'radial-gradient(circle, #1a0d05 0%, #0e0817 100%)'
+    };
 
   return (
     <div className="fixed inset-0 flex flex-col items-center overflow-hidden"

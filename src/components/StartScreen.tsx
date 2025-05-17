@@ -90,8 +90,18 @@ const StartScreen: React.FC<StartScreenProps> = ({ onStart, onHowToPlay }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-[#1a0d05] via-[#0e0817] to-[#1a0d05]">
-      <div className="w-full max-w-lg p-8 text-center bg-gradient-to-br from-[#1a0d05]/90 via-[#2d1a0a]/80 to-[#0e0817]/80 rounded-3xl shadow-2xl border-4 border-amber-700/60 backdrop-blur-xl relative overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center" 
+      style={{
+        backgroundImage: 'url(/images/gameover.webp)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        backgroundColor: '#0e0817', // Fallback color
+      }}>
+      {/* Dark overlay to ensure UI elements are readable against the background image */}
+      <div className="absolute inset-0 bg-black bg-opacity-60"></div>
+      
+      <div className="w-full max-w-lg p-8 text-center bg-gradient-to-br from-[#1a0d05]/90 via-[#2d1a0a]/80 to-[#0e0817]/80 rounded-3xl shadow-2xl border-4 border-amber-700/60 backdrop-blur-xl relative overflow-hidden z-10">
         {/* Funky background shapes */}
         <div className="absolute -top-16 -left-16 w-48 h-48 bg-amber-700/20 rounded-full blur-2xl animate-pulse" />
         <div className="absolute -bottom-20 -right-20 w-56 h-56 bg-indigo-900/20 rounded-full blur-2xl animate-pulse" />
