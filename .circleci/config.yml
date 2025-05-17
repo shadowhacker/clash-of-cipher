@@ -53,6 +53,11 @@ jobs:
       - attach_workspace:
           at: .
       - run:
+          name: Switch to Java 17
+          command: |
+            sudo update-alternatives --set java /usr/lib/jvm/java-17-openjdk-amd64/bin/java
+            sudo update-alternatives --set javac /usr/lib/jvm/java-17-openjdk-amd64/bin/javac
+      - run:
           name: Android Release Build
           command: |
             cd android
