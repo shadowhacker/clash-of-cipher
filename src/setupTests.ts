@@ -33,10 +33,10 @@ class MockImage {
 }
 
 // Replace the global Image constructor
-(global as any).Image = MockImage;
+(globalThis as typeof globalThis & { Image: typeof MockImage }).Image = MockImage;
 
 // Mock canvas methods
-HTMLCanvasElement.prototype.getContext = jest.fn().mockImplementation(() => {
+HTMLCanvasElement.prototype.getContext = jest.fn().mockImplementation((): Partial<CanvasRenderingContext2D> => {
     return {
         drawImage: jest.fn(),
         fillRect: jest.fn(),

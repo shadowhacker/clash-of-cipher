@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import SymbolPreloader from "./components/SymbolPreloader";
 import InitialLoadingScreen from "./components/InitialLoadingScreen";
+import AudioInitializer from "./components/AudioInitializer";
 import { preloadAllGameSymbols, loadingProgress } from "./hooks/useImageCache";
 import logger from './utils/logger';
 
@@ -58,6 +59,9 @@ const App = () => {
           background: 'radial-gradient(circle, #1a0d05 0%, #0e0817 100%)',
           minHeight: '100vh'
         }}>
+          {/* Audio initializer to handle browser autoplay policies */}
+          <AudioInitializer />
+          
           {/* Show loading screen on first load */}
           {!appReady && (
             <InitialLoadingScreen onComplete={handleLoadingComplete} />

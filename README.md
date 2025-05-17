@@ -147,3 +147,41 @@ This game now supports dynamic configuration via Supabase. To enable this featur
 The JSON structure should match the format in `src/config/gameConfig.json`.
 
 If Supabase credentials are not provided, the game will fall back to using the local configuration file.
+
+## Sound Management
+
+This game now supports dynamic sound management via Supabase. Sound files are stored in Supabase Storage and their URLs are managed through a database table.
+
+### Sound Configuration
+
+1. Sound files are stored in the `sounds` bucket in Supabase Storage
+2. The URLs for these sounds are managed in the `sounds` table with the following schema:
+   - `id` (uuid, primary key)
+   - `created_at` (timestamp with timezone)
+   - `updated_at` (timestamp with timezone)
+   - `sounds_json` (jsonb) - A JSON object mapping sound names to URLs
+
+### Default Sound Mapping
+
+The default sound mapping is:
+
+```json
+{
+  "success": "https://vppefmbjgvfwqqwomfeb.supabase.co/storage/v1/object/public/sounds/success_bell.mp3",
+  "fail": "https://vppefmbjgvfwqqwomfeb.supabase.co/storage/v1/object/public/sounds/failure_bell.mp3",
+  "victory": "https://vppefmbjgvfwqqwomfeb.supabase.co/storage/v1/object/public/sounds/victory.mp3"
+}
+```
+
+### Uploading New Sounds
+
+To upload new sounds to Supabase:
+
+1. Place the sound files in the `public/snd` directory
+2. Update the `scripts/upload-sounds.js` script with your Supabase service key
+3. Run the script: `node scripts/upload-sounds.js`
+
+The script will:
+- Create a `sounds` bucket if it doesn't exist
+- Upload the sound files to the bucket
+- Update the `sounds` table with the new URLs

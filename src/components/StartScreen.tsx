@@ -2,11 +2,16 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { useRemoteConfig } from '../hooks/useRemoteConfig';
 import { Loader2 } from 'lucide-react';
+import { playBackgroundMusic, isBackgroundMusicPlaying, setBackgroundMusicVolume } from '../utils/soundManager';
+import logger from '../utils/logger';
 
 interface StartScreenProps {
   onStart: () => void;
   onHowToPlay?: () => void;
 }
+
+// Lower volume for ambient background music
+const AMBIENT_MUSIC_VOLUME = 0.25;
 
 const HOW_TO_PLAY_STEPS = [
   {
@@ -68,6 +73,22 @@ const StartScreen: React.FC<StartScreenProps> = ({ onStart, onHowToPlay }) => {
     };
   }, []);
 
+  // Play background music on user interaction (button click)
+  const handleStart = async () => {
+    logger.info('[AUDIO] Start button clicked, starting ambient background music');
+    try {
+      // Set a lower volume for ambient background music
+      setBackgroundMusicVolume(AMBIENT_MUSIC_VOLUME);
+      
+      // Play the intro music as ambient background
+      await playBackgroundMusic('intro', true);
+      logger.info('[AUDIO] Ambient background music started at lower volume');
+    } catch (err) {
+      logger.error('[AUDIO] Failed to play ambient background music:', err);
+    }
+    onStart();
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-[#1a0d05] via-[#0e0817] to-[#1a0d05]">
       <div className="w-full max-w-lg p-8 text-center bg-gradient-to-br from-[#1a0d05]/90 via-[#2d1a0a]/80 to-[#0e0817]/80 rounded-3xl shadow-2xl border-4 border-amber-700/60 backdrop-blur-xl relative overflow-hidden">
@@ -109,7 +130,7 @@ const StartScreen: React.FC<StartScreenProps> = ({ onStart, onHowToPlay }) => {
         <div className="border-t-2 border-amber-700/40 pt-7 mt-7 relative">
           <div className="relative w-full h-16 mb-2">
             <Button
-              onClick={onStart}
+              onClick={handleStart}
               className={`w-full h-16 text-xl font-extrabold rounded-2xl transition-all duration-300 tracking-wide shadow-xl overflow-hidden relative ${ctaEnabled ? 'bg-amber-500 hover:bg-amber-600 text-white' : 'bg-amber-900 text-amber-400 cursor-not-allowed opacity-80'}`}
               disabled={loading || !ctaEnabled}
               style={{letterSpacing: '0.04em'}}>

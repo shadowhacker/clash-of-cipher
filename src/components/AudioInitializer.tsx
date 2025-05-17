@@ -70,7 +70,9 @@ const AudioInitializer: React.FC<AudioInitializerProps> = ({ onSymbolClick, chil
   const initializeAudio = useCallback(() => {
     try {
       if (!audioContext.current) {
-        audioContext.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+        const AnyWindow = window as typeof window & { webkitAudioContext?: typeof AudioContext };
+        const AudioCtx = window.AudioContext || AnyWindow.webkitAudioContext;
+        audioContext.current = new AudioCtx();
       }
 
       // Try to resume audio context if suspended

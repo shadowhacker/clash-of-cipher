@@ -10,13 +10,15 @@ import {
     preloadSpecificSymbols
 } from '../symbolCacheUtils';
 import { getMasterSymbols } from '../symbolManager';
+import { dataUrlCache, preloadAllGameSymbols, preloadImage } from '../../hooks/useImageCache';
 
 // Mock dataUrlCache from useImageCache hook
 jest.mock('../../hooks/useImageCache', () => ({
     dataUrlCache: {},
-    preloadAllGameSymbols: jest.fn().mockImplementation(() => {
+    preloadAllGameSymbols: jest.fn().mockImplementation(async () => {
         // Mark all symbols as loaded in loadedImages
-        getMasterSymbols().forEach(symbol => {
+        const symbols = await getMasterSymbols();
+        symbols.forEach(symbol => {
             loadedImages[symbol] = true;
         });
         return Promise.resolve();
@@ -163,7 +165,6 @@ describe('symbolCacheUtils', () => {
 
         it('should persist data URLs to localStorage', async () => {
             // Setup mock dataUrlCache
-            const { dataUrlCache } = require('../../hooks/useImageCache');
             const symbols = await getMasterSymbols();
             const testSymbol = symbols[0];
             dataUrlCache[`/symbols/${testSymbol}`] = 'mock-data-url';
@@ -196,14 +197,13 @@ describe('symbolCacheUtils', () => {
     describe('async preloading functions', () => {
         it('preloadAllSymbols should load all symbols', async () => {
             // Get the mock function
-            const { preloadAllGameSymbols } = require('../../hooks/useImageCache');
-            const initialCallCount = preloadAllGameSymbols.mock.calls.length;
+            const initialCallCount = (preloadAllGameSymbols as jest.Mock).mock.calls.length;
 
             // Call function and wait for completion
             await preloadAllSymbols();
 
             // Should have called the preload function
-            const finalCallCount = preloadAllGameSymbols.mock.calls.length;
+            const finalCallCount = (preloadAllGameSymbols as jest.Mock).mock.calls.length;
             if (finalCallCount <= initialCallCount) {
                 throw new Error('Expected preloadAllGameSymbols to be called');
             }
@@ -219,14 +219,13 @@ describe('symbolCacheUtils', () => {
             const symbols = [getMasterSymbols()[0], getMasterSymbols()[1]];
 
             // Get the mock function
-            const { preloadImage } = require('../../hooks/useImageCache');
-            const initialCallCount = preloadImage.mock.calls.length;
+            const initialCallCount = (preloadImage as jest.Mock).mock.calls.length;
 
             // Call function
             await preloadSpecificSymbols(symbols);
 
             // Verify preloadImage was called for each symbol
-            const finalCallCount = preloadImage.mock.calls.length;
+            const finalCallCount = (preloadImage as jest.Mock).mock.calls.length;
             if (finalCallCount - initialCallCount !== symbols.length) {
                 throw new Error(`Expected preloadImage to be called ${symbols.length} times but was called ${finalCallCount - initialCallCount} times`);
             }

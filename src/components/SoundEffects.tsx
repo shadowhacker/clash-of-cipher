@@ -1,5 +1,9 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import logger from '../utils/logger';
+import { getSound, subscribeSounds, preloadSounds, playSound } from '../utils/soundManager';
+
+// Slightly lower volume for sound effects to avoid overpowering background music
+const SOUND_EFFECT_VOLUME = 0.5;
 
 interface SoundEffectsProps {
   gameState: 'idle' | 'showCode' | 'input' | 'result';
@@ -14,11 +18,6 @@ const SoundEffects: React.FC<SoundEffectsProps> = ({
   level,
   totalScore
 }) => {
-  // Sound effects using useRef for better performance
-  const sfxSuccess = useRef<HTMLAudioElement | null>(null);
-  const sfxFail = useRef<HTMLAudioElement | null>(null);
-  const sfxVictory = useRef<HTMLAudioElement | null>(null); // Victory sound for milestones
-  const audioInitialized = useRef<boolean>(false);
   const [isMuted, setIsMuted] = useState(() => {
     const savedMute = localStorage.getItem('cipher-clash-muted');
     return savedMute === 'true';
@@ -27,11 +26,30 @@ const SoundEffects: React.FC<SoundEffectsProps> = ({
   // Play victory sound for notable milestones (levels divisible by 20)
   const isMilestone = level > 0 && level % 20 === 0;
 
-  // Initialize sound effects
+  // Preload sound effects on component mount
   useEffect(() => {
-    sfxSuccess.current = new Audio('/snd/success.mp3');
-    sfxFail.current = new Audio('/snd/fail.mp3');
-    sfxVictory.current = new Audio('/snd/victory.mp3');
+    const loadSounds = async () => {
+      try {
+        // Preload all game sounds
+        await preloadSounds(['success', 'fail', 'victory', 'intro']);
+        logger.info('Sound effects preloaded');
+      } catch (err) {
+        logger.error('Error preloading sound effects:', err);
+      }
+    };
+    
+    loadSounds();
+    
+    // Subscribe to sound updates
+    const unsubscribe = subscribeSounds(async (sounds) => {
+      // When sounds update, preload them again
+      await preloadSounds(['success', 'fail', 'victory', 'intro']);
+      logger.info('Sound effects updated and preloaded');
+    });
+    
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   // Listen for mute change events
@@ -52,16 +70,16 @@ const SoundEffects: React.FC<SoundEffectsProps> = ({
     if (gameState === 'result' && !isMuted) {
       try {
         // For milestone levels (every 20 levels)
-        if (isMilestone && isPlayerWinner && sfxVictory.current) {
-          sfxVictory.current.play().catch(err => logger.error("Error playing victory sound:", err));
+        if (isMilestone && isPlayerWinner) {
+          playSound('victory', SOUND_EFFECT_VOLUME).catch(err => logger.error("Error playing victory sound:", err));
         }
         // For regular success
-        else if (isPlayerWinner && sfxSuccess.current) {
-          sfxSuccess.current.play().catch(err => logger.error("Error playing success sound:", err));
+        else if (isPlayerWinner) {
+          playSound('success', SOUND_EFFECT_VOLUME).catch(err => logger.error("Error playing success sound:", err));
         }
         // For failure
-        else if (!isPlayerWinner && sfxFail.current) {
-          sfxFail.current.play().catch(err => logger.error("Error playing fail sound:", err));
+        else if (!isPlayerWinner) {
+          playSound('fail', SOUND_EFFECT_VOLUME).catch(err => logger.error("Error playing fail sound:", err));
         }
       } catch (e) {
         logger.error("Audio playback error:", e);

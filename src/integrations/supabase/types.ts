@@ -116,6 +116,27 @@ export type Database = {
           symbols_json?: { symbols: string[] };
         };
         Relationships: [];
+      },
+      sounds: {
+        Row: {
+          id: string;
+          created_at: string;
+          updated_at: string;
+          sounds_json: Record<string, string>;
+        };
+        Insert: {
+          id?: string;
+          created_at?: string;
+          updated_at?: string;
+          sounds_json: Record<string, string>;
+        };
+        Update: {
+          id?: string;
+          created_at?: string;
+          updated_at?: string;
+          sounds_json?: Record<string, string>;
+        };
+        Relationships: [];
       }
     }
     Views: {

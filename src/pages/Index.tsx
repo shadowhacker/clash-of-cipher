@@ -63,9 +63,6 @@ const Index = () => {
     'bg-rose-500': 'bg-rose-600 hover:bg-rose-700',
   }[currentTheme] || 'bg-amber-600 hover:bg-amber-700';
 
-  // We no longer show how-to-play guide automatically for first-time users
-  // They will see it after setting their name
-
   // Check for existing player name whenever the component mounts
   useEffect(() => {
     const playerName = getPlayerName();
