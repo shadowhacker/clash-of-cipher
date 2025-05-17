@@ -1,12 +1,13 @@
 import { useRemoteConfig } from '../hooks/useRemoteConfig';
 import { useEffect, useState } from 'react';
+import { getInitialCountdown } from '../config/gameConfig';
 
 interface LaunchCountdownProps {
   onComplete: () => void;
 }
 
 const LaunchCountdown: React.FC<LaunchCountdownProps> = ({ onComplete }) => {
-  const [count, setCount] = useState(5);
+  const [count, setCount] = useState(getInitialCountdown());
   const { config, loading } = useRemoteConfig();
 
   useEffect(() => {
@@ -57,4 +58,4 @@ const LaunchCountdown: React.FC<LaunchCountdownProps> = ({ onComplete }) => {
   );
 };
 
-export default LaunchCountdown; 
+export default LaunchCountdown;

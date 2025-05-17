@@ -1,6 +1,7 @@
 {
   "MAX_ROUND_TIME": 10,
   "STARTING_LIVES": 2,
+  "INITIAL_COUNTDOWN": 5,
   "ROUND_LOGIC": [
     {
       "level_start": 1,

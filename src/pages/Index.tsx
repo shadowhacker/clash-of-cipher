@@ -1,14 +1,12 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useGame } from '../hooks/useGame';
 import { getPlayerName, savePlayerName } from '../utils/deviceStorage';
-import IntroScreen from '../components/IntroScreen';
 import GuideScreen from '../components/GuideScreen';
 import GameGrid from '../components/GameGrid';
 import GameStatus from '../components/GameStatus';
 import GameOverModal from '../components/GameOverModal';
 import AudioControls from '../components/AudioControls';
 import { Button } from '../components/ui/button';
-import { HelpCircle } from 'lucide-react';
 import AudioInitializer from '../components/AudioInitializer';
 import SoundEffects from '../components/SoundEffects';
 import ThemeManager from '../components/ThemeManager';
@@ -65,12 +63,8 @@ const Index = () => {
     'bg-rose-500': 'bg-rose-600 hover:bg-rose-700',
   }[currentTheme] || 'bg-amber-600 hover:bg-amber-700';
 
-  // Show how-to-play guide for first-time users
-  useEffect(() => {
-    if (isFirstTimePlay && !showStartScreen) {
-      setShowHowToPlay(true);
-    }
-  }, [isFirstTimePlay, showStartScreen]);
+  // We no longer show how-to-play guide automatically for first-time users
+  // They will see it after setting their name
 
   // Check for existing player name whenever the component mounts
   useEffect(() => {
@@ -307,7 +301,7 @@ const Index = () => {
         />
 
         <HowToPlayGuide
-          open={showHowToPlay} 
+          open={showHowToPlay}
           onClose={() => setShowHowToPlay(false)}
           isFirstTime={false}
         />

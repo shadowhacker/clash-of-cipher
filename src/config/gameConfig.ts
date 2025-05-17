@@ -41,6 +41,7 @@ export const getScoring = () => activeConfig.SCORING;
 export const getSymbolConfig = () => activeConfig.SYMBOL_CONFIG;
 export const getMaxReferenceLevel = () => activeConfig.MAX_REFERENCE_LEVEL;
 export const getRoundLogic = () => activeConfig.ROUND_LOGIC;
+export const getInitialCountdown = () => activeConfig.INITIAL_COUNTDOWN; // Default to 5 if not set
 
 // For backward compatibility, export direct references too
 // These won't update when remote config loads

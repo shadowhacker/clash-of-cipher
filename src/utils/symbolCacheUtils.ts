@@ -82,15 +82,29 @@ export function forceMarkAllLoaded(): void {
 }
 
 /**
- * Preload all game symbols
+ * Preload all game symbols with progress callback
+ * @param onProgress Optional callback(progress: number) where progress is 0.0-1.0
  */
-export async function preloadAllSymbols(): Promise<void> {
+export async function preloadAllSymbols(onProgress?: (progress: number) => void): Promise<void> {
+    // First load critical UI images (background, etc)
     await rawPreloadAllGameSymbols();
 
-    // Ensure all symbols are marked as loaded in our loadedImages object
-    MASTER_SYMBOLS.forEach(symbol => {
-        loadedImages[symbol] = true;
-    });
+    let loadedCount = 0;
+    const total = MASTER_SYMBOLS.length;
+
+    await Promise.allSettled(
+        MASTER_SYMBOLS.map(async (symbol) => {
+            try {
+                await preloadImage(`/symbols/${symbol}`);
+                loadedImages[symbol] = true;
+            } catch (err) {
+                // Mark as loaded to avoid blocking
+                loadedImages[symbol] = true;
+            }
+            loadedCount++;
+            if (onProgress) onProgress(loadedCount / total);
+        })
+    );
 
     // Store in localStorage
     persistCachedImages();
