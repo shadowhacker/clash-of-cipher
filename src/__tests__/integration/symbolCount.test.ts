@@ -1,7 +1,7 @@
 import { SYMBOL_COUNT, getSymbolCountRange } from '../../config/gameConfig';
 
 describe('Symbol Count Tests', () => {
-    it('should return the correct symbol count range for level 1-10', () => {
+    it.skip('should return the correct symbol count range for level 1-10', () => {
         const [min, max] = SYMBOL_COUNT.LEVEL_10_RANGE;
 
         for (let level = 1; level <= 10; level++) {
@@ -10,7 +10,7 @@ describe('Symbol Count Tests', () => {
         }
     });
 
-    it('should return the correct symbol count range for level 11-20', () => {
+    it.skip('should return the correct symbol count range for level 11-20', () => {
         const [min, max] = SYMBOL_COUNT.LEVEL_20_RANGE;
 
         for (let level = 11; level <= 20; level++) {
@@ -19,10 +19,10 @@ describe('Symbol Count Tests', () => {
         }
     });
 
-    it('should return the correct symbol count range for level 21-30', () => {
+    it('should return the correct symbol count range for level 1-30', () => {
         const [min, max] = SYMBOL_COUNT.LEVEL_30_RANGE;
 
-        for (let level = 21; level <= 30; level++) {
+        for (let level = 1; level <= 30; level++) {
             const range = getSymbolCountRange(level);
             expect(range).toEqual([min, max]);
         }
@@ -38,23 +38,20 @@ describe('Symbol Count Tests', () => {
     });
 
     it('should return the maximum symbol count for levels above 50', () => {
-        const maxCount = SYMBOL_COUNT.MAX_COUNT;
+        const [min, max] = SYMBOL_COUNT.MAX_RANGE;
 
         for (let level = 51; level <= 60; level++) {
-            const [min, max] = getSymbolCountRange(level);
-            expect(min).toBe(maxCount);
-            expect(max).toBe(maxCount);
+            const range = getSymbolCountRange(level);
+            expect(range).toEqual([min, max]);
         }
     });
 
     it('should have ranges that increase with level', () => {
         // Get all the ranges
         const ranges = [
-            SYMBOL_COUNT.LEVEL_10_RANGE,
-            SYMBOL_COUNT.LEVEL_20_RANGE,
             SYMBOL_COUNT.LEVEL_30_RANGE,
             SYMBOL_COUNT.LEVEL_50_RANGE,
-            [SYMBOL_COUNT.MAX_COUNT, SYMBOL_COUNT.MAX_COUNT]
+            SYMBOL_COUNT.MAX_RANGE
         ];
 
         // Check that each range min/max is greater than or equal to the previous range

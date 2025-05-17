@@ -100,11 +100,26 @@ export function calculateCorrectSymbolCopies(level: number, codeLength: number):
     const maxPossibleCopies = Math.floor(GRID_SIZE / (codeLength * 2));
     const adjustedMaxCopies = Math.min(MAX_CORRECT_SYMBOL_COPIES, maxPossibleCopies);
 
-    // Linear reduction from max copies to min copies as difficulty increases
-    const rawCopies = adjustedMaxCopies - ((adjustedMaxCopies - MIN_CORRECT_SYMBOL_COPIES) * progressRatio);
-
-    // Round to nearest integer and ensure at least minimum copies
-    return Math.max(Math.round(rawCopies), MIN_CORRECT_SYMBOL_COPIES);
+    // For levels 1-30, keep the original logic with more copies
+    if (level <= 30) {
+        // Linear reduction from max copies to min copies as difficulty increases
+        const rawCopies = adjustedMaxCopies - ((adjustedMaxCopies - MIN_CORRECT_SYMBOL_COPIES) * progressRatio * 0.6);
+        // Round to nearest integer and ensure at least minimum copies
+        return Math.max(Math.round(rawCopies), MIN_CORRECT_SYMBOL_COPIES);
+    } 
+    // For levels 31-50, start reducing copies more aggressively
+    else if (level <= 50) {
+        // Faster reduction rate for these levels
+        const rawCopies = adjustedMaxCopies - ((adjustedMaxCopies - MIN_CORRECT_SYMBOL_COPIES) * progressRatio * 0.8);
+        return Math.max(Math.round(rawCopies), MIN_CORRECT_SYMBOL_COPIES);
+    }
+    // For levels 51+, make it much harder by reducing copies significantly
+    else {
+        // For high levels, use minimum copies plus a small chance of an extra copy
+        // This makes the game significantly harder
+        const extraCopyChance = Math.random() < 0.3 ? 1 : 0; // 30% chance of an extra copy
+        return MIN_CORRECT_SYMBOL_COPIES + extraCopyChance;
+    }
 }
 
 /**

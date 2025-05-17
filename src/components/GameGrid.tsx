@@ -89,7 +89,7 @@ const GameGrid: React.FC<GameGridProps> = ({
           <div className="absolute inset-0 flex items-center justify-center z-10 bg-black/80 rounded-md pointer-events-none">
             <div className="flex flex-col items-center gap-4 max-w-xs justify-center shadow-2xl rounded-lg px-6 py-4">
               <p className="text-amber-400 text-2xl font-medium tracking-wider uppercase">
-                Meditate on these
+                Memorise these symbols
               </p>
               <div className="flex flex-wrap gap-4 justify-center text-4xl font-bold text-white">
                 {code.map((symbol, idx) => (

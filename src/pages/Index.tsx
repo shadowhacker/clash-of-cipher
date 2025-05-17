@@ -17,9 +17,12 @@ import Leaderboard from '../components/Leaderboard';
 import LifeWarning from '../components/LifeWarning';
 import HelpButton from '../components/HelpButton';
 import logger from '../utils/logger';
+import HowToPlayGuide from '../components/HowToPlayGuide';
+import StartScreen from '../components/StartScreen';
 
 const Index = () => {
   const [showGuide, setShowGuide] = useState(false);
+  const [showHowToPlay, setShowHowToPlay] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showPlayerNameDialog, setShowPlayerNameDialog] = useState(false);
   const [isFirstTimePlay, setIsFirstTimePlay] = useState(() => {
@@ -61,6 +64,13 @@ const Index = () => {
     'bg-rose-500': 'bg-rose-600 hover:bg-rose-700',
   }[currentTheme] || 'bg-amber-600 hover:bg-amber-700';
 
+  // Show how-to-play guide for first-time users
+  useEffect(() => {
+    if (isFirstTimePlay && !showStartScreen) {
+      setShowHowToPlay(true);
+    }
+  }, [isFirstTimePlay, showStartScreen]);
+
   // Check for existing player name whenever the component mounts
   useEffect(() => {
     const playerName = getPlayerName();
@@ -86,8 +96,11 @@ const Index = () => {
     if (!playerName) {
       // We need to get the player name first
       setShowPlayerNameDialog(true);
+    } else if (isFirstTimePlay) {
+      // For first-time users, show the how-to-play guide first
+      setShowHowToPlay(true);
     } else {
-      // Already have a name, proceed directly
+      // Already have a name and not first time, proceed directly
       dismissStartScreen();
       startGame();
     }
@@ -101,12 +114,38 @@ const Index = () => {
   // Handle guide screen close for first-time users
   const handleGuideClose = () => {
     setShowGuide(false);
-    setIsFirstTimePlay(false);
+    // Mark as seen if this is the first time
+    if (isFirstTimePlay) {
+      localStorage.setItem('hasSeenGuide', 'true');
+      setIsFirstTimePlay(false);
+    }
+  };
+
+  // Handle how-to-play guide close
+  const handleHowToPlayClose = () => {
+    setShowHowToPlay(false);
+    // Mark as seen if this is the first time
+    if (isFirstTimePlay) {
+      localStorage.setItem('hasSeenGuide', 'true');
+      setIsFirstTimePlay(false);
+    }
+    // Proceed to the game
+    dismissStartScreen();
+    startGame();
   };
 
   // Handle game over modal close
   const handleGameOverClose = () => {
     resetGame();
+  };
+
+  // Handle back to home from game over
+  const handleBackToHome = () => {
+    resetGame();
+    // We need to navigate back to the start screen
+    // Since we don't have direct access to setShowStartScreen,
+    // we'll use the game's state management system
+    window.location.reload(); // This is a simple way to reset to the initial state
   };
 
   const handleStartGame = useCallback(() => {
@@ -126,22 +165,24 @@ const Index = () => {
   if (showStartScreen) {
     return (
       <>
-        <IntroScreen
-          onStartGame={handleIntroStartGame}
-          onShowGuide={handleIntroShowGuide}
+        <StartScreen
+          onStart={handleIntroStartGame}
+          onHowToPlay={handleIntroShowGuide}
         />
         <GuideScreen
           open={showGuide}
           onClose={handleGuideClose}
           isFirstTime={isFirstTimePlay}
         />
+        <HowToPlayGuide
+          open={showHowToPlay}
+          onClose={handleHowToPlayClose}
+          isFirstTime={true}
+        />
         <PlayerNameDialog
           open={showPlayerNameDialog}
           onSubmit={handlePlayerNameSubmit}
-          onClose={() => {
-            // Just hide the dialog if they dismiss without entering a name
-            setShowPlayerNameDialog(false);
-          }}
+          onClose={() => setShowPlayerNameDialog(false)}
         />
       </>
     );
@@ -174,7 +215,7 @@ const Index = () => {
           <div className="flex items-center space-x-2">
             <AudioControls />
             <Leaderboard personalBest={personalBest} />
-            <HelpButton onClick={() => setShowGuide(true)} />
+            <HelpButton onClick={() => setShowHowToPlay(true)} />
           </div>
         </div>
 
@@ -204,6 +245,13 @@ const Index = () => {
           onOpenGuide={() => setShowGuide(true)}
           playerName={getPlayerName()}
         />
+
+        {/* Context message above grid - Only visible during input state */}
+        {gameState === 'input' && (
+          <div className="text-center mb-2 text-amber-200 font-medium px-4 py-2 bg-amber-900/40 rounded-lg border border-amber-700/30 animate-pulse">
+            Tap the symbols in the EXACT SAME ORDER as they appeared
+          </div>
+        )}
 
         {/* Game Grid */}
         <AudioInitializer onSymbolClick={handleSymbolClick}>
@@ -256,12 +304,19 @@ const Index = () => {
           onShare={shareScore}
           totalScore={totalScore}
           onClose={handleGameOverClose}
+          onBackToHome={handleBackToHome}
         />
 
         <GuideScreen
           open={showGuide}
           onClose={handleGuideClose}
           isFirstTime={isFirstTimePlay}
+        />
+
+        <HowToPlayGuide
+          open={showHowToPlay} 
+          onClose={() => setShowHowToPlay(false)}
+          isFirstTime={false}
         />
 
         {/* Game Launch Overlay */}

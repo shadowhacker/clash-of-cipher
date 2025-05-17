@@ -9,18 +9,18 @@ export const STARTING_LIVES = 2; // Number of lives player starts with
 
 // Flash/Show code time configuration
 export const SYMBOL_FLASH_TIME = {
-    MAX: 2.0,    // Maximum flash time (seconds)
-    MIN: 1.2,    // Minimum flash time (seconds)
-    CYCLE: 20,   // Level cycle for flash time oscillation
+    MAX_HIGH: 2.0,    // Maximum flash time for easier rounds (seconds)
+    MIN_HIGH: 1.5,    // Minimum flash time for easier rounds (seconds)
+    MAX_LOW: 1.5,     // Maximum flash time for harder rounds (seconds)
+    MIN_LOW: 1.2,     // Minimum flash time for harder rounds (seconds)
+    CYCLE: 20,        // Level cycle for flash time oscillation
 };
 
 // Symbol count progression by level
 export const SYMBOL_COUNT = {
-    LEVEL_10_RANGE: [1, 2] as [number, number],   // Symbol count range for levels 1-10
-    LEVEL_20_RANGE: [2, 3] as [number, number],   // Symbol count range for levels 11-20
-    LEVEL_30_RANGE: [3, 4] as [number, number],   // Symbol count range for levels 21-30
-    LEVEL_50_RANGE: [4, 5] as [number, number],   // Symbol count range for levels 31-50
-    MAX_COUNT: 5,             // Maximum symbol count (after level 50)
+    LEVEL_30_RANGE: [1, 2] as [number, number],   // Symbol count range for levels 1-30
+    LEVEL_50_RANGE: [2, 3] as [number, number],   // Symbol count range for levels 31-50
+    MAX_RANGE: [3, 4] as [number, number],        // Symbol count range for levels 51+
 };
 
 // Symbol distribution
@@ -69,20 +69,33 @@ export const MAX_REFERENCE_LEVEL = 50;
 
 // Calculate flash time based on level with oscillating pattern
 export const getFlashTime = (level: number): number => {
-    const phase = Math.floor((level - 1) / SYMBOL_FLASH_TIME.CYCLE) % 2;  // 0 = down, 1 = up
-    const index = (level - 1) % SYMBOL_FLASH_TIME.CYCLE;
-    const step = (SYMBOL_FLASH_TIME.MAX - SYMBOL_FLASH_TIME.MIN) / (SYMBOL_FLASH_TIME.CYCLE - 1);
-
-    return phase === 0
-        ? SYMBOL_FLASH_TIME.MAX - (step * index)  // decreasing
-        : SYMBOL_FLASH_TIME.MIN + (step * index); // increasing
+    // Determine which 20-level bracket we're in (0-indexed)
+    const bracket = Math.floor((level - 1) / SYMBOL_FLASH_TIME.CYCLE);
+    
+    // Determine if we're in an "easy" or "hard" bracket
+    // Even brackets (0, 2, 4...) use higher times (1.5-2.0s)
+    // Odd brackets (1, 3, 5...) use lower times (1.2-1.5s)
+    const isEasyBracket = bracket % 2 === 0;
+    
+    // Position within the current 20-level bracket (0-19)
+    const positionInBracket = (level - 1) % SYMBOL_FLASH_TIME.CYCLE;
+    
+    if (isEasyBracket) {
+        // Easy bracket: oscillate between 1.5-2.0 seconds
+        const step = (SYMBOL_FLASH_TIME.MAX_HIGH - SYMBOL_FLASH_TIME.MIN_HIGH) / (SYMBOL_FLASH_TIME.CYCLE - 1);
+        // Start high (2.0s), gradually decrease to low (1.5s)
+        return SYMBOL_FLASH_TIME.MAX_HIGH - (step * positionInBracket);
+    } else {
+        // Hard bracket: oscillate between 1.2-1.5 seconds
+        const step = (SYMBOL_FLASH_TIME.MAX_LOW - SYMBOL_FLASH_TIME.MIN_LOW) / (SYMBOL_FLASH_TIME.CYCLE - 1);
+        // Start high (1.5s), gradually decrease to low (1.2s)
+        return SYMBOL_FLASH_TIME.MAX_LOW - (step * positionInBracket);
+    }
 };
 
 // Get symbol count range based on level
 export const getSymbolCountRange = (level: number): [number, number] => {
-    if (level <= 10) return SYMBOL_COUNT.LEVEL_10_RANGE;
-    if (level <= 20) return SYMBOL_COUNT.LEVEL_20_RANGE;
     if (level <= 30) return SYMBOL_COUNT.LEVEL_30_RANGE;
     if (level <= 50) return SYMBOL_COUNT.LEVEL_50_RANGE;
-    return [SYMBOL_COUNT.MAX_COUNT, SYMBOL_COUNT.MAX_COUNT];
+    return SYMBOL_COUNT.MAX_RANGE;
 }; 

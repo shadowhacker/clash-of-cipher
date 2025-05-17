@@ -9,7 +9,8 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { toast } from "sonner";
-import { Share2 } from 'lucide-react';
+import { Share2, Home } from 'lucide-react';
+import { copyToClipboard } from '@/utils/clipboardUtils';
 
 interface GameOverModalProps {
   level: number;
@@ -19,6 +20,7 @@ interface GameOverModalProps {
   onShare: () => string;
   totalScore: number;
   onClose: () => void;
+  onBackToHome?: () => void;
 }
 
 const GameOverModal: React.FC<GameOverModalProps> = ({
@@ -29,6 +31,7 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
   onShare,
   totalScore,
   onClose,
+  onBackToHome,
 }) => {
   const [showShareModal, setShowShareModal] = useState(false);
 
@@ -49,10 +52,18 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
       ? `I reached a spiritual milestone with ${totalScore.toLocaleString()} points at Level ${level} in Dhyanam!\nCan you match my spiritual journey? Play → https://clash-of-cipher.lovable.app/`
       : `My tapasya broke after ${totalScore.toLocaleString()} points at Level ${level} in Dhyanam!\nCan you go further? Play → https://clash-of-cipher.lovable.app/`;
 
-    navigator.clipboard.writeText(text);
-    toast("Copied again!", {
-      description: "Ready to share!",
-    });
+    copyToClipboard(text)
+      .then(success => {
+        if (success) {
+          toast("Copied again!", {
+            description: "Ready to share!",
+          });
+        } else {
+          toast("Failed to copy", {
+            description: "Please try again or copy manually",
+          });
+        }
+      });
   };
 
   const handleCloseModal = () => {
@@ -65,6 +76,13 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
     onRestart(); // Then restart the game to initial state
   };
 
+  const handleBackToHome = () => {
+    if (onBackToHome) {
+      onClose(); // First close the modal
+      onBackToHome(); // Then go back to home screen
+    }
+  };
+
   // Copy to clipboard when share modal opens
   useEffect(() => {
     if (showShareModal) {
@@ -73,7 +91,7 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
         ? `I reached a spiritual milestone with ${totalScore.toLocaleString()} points at Level ${level} in Dhyanam!\nCan you match my spiritual journey? Play → https://clash-of-cipher.lovable.app/`
         : `My tapasya broke after ${totalScore.toLocaleString()} points at Level ${level} in Dhyanam!\nCan you go further? Play → https://clash-of-cipher.lovable.app/`;
 
-      navigator.clipboard.writeText(text);
+      copyToClipboard(text);
     }
   }, [showShareModal, totalScore, level, isSignificantMilestone]);
 
@@ -256,9 +274,26 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
                   {isSignificantMilestone ? 'START NEW JOURNEY' : 'RESTART DHYANAM'}
                 </button>
 
+                {onBackToHome && (
+                  <button
+                    onClick={handleBackToHome}
+                    className="w-full max-w-md py-3 font-bold text-xl rounded-xl transition-transform hover:scale-105 focus:outline-none"
+                    style={{
+                      backgroundColor: 'rgba(105, 49, 15, 0.7)',
+                      color: '#ffbb24',
+                      border: '2px solid #873b11',
+                      borderRadius: '16px',
+                      boxShadow: '0 0 15px rgba(105, 49, 15, 0.3)',
+                      textShadow: '0 2px 2px rgba(0, 0, 0, 0.3)'
+                    }}
+                  >
+                    BACK TO HOME
+                  </button>
+                )}
+
                 <button
                   onClick={handleShare}
-                  className="flex items-center justify-center w-full max-w-md py-3 font-bold text-lg transition-opacity hover:opacity-80"
+                  className="flex items-center justify-center w-full max-w-md py-3 font-bold text-lg transition-opacity hover:opacity-80 mt-2"
                   style={{
                     color: '#e8934a',
                     textShadow: '0 2px 2px rgba(0, 0, 0, 0.5)'
