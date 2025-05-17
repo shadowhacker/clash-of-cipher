@@ -143,7 +143,7 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
                 right: 0,
                 bottom: 0,
                 backgroundColor: '#5b2900',
-                backgroundImage: 'url("/images/bg-game-over.png")',
+                backgroundImage: 'linear-gradient(to bottom, #5b2900, #3d1c01)',
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
                 backgroundRepeat: 'no-repeat',

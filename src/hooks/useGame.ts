@@ -77,12 +77,12 @@ export const useGame = () => {
 
   // Initialize game launch hook - only after config is loaded
   const { launchRun, Overlay } = useGameLaunch({
-    onLaunchComplete: () => {
+    onLaunchComplete: async () => {
       // Start the first round after countdown
       const initialLevel = 1;
 
       // Get random symbols for the first level
-      const { newCode, availableSymbols } = generateLevelCode(initialLevel);
+      const { newCode, availableSymbols } = await generateLevelCode(initialLevel);
       setCode(newCode);
 
       // Reset game state
@@ -179,15 +179,25 @@ export const useGame = () => {
   );
 
   // Generate code for the current level
-  const generateLevelCode = useCallback((level: number) => {
+  const generateLevelCode = useCallback(async (level: number) => {
     // Get fresh random symbols for this level
-    const availableSymbols = getSymbolPack(level);
+    const availableSymbols = await getSymbolPack(level);
+    
+    // Check if availableSymbols is a valid array
+    if (!Array.isArray(availableSymbols) || availableSymbols.length === 0) {
+      console.error("Invalid symbols array:", availableSymbols);
+      return { newCode: [], availableSymbols: [] };
+    }
+    
     // Get symbol count range for current level from remote config
     const [minCount, maxCount] = roundLogic ? getRemoteSymbolCountRange(level, roundLogic) : getSymbolCountRange(level);
+    
     // Choose a random symbol count within the range for this level
     const symbolCount = Math.floor(Math.random() * (maxCount - minCount + 1)) + minCount;
+    
     // Generate a code with the determined number of symbols
     const newCode = secureRandomSample(availableSymbols, symbolCount);
+    
     return { newCode, availableSymbols };
   }, [roundLogic]);
 
@@ -254,9 +264,9 @@ export const useGame = () => {
   }, [totalScore, personalBest, clearGameTimer, showWrongTaps]);
 
   // Define the restartSameLevel function before assigning it to ref
-  const restartSameLevel = useCallback((): void => {
+  const restartSameLevel = useCallback(async (): Promise<void> => {
     // Generate fresh symbols for the same level
-    const { newCode, availableSymbols } = generateLevelCode(level);
+    const { newCode, availableSymbols } = await generateLevelCode(level);
     setCode(newCode);
 
     // Create a new grid ensuring all code symbols are included

@@ -1,4 +1,4 @@
-import { getSymbolPack, generateCode, generateGrid, MASTER_SYMBOLS, calculateUniqueSymbolCount } from '../../utils/symbolManager';
+import { getSymbolPack, generateCode, generateGrid, getMasterSymbols, calculateUniqueSymbolCount } from '../../utils/symbolManager';
 import { secureRandomInt, secureShuffleArray } from '../../utils/randomUtils';
 import { SYMBOL_CONFIG } from '../../config/gameConfig';
 
@@ -33,7 +33,7 @@ describe('Random Distribution Tests', () => {
 
             // Check that they're all from the master symbols list
             pack.forEach(symbol => {
-                expect(MASTER_SYMBOLS).toContain(symbol);
+                expect(getMasterSymbols()).toContain(symbol);
             });
         });
     });

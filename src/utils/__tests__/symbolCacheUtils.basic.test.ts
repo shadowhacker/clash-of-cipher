@@ -4,7 +4,7 @@ import {
     forceMarkAllLoaded,
     areAllImagesLoaded
 } from '../symbolCacheUtils';
-import { MASTER_SYMBOLS } from '../symbolManager';
+import { getMasterSymbols } from '../symbolManager';
 
 // Simple test with minimal dependencies
 describe('symbolCacheUtils basic tests', () => {
@@ -15,14 +15,14 @@ describe('symbolCacheUtils basic tests', () => {
         });
     });
 
-    test('areAllImagesLoaded should return false when no images are loaded', () => {
+    test('areAllImagesLoaded should return false when no images are loaded', async () => {
         // Ensure none are loaded initially
         Object.keys(loadedImages).forEach(key => {
             delete loadedImages[key];
         });
 
         // Test
-        const result = areAllImagesLoaded();
+        const result = await areAllImagesLoaded();
 
         // Assertion
         if (result !== false) {
@@ -30,14 +30,15 @@ describe('symbolCacheUtils basic tests', () => {
         }
     });
 
-    test('areAllImagesLoaded should return true when all images are loaded', () => {
+    test('areAllImagesLoaded should return true when all images are loaded', async () => {
         // Mark all images as loaded
-        MASTER_SYMBOLS.forEach(symbol => {
+        const symbols = await getMasterSymbols();
+        symbols.forEach(symbol => {
             loadedImages[symbol] = true;
         });
 
         // Test
-        const result = areAllImagesLoaded();
+        const result = await areAllImagesLoaded();
 
         // Assertion
         if (result !== true) {
@@ -45,23 +46,23 @@ describe('symbolCacheUtils basic tests', () => {
         }
     });
 
-    test('forceMarkAllLoaded should mark all images as loaded', () => {
+    test('forceMarkAllLoaded should mark all images as loaded', async () => {
         // Ensure none are loaded initially
         Object.keys(loadedImages).forEach(key => {
             delete loadedImages[key];
         });
 
         // Initial state check
-        const initialResult = areAllImagesLoaded();
+        const initialResult = await areAllImagesLoaded();
         if (initialResult !== false) {
             throw new Error(`Expected initial areAllImagesLoaded() to be false, but got ${initialResult}`);
         }
 
         // Test the function
-        forceMarkAllLoaded();
+        await forceMarkAllLoaded();
 
         // Check result
-        const finalResult = areAllImagesLoaded();
+        const finalResult = await areAllImagesLoaded();
         if (finalResult !== true) {
             throw new Error(`Expected areAllImagesLoaded() to be true after forceMarkAllLoaded(), but got ${finalResult}`);
         }

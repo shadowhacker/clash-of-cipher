@@ -95,6 +95,27 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      },
+      symbols: {
+        Row: {
+          id: string;
+          created_at: string;
+          updated_at: string;
+          symbols_json: { symbols: string[] };
+        };
+        Insert: {
+          id?: string;
+          created_at?: string;
+          updated_at?: string;
+          symbols_json: { symbols: string[] };
+        };
+        Update: {
+          id?: string;
+          created_at?: string;
+          updated_at?: string;
+          symbols_json?: { symbols: string[] };
+        };
+        Relationships: [];
       }
     }
     Views: {

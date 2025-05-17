@@ -6,14 +6,14 @@ import {
     getSymbolCountRange
 } from '../../config/gameConfig';
 import {
-    MASTER_SYMBOLS,
     calculateProgressRatio,
     calculateUniqueSymbolCount,
     getSymbolPack,
     generateCode,
     calculateCorrectSymbolCopies,
     generateGrid,
-    verifyGrid
+    verifyGrid,
+    getMasterSymbols
 } from '../../utils/symbolManager';
 import { preloadAllSymbols, areAllImagesLoaded, loadedImages } from '../../utils/symbolCacheUtils';
 // Import for testing
@@ -249,7 +249,8 @@ describe('Game Logic Integration Tests', () => {
             // Mock the preloadAllSymbols function to mark all images as loaded
             jest.spyOn(symbolCacheUtils, 'preloadAllSymbols').mockImplementation(async () => {
                 // Directly mark all symbols as loaded for this test
-                MASTER_SYMBOLS.forEach(symbol => {
+                const masterSymbols = await getMasterSymbols();
+                masterSymbols.forEach(symbol => {
                     loadedImages[symbol] = true;
                 });
                 return Promise.resolve();

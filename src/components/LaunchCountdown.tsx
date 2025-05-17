@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { getInitialCountdown } from '../config/gameConfig';
 
 interface LaunchCountdownProps {
-  onComplete: () => void;
+  onComplete: () => Promise<void> | void;
 }
 
 const LaunchCountdown: React.FC<LaunchCountdownProps> = ({ onComplete }) => {
@@ -18,8 +18,8 @@ const LaunchCountdown: React.FC<LaunchCountdownProps> = ({ onComplete }) => {
         if (prevCount <= 1) {
           clearInterval(timer);
           // Schedule the onComplete callback after the render cycle
-          setTimeout(() => {
-            onComplete();
+          setTimeout(async () => {
+            await onComplete();
           }, 0);
           return 0;
         }
