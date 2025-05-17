@@ -1,12 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
 
-// In Vite, use only import.meta.env, not process.env
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-// Check if Supabase credentials are available
-const isSupabaseConfigured = supabaseUrl && supabaseAnonKey;
-
 // In-memory cache for config
 let cachedConfig: any = null;
 let configPromise: Promise<any> | null = null;
