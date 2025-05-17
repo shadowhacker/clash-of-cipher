@@ -111,27 +111,7 @@ const Index = () => {
     setShowHowToPlay(true);
   }, []);
 
-  const handlePlayerNameSubmit = useCallback((name: string) => {
-    savePlayerName(name);
-    setShowPlayerNameDialog(false);
-  }, []);
-
-  // Handle start game from intro screens
-  const handleIntroStartGame = useCallback(() => {
-    // Check if we need to show the guide first for first-time users
-    if (isFirstTimePlay) {
-      if (configReady) {
-        setShowHowToPlay(true);
-      }
-    } else {
-      handleStartGame();
-    }
-  }, [isFirstTimePlay, configReady]);
-
-  const handleIntroShowGuide = useCallback(() => {
-    setShowGuide(true);
-  }, []);
-
+  // Define handleStartGame first so it can be used in other callbacks
   const handleStartGame = useCallback(() => {
     if (showStartScreen) {
       logger.debug('On start screen, dismissing and starting game');
@@ -139,12 +119,34 @@ const Index = () => {
       startGame();
       return;
     }
-
     if (gameState === 'idle') {
       logger.debug('In idle state, starting game');
       startGame();
     }
   }, [showStartScreen, gameState, dismissStartScreen, startGame]);
+
+  const handlePlayerNameSubmit = useCallback((name: string) => {
+    savePlayerName(name);
+    setShowPlayerNameDialog(false);
+    // After setting nickname, start the game
+    handleStartGame();
+  }, [handleStartGame]);
+
+  // Handle start game from intro screens
+  const handleIntroStartGame = useCallback(() => {
+    // If player has no nickname, show nickname dialog first
+    const playerName = getPlayerName();
+    if (!playerName) {
+      setShowPlayerNameDialog(true);
+      return;
+    }
+    // If first time, do NOT show guide automatically, just start the game
+    handleStartGame();
+  }, [configReady, handleStartGame]);
+
+  const handleIntroShowGuide = useCallback(() => {
+    setShowGuide(true);
+  }, []);
 
   if (showStartScreen) {
     return (
