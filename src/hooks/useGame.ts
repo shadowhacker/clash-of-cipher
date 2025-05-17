@@ -363,11 +363,11 @@ export const useGame = () => {
 
   // Start next level
   const startNextLevel = useCallback(
-    (newLevel: number): void => {
+    async (newLevel: number): Promise<void> => {
       clearGameTimer();
 
       // Generate level code
-      const { newCode, availableSymbols } = generateLevelCode(newLevel);
+      const { newCode, availableSymbols } = await generateLevelCode(newLevel);
       setCode(newCode);
       setUserInput([]);
       setLevel(newLevel);
