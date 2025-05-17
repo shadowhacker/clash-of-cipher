@@ -209,7 +209,7 @@ export function isBackgroundMusicPlaying(): boolean {
  * @param volume Optional volume override (0-1)
  * @returns Promise that resolves when the sound starts playing
  */
-export async function playSound(soundName: string, volumeOverride?: number): Promise<void> {
+export async function playSound(soundName: string): Promise<void> {
   try {
     // Initialize audio context if needed
     await initializeAudioContext();
@@ -218,7 +218,7 @@ export async function playSound(soundName: string, volumeOverride?: number): Pro
     if (preloadedSounds[soundName]) {
       const audio = preloadedSounds[soundName];
       audio.currentTime = 0; // Reset to beginning
-      audio.volume = volumeOverride !== undefined ? volumeOverride : effectsVolume;
+      audio.volume = effectsVolume;
       await audio.play();
       return;
     }
@@ -228,7 +228,7 @@ export async function playSound(soundName: string, volumeOverride?: number): Pro
     if (!soundUrl) return;
     
     const audio = new Audio(soundUrl);
-    audio.volume = volumeOverride !== undefined ? volumeOverride : effectsVolume;
+    audio.volume = effectsVolume;
     await audio.play();
   } catch (err) {
     logger.error(`Error playing sound (${soundName}):`, err);
