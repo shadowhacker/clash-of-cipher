@@ -3,7 +3,7 @@ version: 2.1
 executors:
   node-executor:
     docker:
-      - image: cimg/node:18.20
+      - image: cimg/node:20.0.0
     working_directory: ~/app
   android-executor:
     docker:
@@ -18,7 +18,8 @@ jobs:
       - run:
           name: Install Node Dependencies & Capacitor Platforms
           command: |
-            npm ci
+            rm package-lock.json
+            npm i
             npm install @capacitor/core
             npm install @capacitor/cli @capacitor/android @capacitor/ios --save-dev
       - run:
