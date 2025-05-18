@@ -24,7 +24,7 @@ jobs:
       - run:
           name: Initialize Capacitor
           command: |
-            npx cap init ClashOfCipher app.clash-of-cipher --web-dir=dist
+            npx cap init ClashOfCipher app.clashofcipher --web-dir=dist
       - run:
           name: Add Capacitor Platforms (android/ios)
           command: |
