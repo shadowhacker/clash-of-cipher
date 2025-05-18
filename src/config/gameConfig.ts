@@ -5,6 +5,16 @@
 import defaultConfig from './gameConfig.json';
 import { fetchGameConfig } from '../utils/supabaseConfig';
 
+// Define the type for round logic brackets
+export interface RoundLogicBracket {
+  level_start: number;
+  level_end: number;
+  flash_time: [number, number];
+  icon_count: [number, number];
+  repeat_copies: [number, number];
+  // Add other properties as needed
+}
+
 // Store the config that will be used
 let activeConfig = defaultConfig;
 
@@ -61,7 +71,7 @@ export const CONFIG_DEFAULTS = activeConfig;
  */
 
 // Get the appropriate round logic bracket for a given level
-export function getRoundLogicBracket(level: number, roundLogic: any[] | null) {
+export function getRoundLogicBracket(level: number, roundLogic: RoundLogicBracket[] | null) {
   // If explicit roundLogic is provided, use it
   if (roundLogic && roundLogic.length) {
     return roundLogic.find((r) =>
@@ -70,7 +80,7 @@ export function getRoundLogicBracket(level: number, roundLogic: any[] | null) {
   }
 
   // Otherwise use the active config
-  const currentRoundLogic = activeConfig.ROUND_LOGIC;
+  const currentRoundLogic = activeConfig.ROUND_LOGIC as RoundLogicBracket[];
   return currentRoundLogic.find((r) =>
     level >= r.level_start && level <= r.level_end
   );
@@ -97,7 +107,7 @@ export const getSymbolCountRange = (level: number): [number, number] => {
 };
 
 // Utility to get flash time for a level from remote roundLogic
-export function getRemoteFlashTime(level: number, roundLogic: any[]): number {
+export function getRemoteFlashTime(level: number, roundLogic: RoundLogicBracket[]): number {
   // Find the matching round logic bracket
   const bracket = getRoundLogicBracket(level, roundLogic);
   if (!bracket) return 1.5; // fallback
@@ -108,14 +118,14 @@ export function getRemoteFlashTime(level: number, roundLogic: any[]): number {
 }
 
 // Utility to get symbol count range for a level from remote roundLogic
-export function getRemoteSymbolCountRange(level: number, roundLogic: any[]): [number, number] {
+export function getRemoteSymbolCountRange(level: number, roundLogic: RoundLogicBracket[]): [number, number] {
   const bracket = getRoundLogicBracket(level, roundLogic);
   if (!bracket) return [1, 2]; // fallback
   return bracket.icon_count;
 }
 
 // Get repeat copies range for a level from round logic
-export function getRepeatCopiesRange(level: number, roundLogic: any[] | null): [number, number] {
+export function getRepeatCopiesRange(level: number, roundLogic: RoundLogicBracket[] | null): [number, number] {
   const bracket = getRoundLogicBracket(level, roundLogic);
   if (!bracket) return [1, 3]; // fallback
   return bracket.repeat_copies;

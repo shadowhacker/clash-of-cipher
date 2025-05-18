@@ -1,7 +1,7 @@
 // Removed circular import
 // import { MASTER_SYMBOLS } from '../hooks/useGame';
 import { preloadImage, dataUrlCache, preloadAllGameSymbols as rawPreloadAllGameSymbols } from '../hooks/useImageCache';
-import { MASTER_SYMBOLS } from './symbolManager';
+import { getMasterSymbols } from './symbolManager';
 import logger from './logger';
 
 // Cache version - update when structure changes
@@ -12,9 +12,19 @@ export const CACHE_KEY_PREFIX = 'clash-symbol-';
 export const loadedImages: Record<string, boolean> = {};
 
 /**
+ * Helper function to get a consistent cache key for a URL
+ * This ensures both local paths and full URLs are stored consistently
+ */
+function getCacheKey(url: string): string {
+  // Extract just the filename from the URL for consistency
+  const filename = url.split('/').pop() || url;
+  return `${CACHE_KEY_PREFIX}${filename}`;
+}
+
+/**
  * Restore cached image data from localStorage
  */
-export function restoreCachedImages(): void {
+export async function restoreCachedImages(): Promise<void> {
     // Get stored cache version
     const storedVersion = localStorage.getItem('clash-cache-version');
 
@@ -35,49 +45,50 @@ export function restoreCachedImages(): void {
     logger.info('Restored cached symbols from localStorage');
 
     // For any cached symbols, mark them as loaded
-    MASTER_SYMBOLS.forEach(symbol => {
-        const key = `${CACHE_KEY_PREFIX}${symbol}`;
+    const symbols = await getMasterSymbols();
+    await Promise.all(symbols.map(async (url) => {
+        const key = getCacheKey(url);
         const cachedDataUrl = localStorage.getItem(key);
         if (cachedDataUrl) {
             // Cache the dataUrl
-            dataUrlCache[`/symbols/${symbol}`] = cachedDataUrl;
+            dataUrlCache[url] = cachedDataUrl;
             // Mark as loaded
-            loadedImages[symbol] = true;
+            loadedImages[url] = true;
         }
-    });
+    }));
 }
 
 /**
  * Persist cached image data to localStorage
  */
-export function persistCachedImages(): void {
+export async function persistCachedImages(): Promise<void> {
     // Store current version
     localStorage.setItem('clash-cache-version', CACHE_VERSION);
-
-    // Store all cached symbols
-    MASTER_SYMBOLS.forEach(symbol => {
-        const src = `/symbols/${symbol}`;
-        if (dataUrlCache[src]) {
-            localStorage.setItem(`${CACHE_KEY_PREFIX}${symbol}`, dataUrlCache[src]);
+    const symbols = await getMasterSymbols();
+    await Promise.all(symbols.map(async (url) => {
+        if (dataUrlCache[url]) {
+            const key = getCacheKey(url);
+            localStorage.setItem(key, dataUrlCache[url]);
         }
-    });
-
+    }));
     logger.info('Persisted symbol cache to localStorage');
 }
 
 /**
  * Check if all game symbols are loaded
  */
-export function areAllImagesLoaded(): boolean {
-    return MASTER_SYMBOLS.every(symbol => loadedImages[symbol] === true);
+export async function areAllImagesLoaded(): Promise<boolean> {
+    const symbols = await getMasterSymbols();
+    return symbols.every(url => loadedImages[url] === true);
 }
 
 /**
  * Force mark all images as loaded (useful for fast testing)
  */
-export function forceMarkAllLoaded(): void {
-    MASTER_SYMBOLS.forEach(symbol => {
-        loadedImages[symbol] = true;
+export async function forceMarkAllLoaded(): Promise<void> {
+    const symbols = await getMasterSymbols();
+    symbols.forEach(url => {
+        loadedImages[url] = true;
     });
 }
 
@@ -88,26 +99,24 @@ export function forceMarkAllLoaded(): void {
 export async function preloadAllSymbols(onProgress?: (progress: number) => void): Promise<void> {
     // First load critical UI images (background, etc)
     await rawPreloadAllGameSymbols();
-
     let loadedCount = 0;
-    const total = MASTER_SYMBOLS.length;
-
+    const symbols = await getMasterSymbols();
+    const total = symbols.length;
     await Promise.allSettled(
-        MASTER_SYMBOLS.map(async (symbol) => {
+        symbols.map(async (url) => {
             try {
-                await preloadImage(`/symbols/${symbol}`);
-                loadedImages[symbol] = true;
+                await preloadImage(url);
+                loadedImages[url] = true;
             } catch (err) {
                 // Mark as loaded to avoid blocking
-                loadedImages[symbol] = true;
+                loadedImages[url] = true;
             }
             loadedCount++;
             if (onProgress) onProgress(loadedCount / total);
         })
     );
-
     // Store in localStorage
-    persistCachedImages();
+    await persistCachedImages();
 }
 
 /**
@@ -117,14 +126,10 @@ export async function preloadAllSymbols(onProgress?: (progress: number) => void)
 export async function preloadSpecificSymbols(symbols: string[]): Promise<void> {
     try {
         await Promise.all(
-            symbols.map(symbol =>
-                preloadImage(`/symbols/${symbol}`)
-                    .then(() => {
-                        loadedImages[symbol] = true;
-                        return true;
+            symbols.map(async (url) => {
+                await preloadImage(url);
+                loadedImages[url] = true;
                     })
-                    .catch(() => false)
-            )
         );
     } catch (error) {
         logger.error('Error preloading specific symbols:', error);

@@ -3,7 +3,7 @@ import { preloadAllSymbols, forceMarkAllLoaded } from '../utils/symbolCacheUtils
 import LaunchCountdown from '../components/LaunchCountdown.tsx';
 
 interface UseGameLaunchProps {
-  onLaunchComplete: () => void;
+  onLaunchComplete: () => Promise<void> | void;
 }
 
 export const useGameLaunch = ({ onLaunchComplete }: UseGameLaunchProps) => {
@@ -22,11 +22,11 @@ export const useGameLaunch = ({ onLaunchComplete }: UseGameLaunchProps) => {
   }, []);
 
   // Callback when countdown completes
-  const handleCountdownComplete = useCallback(() => {
+  const handleCountdownComplete = useCallback(async () => {
     // Use requestAnimationFrame to ensure we're not updating during render
-    requestAnimationFrame(() => {
+    requestAnimationFrame(async () => {
       setShowCountdown(false);
-      onLaunchComplete();
+      await onLaunchComplete();
     });
   }, [onLaunchComplete]);
 

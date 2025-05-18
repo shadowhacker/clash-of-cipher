@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import AudioControls from './AudioControls';
-import { useImageCache, getImageLoadingStatus, getCachedImageUrl } from '../hooks/useImageCache';
 
 interface IntroScreenProps {
   onStartGame: () => void;
@@ -8,29 +7,8 @@ interface IntroScreenProps {
 }
 
 const IntroScreen: React.FC<IntroScreenProps> = ({ onStartGame, onShowGuide }) => {
-  // Get background image loading status and cached URL
-  const bgImagePath = '/images/bg-intro.png';
-  const bgImageStatus = getImageLoadingStatus(bgImagePath);
-  const { status, cachedUrl } = useImageCache(bgImagePath);
-  const [bgLoaded, setBgLoaded] = useState(bgImageStatus === 'loaded');
-
-  // Check if bg image is loaded
-  useEffect(() => {
-    if (status === 'loaded') {
-      setBgLoaded(true);
-    }
-  }, [status]);
-
-  // Prepare background style with cached image if available
-  const bgImageStyle = bgLoaded
-    ? {
-      backgroundImage: `url("${cachedUrl}")`,
-      backgroundPosition: 'center center',
-      backgroundSize: 'auto 100%',
-      backgroundRepeat: 'no-repeat'
-    }
-    : {
-      // Fallback gradient background while loading
+  // Use a gradient background instead of an image
+  const bgStyle = {
       background: 'radial-gradient(circle, #1a0d05 0%, #0e0817 100%)'
     };
 
@@ -38,20 +16,11 @@ const IntroScreen: React.FC<IntroScreenProps> = ({ onStartGame, onShowGuide }) =
     <div className="fixed inset-0 flex flex-col items-center overflow-hidden"
       style={{
         backgroundColor: '#0e0817',
-        transition: 'background-image 0.5s ease-in',
-        ...bgImageStyle
+        ...bgStyle
       }}>
       <div className="absolute top-4 right-4 z-10">
         <AudioControls />
       </div>
-
-      {/* Show loading indicator if background is still loading */}
-      {status === 'loading' && (
-        <div className="absolute top-4 left-4 flex items-center space-x-2 text-amber-400/70">
-          <div className="w-3 h-3 rounded-full bg-amber-500 animate-pulse"></div>
-          <span className="text-xs">Loading background...</span>
-        </div>
-      )}
 
       <div className="w-full h-full flex flex-col justify-end items-center px-4" style={{ paddingBottom: '5vh' }}>
         <div className="flex-grow"></div>

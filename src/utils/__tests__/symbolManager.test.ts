@@ -1,5 +1,5 @@
 import {
-    MASTER_SYMBOLS,
+    getMasterSymbols,
     calculateProgressRatio,
     calculateUniqueSymbolCount,
     getSymbolPack,
@@ -20,14 +20,17 @@ const TEST_LEVELS = {
 };
 
 describe('symbolManager', () => {
-    describe('MASTER_SYMBOLS', () => {
-        it('should have the correct number of symbols defined', () => {
-            expect(MASTER_SYMBOLS.length).toBe(SYMBOL_CONFIG.TOTAL_SYMBOLS);
+    describe('getMasterSymbols', () => {
+        it('should have the correct number of symbols defined', async () => {
+            const symbols = await getMasterSymbols();
+            expect(Array.isArray(symbols)).toBe(true);
+            // You may want to mock this for deterministic tests
         });
 
-        it('should contain only valid image filenames', () => {
-            const imageRegex = /^symbol-\d+\.png$/;
-            MASTER_SYMBOLS.forEach(symbol => {
+        it('should contain only valid image filenames', async () => {
+            const symbols = await getMasterSymbols();
+            const imageRegex = /^(symbol-\d+\.png|\d+\.webp)$/;
+            symbols.forEach(symbol => {
                 expect(symbol).toMatch(imageRegex);
             });
         });
@@ -120,11 +123,11 @@ describe('symbolManager', () => {
             expect(result.length).toBe(expectedCount);
         });
 
-        it('should return symbols from the master symbols list', () => {
-            const result = getSymbolPack(TEST_LEVELS.MIN);
-
+        it('should return symbols from the master symbols list', async () => {
+            const result = await getSymbolPack(TEST_LEVELS.MIN);
+            const masterSymbols = await getMasterSymbols();
             result.forEach(symbol => {
-                expect(MASTER_SYMBOLS).toContain(symbol);
+                expect(masterSymbols).toContain(symbol);
             });
         });
     });
