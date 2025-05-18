@@ -3,15 +3,22 @@ import logger from './logger';
 
 // Default sound paths (fallback if Supabase fails)
 const DEFAULT_SOUNDS = {
-  intro: 'https://vppefmbjgvfwqqwomfeb.supabase.co/storage/v1/object/public/sounds//intro_sound.mp3',
+  intro: [
+    'https://vppefmbjgvfwqqwomfeb.supabase.co/storage/v1/object/public/sounds//intro_sound.mp3',
+    'https://vppefmbjgvfwqqwomfeb.supabase.co/storage/v1/object/public/sounds//intro_sound_2.mp3',
+    'https://vppefmbjgvfwqqwomfeb.supabase.co/storage/v1/object/public/sounds//intro_sound_3.mp3'
+  ],
   success: 'https://vppefmbjgvfwqqwomfeb.supabase.co/storage/v1/object/public/sounds//success_bell.mp3',
   failure: 'https://vppefmbjgvfwqqwomfeb.supabase.co/storage/v1/object/public/sounds//failure_bell.mp3'
 };
 
+// Sound data type can be either a string URL or an array of string URLs
+type SoundData = string | string[];
+
 // Cache for sound URLs
-let cachedSounds: Record<string, string> | null = null;
-let soundsPromise: Promise<Record<string, string>> | null = null;
-const subscribers: ((sounds: Record<string, string>) => void)[] = [];
+let cachedSounds: Record<string, SoundData> | null = null;
+let soundsPromise: Promise<Record<string, SoundData>> | null = null;
+const subscribers: ((sounds: Record<string, SoundData>) => void)[] = [];
 
 // Background music instance
 let backgroundMusic: HTMLAudioElement | null = null;
@@ -93,7 +100,7 @@ setupAudioUnlockListeners();
  * Fetch sound URLs from Supabase
  * @returns Record of sound names to URLs
  */
-async function fetchSoundsFromSupabase(): Promise<Record<string, string>> {
+async function fetchSoundsFromSupabase(): Promise<Record<string, SoundData>> {
   try {
     const { data, error } = await supabase
       .from('sounds')
@@ -118,7 +125,7 @@ async function fetchSoundsFromSupabase(): Promise<Record<string, string>> {
  * @param forceRefresh Force refresh from Supabase
  * @returns Record of sound names to URLs
  */
-export async function getSounds(forceRefresh = false): Promise<Record<string, string>> {
+export async function getSounds(forceRefresh = false): Promise<Record<string, SoundData>> {
   if (cachedSounds && !forceRefresh) return cachedSounds;
   if (soundsPromise && !forceRefresh) return soundsPromise;
   
@@ -154,7 +161,7 @@ export async function getSounds(forceRefresh = false): Promise<Record<string, st
  * @param cb Callback to receive updated sounds
  * @returns Unsubscribe function
  */
-export function subscribeSounds(cb: (sounds: Record<string, string>) => void) {
+export function subscribeSounds(cb: (sounds: Record<string, SoundData>) => void) {
   subscribers.push(cb);
   // Immediately call with cached if available
   if (cachedSounds) cb(cachedSounds);
@@ -178,7 +185,19 @@ setInterval(() => {
  */
 export async function getSound(soundName: string): Promise<string> {
   const sounds = await getSounds();
-  return sounds[soundName] || DEFAULT_SOUNDS[soundName as keyof typeof DEFAULT_SOUNDS] || '';
+  const soundData = sounds[soundName] || DEFAULT_SOUNDS[soundName as keyof typeof DEFAULT_SOUNDS] || '';
+  
+  // Handle array of sound URLs (choose randomly)
+  if (Array.isArray(soundData)) {
+    if (soundData.length === 0) return '';
+    // Pick a random sound from the array
+    const randomIndex = Math.floor(Math.random() * soundData.length);
+    logger.info(`[AUDIO] Randomly selected ${soundName} sound ${randomIndex + 1} of ${soundData.length}`);
+    return soundData[randomIndex];
+  }
+  
+  // Handle string URL
+  return soundData;
 }
 
 /**
@@ -190,8 +209,11 @@ export async function preloadSounds(soundNames: string[]): Promise<void> {
     const sounds = await getSounds();
     
     for (const name of soundNames) {
-      const url = sounds[name] || DEFAULT_SOUNDS[name as keyof typeof DEFAULT_SOUNDS];
-      if (!url) continue;
+      const soundData = sounds[name] || DEFAULT_SOUNDS[name as keyof typeof DEFAULT_SOUNDS];
+      if (!soundData) continue;
+      
+      // Get the URL (handle both string and array)
+      const url = Array.isArray(soundData) ? soundData[0] : soundData;
       
       if (!preloadedSounds[name]) {
         const audio = new Audio(url);
