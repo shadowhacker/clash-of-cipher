@@ -42,14 +42,24 @@ jobs:
       - run:
           name: Add debug keystore
           command: |
+            mkdir -p android/app/debug-keys
             echo "$DEBUG_KEY_B64" | base64 -d > android/app/debug-keys/debug.jks
+      - run:
+          name: Ensure build-tools and apksigner are available
+          command: |
+            sdkmanager "build-tools;34.0.0"
+      - run:
+          name: Add apksigner to PATH for subsequent steps
+          command: |
+            echo 'export PATH=$PATH:$ANDROID_HOME/build-tools/34.0.0' >> $BASH_ENV
+            source $BASH_ENV
       - run:
           name: Build Android APK
           command: |
             npx cap build android
       - store_artifacts:
-          path: android/app/build/outputs/apk/**/*.apk
-          destination: android/app-release.apk
+          path: android/app/build/outputs/apk/release/app-release-signed.apk
+          destination: app-release-signed.apk
 workflows:
   version: 2
   capacitor-build:
