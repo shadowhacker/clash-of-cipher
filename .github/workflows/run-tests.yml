@@ -38,13 +38,13 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libcairo2-dev libjpeg-dev libpango1.0-dev libgif-dev build-essential g++
 
-      - name: Run Jest tests with coverage
-        id: coverage
-        run: npm run test:coverage || echo "::set-output name=failed::true"
-
       - name: Run basic tests
         id: basic_tests
-        run: npm run test:basic || echo "::set-output name=failed::true"
+        run: npm run test:basic
+
+      - name: Run Jest tests with coverage
+        id: coverage
+        run: npm run test:coverage
 
       - name: Capture test output for reports
         if: always()
