@@ -45,12 +45,18 @@ jobs:
             mkdir -p android/app/debug-keys
             echo "$DEBUG_KEY_B64" | base64 -d > android/app/debug-keys/debug.jks
       - run:
+          name: Ensure build-tools and apksigner are available
+          command: |
+            sdkmanager "build-tools;34.0.0"
+            export PATH=$PATH:$ANDROID_HOME/build-tools/34.0.0
+            which apksigner || echo "apksigner not found in PATH"
+      - run:
           name: Build Android APK
           command: |
             npx cap build android
       - store_artifacts:
-          path: android/app/build/outputs/apk/**/*.apk
-          destination: android/app-release.apk
+          path: android/app/build/outputs/apk/release/app-release-signed.apk
+          destination: app-release-signed.apk
 workflows:
   version: 2
   capacitor-build:
