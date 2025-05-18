@@ -20,8 +20,9 @@ let cachedSounds: Record<string, SoundData> | null = null;
 let soundsPromise: Promise<Record<string, SoundData>> | null = null;
 const subscribers: ((sounds: Record<string, SoundData>) => void)[] = [];
 
-// Background music instance
-let backgroundMusic: HTMLAudioElement | null = null;
+// Background music instance using Howler.js
+import { Howl, Howler } from 'howler';
+let backgroundMusic: Howl | null = null;
 let isMusicMuted = false;
 
 // Volume settings (0-1)
@@ -234,10 +235,7 @@ export async function preloadSounds(soundNames: string[]): Promise<void> {
  * @returns boolean indicating if background music is playing
  */
 export function isBackgroundMusicPlaying(): boolean {
-  return backgroundMusic !== null && 
-         !backgroundMusic.paused && 
-         backgroundMusic.currentTime > 0 &&
-         !backgroundMusic.ended;
+  return backgroundMusic !== null && backgroundMusic.playing();
 }
 
 /**
@@ -273,79 +271,56 @@ export async function playSound(soundName: string): Promise<void> {
 }
 
 /**
- * Play background music
+ * Play background music using Howler.js
  * @param soundName Name of the sound to play as background
  * @param loop Whether to loop the sound (default: true)
  * @returns Promise that resolves when the music starts playing
  */
 export async function playBackgroundMusic(soundName: string, loop = true): Promise<void> {
-  try {
-    // Initialize audio context if needed
-    await initializeAudioContext();
-    
-    // Stop any existing background music
-    stopBackgroundMusic();
-    
-    // Get the sound URL
-    const soundUrl = await getSound(soundName);
-    logger.info(`[AUDIO] Attempting to play background music: ${soundName}, URL: ${soundUrl}`);
-    
-    // Create a new audio element
-    backgroundMusic = new Audio(soundUrl);
-    backgroundMusic.loop = loop;
-    backgroundMusic.volume = musicVolume;
-    
-    // Apply mute state
-    backgroundMusic.muted = isMusicMuted;
-    
-    // Play the music
-    await backgroundMusic.play();
-    logger.info(`[AUDIO] Background music started: ${soundName}`);
-  } catch (err) {
-    logger.error(`[AUDIO] Error playing background music (${soundName}):`, err);
-    throw err; // Re-throw to allow caller to handle
+  if (backgroundMusic) {
+    backgroundMusic.stop();
+    backgroundMusic.unload();
+    backgroundMusic = null;
   }
+  const url = await getSound(soundName);
+  backgroundMusic = new Howl({
+    src: [url],
+    loop,
+    volume: musicVolume,
+    mute: isMusicMuted
+  });
+  backgroundMusic.play();
 }
 
 /**
- * Stop background music
+ * Stop background music using Howler.js
  */
 export function stopBackgroundMusic(): void {
   if (backgroundMusic) {
-    backgroundMusic.pause();
-    backgroundMusic.currentTime = 0;
+    backgroundMusic.stop();
+    backgroundMusic.unload();
     backgroundMusic = null;
-    logger.info('[AUDIO] Background music stopped');
   }
 }
 
 /**
- * Set mute state for background music
- * @param muted Whether to mute the background music
+ * Set mute state for background music using Howler.js
  */
 export function setBackgroundMusicMuted(muted: boolean): void {
   isMusicMuted = muted;
-  
   if (backgroundMusic) {
-    backgroundMusic.muted = muted;
+    backgroundMusic.mute(muted);
   }
-  
-  // Save mute state to localStorage
-  localStorage.setItem('cipher-clash-music-muted', muted.toString());
 }
 
 /**
- * Set volume for background music
- * @param volume Volume level (0-1)
+ * Set volume for background music using Howler.js
  */
 export function setBackgroundMusicVolume(volume: number): void {
-  musicVolume = Math.max(0, Math.min(1, volume));
-  
+  musicVolume = volume;
   if (backgroundMusic) {
-    backgroundMusic.volume = musicVolume;
+    backgroundMusic.volume(volume);
   }
-  
-  // Save volume to localStorage
   localStorage.setItem('cipher-clash-music-volume', musicVolume.toString());
 }
 
