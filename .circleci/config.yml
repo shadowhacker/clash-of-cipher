@@ -64,7 +64,7 @@ jobs:
           name: Notify Discord (Success)
           when: on_success
           command: |
-            ARTIFACT_URL="${CIRCLE_BUILD_URL}/artifacts/0/android/app/build/outputs/apk/release/app-release-signed.apk"
+            ARTIFACT_URL="https://output.circle-artifacts.com/output/job/$CIRCLE_WORKFLOW_JOB_ID/artifacts/0/app-release-signed.apk"
             PAYLOAD="{\"content\":\"✅ Android APK build succeeded! [Download Artifact]($ARTIFACT_URL)\"}"
             curl -H "Content-Type: application/json" -X POST -d "$PAYLOAD" "$DISCORD_WEBHOOK_URL"
       - run:
