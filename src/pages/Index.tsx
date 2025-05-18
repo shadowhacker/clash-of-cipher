@@ -225,12 +225,12 @@ const Index = () => {
           playerName={getPlayerName()}
         />
 
-        {/* Context message above grid - Only visible during input state */}
-        {gameState === 'input' && (
-          <div className="text-center mb-2 text-amber-200 font-medium px-4 py-2 bg-amber-900/40 rounded-lg border border-amber-700/30 animate-pulse">
+        {/* Context message overlay - only visible during input state */}
+        <div className={`fixed left-1/2 bottom-[0%] z-30 transform -translate-x-1/2 w-full max-w-md pointer-events-none transition-opacity duration-300 ${gameState === 'input' ? 'opacity-100' : 'opacity-0'}`} aria-live="polite">
+          <div className="mx-auto text-center text-amber-200 font-medium px-4 py-2 bg-amber-900/80 rounded-lg border border-amber-700/30 animate-pulse shadow-lg pointer-events-auto select-none">
             Tap the symbols in the EXACT SAME ORDER as they appeared
           </div>
-        )}
+        </div>
 
         {/* Game Grid */}
         <AudioInitializer onSymbolClick={handleSymbolClick}>

@@ -122,14 +122,14 @@ const GameStatus: React.FC<GameStatusProps> = ({
           </div>
 
           {/* Time progress bar */}
-          {gameState === 'input' && (
-            <div className="w-full h-2 bg-amber-900/30 rounded-full overflow-hidden mt-1 mb-3">
+          <div className="w-full h-2 bg-amber-900/30 rounded-full overflow-hidden mt-1 mb-3" style={{ minHeight: '0.5rem' }}>
+            {gameState === 'input' && (
               <div
                 className={`h-full ${getProgressBarColor()} transition-all duration-1000 ease-linear`}
                 style={{ width: `${timePercentage}%` }}
               ></div>
-            </div>
-          )}
+            )}
+          </div>
 
           {/* Decorative horizontal line */}
           <div className="absolute w-full h-[2px] bg-gradient-to-r from-transparent via-amber-600/70 to-transparent -bottom-2"></div>
