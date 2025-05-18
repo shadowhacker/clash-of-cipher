@@ -1,18 +1,14 @@
 version: 2.1
 
 executors:
-  node-executor:
-    docker:
-      - image: cimg/node:20.0.0
-    working_directory: ~/app
   android-executor:
     docker:
       - image: cimg/android:2024.04-browsers
     working_directory: ~/app
 
 jobs:
-  setup:
-    executor: node-executor
+  android-build:
+    executor: android-executor
     steps:
       - checkout
       - run:
@@ -25,7 +21,11 @@ jobs:
       - run:
           name: Initialize Capacitor
           command: |
-            npx cap init ClashOfCipher app.clashofcipher --web-dir=dist
+            npx cap init "Dhyanam" app.dhyanam --web-dir=dist
+      - run:
+          name: Overwrite capacitor.config.ts from env
+          command: |
+            echo "$CAPACITOR_CONFIG_B64" | base64 -d > capacitor.config.ts
       - run:
           name: Add Capacitor Platforms (android/ios)
           command: |
@@ -39,28 +39,19 @@ jobs:
           command: |
             npx cap sync
             npx cap copy
-      - persist_to_workspace:
-          root: .
-          paths:
-            - .
-  android-build:
-    executor: android-executor
-    steps:
-      - attach_workspace:
-          at: .
       - run:
-          name: Build Android APK (Gradle)
+          name: Add debug keystore
           command: |
-            cd android
-            ./gradlew assembleRelease
+            echo "$DEBUG_KEY_B64" | base64 -d > app/debug-keys/debug.jks
+      - run:
+          name: Build Android APK
+          command: |
+            npx cap build android
       - store_artifacts:
-          path: android/app/build/outputs/apk/release/app-release.apk
+          path: android/app/build/outputs/apk/**/*.apk
           destination: android/app-release.apk
 workflows:
   version: 2
   capacitor-build:
     jobs:
-      - setup
-      - android-build:
-          requires:
-            - setup
+      - android-build
