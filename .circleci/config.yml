@@ -3,7 +3,7 @@ version: 2.1
 executors:
   node-executor:
     docker:
-      - image: cimg/node:18.20
+      - image: cimg/node:20.0.0
     working_directory: ~/app
   android-executor:
     docker:
@@ -55,9 +55,8 @@ jobs:
       - store_artifacts:
           path: android/app/build/outputs/apk/release/app-release.apk
           destination: android/app-release.apk
-
 workflows:
-  version: 2.1
+  version: 2
   capacitor-build:
     jobs:
       - setup
