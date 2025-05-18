@@ -2,6 +2,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, Medal, HelpCircle } from 'lucide-react';
 import { MAX_ROUND_TIME } from '../config/gameConfig';
+import { formatLargeNumber } from '@/utils/formatUtils';
 
 interface GameStatusProps {
   gameState: 'idle' | 'showCode' | 'input' | 'result';
@@ -62,10 +63,14 @@ const GameStatus: React.FC<GameStatusProps> = ({
             {gameState === 'idle' && playerName ? (
               <div className="space-y-1">
                 <div className="text-lg">Welcome back, {playerName}!</div>
-                <div className="text-base font-semibold">🏆 Best Meditation: {personalBest}</div>
+                <div className="text-base font-semibold" title={personalBest.toLocaleString()}>
+                  🏆 Best Meditation: {formatLargeNumber(personalBest).displayValue}
+                </div>
               </div>
             ) : (
-              <div className="text-base font-semibold">🏆 Best Meditation: {personalBest}</div>
+              <div className="text-base font-semibold" title={personalBest.toLocaleString()}>
+                🏆 Best Meditation: {formatLargeNumber(personalBest).displayValue}
+              </div>
             )}
           </div>
         </div>
@@ -86,7 +91,9 @@ const GameStatus: React.FC<GameStatusProps> = ({
               <div className="h-9 w-[1px] bg-amber-700/50 mx-1"></div>
               <div className="flex flex-col">
                 <span className="text-amber-400 font-medium text-sm">SCORE</span>
-                <span className="text-amber-300 font-bold text-xl">{totalScore}</span>
+                <span className="text-amber-300 font-bold text-xl" title={totalScore.toLocaleString()}>
+                  {formatLargeNumber(totalScore).displayValue}
+                </span>
               </div>
             </div>
 

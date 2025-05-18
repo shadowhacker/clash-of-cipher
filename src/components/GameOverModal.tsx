@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { Share2, Home } from 'lucide-react';
 import { copyToClipboard } from '@/utils/clipboardUtils';
 import useBackButton from '../hooks/useBackButton';
+import { formatLargeNumber } from '@/utils/formatUtils';
 
 interface GameOverModalProps {
   level: number;
@@ -52,9 +53,10 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
 
   const handleShareAgain = () => {
     // Different share text based on whether they reached a significant milestone
+    const { fullValue } = formatLargeNumber(totalScore, { useAbbreviations: false });
     const text = isSignificantMilestone
-      ? `I reached a spiritual milestone with ${totalScore.toLocaleString()} points at Level ${level} in Dhyanam!\nCan you match my spiritual journey? Play → https://clash-of-cipher.lovable.app/`
-      : `My tapasya broke after ${totalScore.toLocaleString()} points at Level ${level} in Dhyanam!\nCan you go further? Play → https://clash-of-cipher.lovable.app/`;
+      ? `I reached a spiritual milestone with ${fullValue} points at Level ${level} in Dhyanam!\nCan you match my spiritual journey? Play → https://clash-of-cipher.lovable.app/`
+      : `My tapasya broke after ${fullValue} points at Level ${level} in Dhyanam!\nCan you go further? Play → https://clash-of-cipher.lovable.app/`;
 
     copyToClipboard(text)
       .then(success => {
@@ -90,9 +92,10 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
   useEffect(() => {
     if (showShareModal) {
       // Different share text based on whether they reached a significant milestone
+      const { fullValue } = formatLargeNumber(totalScore, { useAbbreviations: false });
       const text = isSignificantMilestone
-        ? `I reached a spiritual milestone with ${totalScore.toLocaleString()} points at Level ${level} in Dhyanam!\nCan you match my spiritual journey? Play → https://clash-of-cipher.lovable.app/`
-        : `My tapasya broke after ${totalScore.toLocaleString()} points at Level ${level} in Dhyanam!\nCan you go further? Play → https://clash-of-cipher.lovable.app/`;
+        ? `I reached a spiritual milestone with ${fullValue} points at Level ${level} in Dhyanam!\nCan you match my spiritual journey? Play → https://clash-of-cipher.lovable.app/`
+        : `My tapasya broke after ${fullValue} points at Level ${level} in Dhyanam!\nCan you go further? Play → https://clash-of-cipher.lovable.app/`;
 
       copyToClipboard(text);
     }
@@ -101,7 +104,7 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
   // Helper function to determine font size based on number length
   const getScoreFontSize = (score: number) => {
     const scoreString = score.toString();
-    if (scoreString.length > 6) return 'text-4xl md:text-5xl';
+    if (scoreString.length > 6) return 'text-3xl md:text-4xl';
     if (scoreString.length > 4) return 'text-4xl md:text-5xl';
     return 'text-5xl md:text-6xl';
   };
@@ -239,8 +242,9 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
                       textShadow: '0 2px 4px rgba(0, 0, 0, 0.7)',
                       maxWidth: '100%'
                     }}
+                    title={totalScore.toLocaleString()}
                   >
-                    {totalScore.toLocaleString()}
+                    {formatLargeNumber(totalScore).displayValue}
                   </p>
                 </div>
 
@@ -336,8 +340,8 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
           <div className="py-4 text-center">
             <p className="text-md mb-4 bg-amber-900/50 p-3 rounded-md border border-amber-800/50 text-amber-200">
               {isSignificantMilestone
-                ? `I reached a spiritual milestone with ${totalScore.toLocaleString()} points at Level ${level} in Dhyanam!`
-                : `My tapasya broke after ${totalScore.toLocaleString()} points at Level ${level} in Dhyanam!`
+                ? `I reached a spiritual milestone with ${formatLargeNumber(totalScore).displayValue} points at Level ${level} in Dhyanam!`
+                : `My tapasya broke after ${formatLargeNumber(totalScore).displayValue} points at Level ${level} in Dhyanam!`
               }
               <br />
               {isSignificantMilestone

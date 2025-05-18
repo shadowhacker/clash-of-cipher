@@ -17,6 +17,7 @@ import { Separator } from '@/components/ui/separator';
 import GameButton from './GameButton';
 import { copyToClipboard } from '@/utils/clipboardUtils';
 import useBackButton from '../hooks/useBackButton';
+import { formatLargeNumber } from '@/utils/formatUtils';
 
 interface LeaderboardProps {
   personalBest: number;
@@ -70,7 +71,8 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ className = '', personalBest 
 
   // Handle sharing a specific player's score
   const sharePlayerScore = (name: string, rank: number, best: number) => {
-    const shareText = `${name} is #${rank} on Dhyanam with a score of ${best.toLocaleString()}! Try: https://clash-of-cipher.lovable.app/`;
+    const { fullValue } = formatLargeNumber(best, { useAbbreviations: false });
+    const shareText = `${name} is #${rank} on Dhyanam with a score of ${fullValue}! Try: https://clash-of-cipher.lovable.app/`;
 
     copyToClipboard(shareText)
       .then(success => {
@@ -206,8 +208,9 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ className = '', personalBest 
                             )}
                           </div>
 
-                          <div className={`${isCurrentPlayer ? 'font-medium text-amber-900' : ''} text-right`}>
-                            {entry.best.toLocaleString()}
+                          <div className={`${isCurrentPlayer ? 'font-medium text-amber-900' : ''} text-right`}
+                               title={entry.best.toLocaleString()}>
+                            {formatLargeNumber(entry.best).displayValue}
                           </div>
 
                           <div>
