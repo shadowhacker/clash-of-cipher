@@ -42,7 +42,7 @@ jobs:
       - run:
           name: Add debug keystore
           command: |
-            echo "$DEBUG_KEY_B64" | base64 -d > app/debug-keys/debug.jks
+            echo "$DEBUG_KEY_B64" | base64 -d > android/app/debug-keys/debug.jks
       - run:
           name: Build Android APK
           command: |
