@@ -14,7 +14,6 @@ interface GameGridProps {
   code: string[];
   userInput: string[];
   isPlayerWinner: boolean | null;
-  currentSymbolPack: string[];
   gridSymbols: string[];
   showWrongTaps?: boolean;
 }

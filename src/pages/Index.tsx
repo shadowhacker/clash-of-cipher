@@ -139,7 +139,7 @@ const Index = () => {
     }
     // If first time, do NOT show guide automatically, just start the game
     handleStartGame();
-  }, [configReady, handleStartGame]);
+  }, [handleStartGame]);
 
   const handleIntroShowGuide = useCallback(() => {
     setShowGuide(true);
@@ -240,7 +240,6 @@ const Index = () => {
             code={code}
             userInput={userInput}
             isPlayerWinner={isPlayerWinner}
-            currentSymbolPack={currentSymbolPack}
             gridSymbols={gridSymbols}
             showWrongTaps={showWrongTaps}
           />
