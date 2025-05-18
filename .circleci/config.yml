@@ -1,0 +1,67 @@
+version: 2.1
+
+executors:
+  android-executor:
+    docker:
+      - image: cimg/android:2024.04-browsers
+    working_directory: ~/app
+
+jobs:
+  android-build:
+    executor: android-executor
+    steps:
+      - checkout
+      - run:
+          name: Install Node Dependencies & Capacitor Platforms
+          command: |
+            rm package-lock.json
+            npm i
+            npm install @capacitor/core
+            npm install @capacitor/cli @capacitor/android @capacitor/ios --save-dev
+      - run:
+          name: Initialize Capacitor
+          command: |
+            npx cap init "Dhyanam" app.dhyanam --web-dir=dist
+      - run:
+          name: Overwrite capacitor.config.ts from env
+          command: |
+            echo "$CAPACITOR_CONFIG_B64" | base64 -d > capacitor.config.ts
+      - run:
+          name: Add Capacitor Platforms (android/ios)
+          command: |
+            npx cap add android
+            npx cap add ios
+      - run:
+          name: Build Web App
+          command: npm run build
+      - run:
+          name: Capacitor Sync & Copy
+          command: |
+            npx cap sync
+            npx cap copy
+      - run:
+          name: Add debug keystore
+          command: |
+            mkdir -p android/app/debug-keys
+            echo "$DEBUG_KEY_B64" | base64 -d > android/app/debug-keys/debug.jks
+      - run:
+          name: Ensure build-tools and apksigner are available
+          command: |
+            sdkmanager "build-tools;34.0.0"
+      - run:
+          name: Add apksigner to PATH for subsequent steps
+          command: |
+            echo 'export PATH=$PATH:$ANDROID_HOME/build-tools/34.0.0' >> $BASH_ENV
+            source $BASH_ENV
+      - run:
+          name: Build Android APK
+          command: |
+            npx cap build android
+      - store_artifacts:
+          path: android/app/build/outputs/apk/release/app-release-signed.apk
+          destination: app-release-signed.apk
+workflows:
+  version: 2
+  capacitor-build:
+    jobs:
+      - android-build
