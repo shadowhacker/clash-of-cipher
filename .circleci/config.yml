@@ -1,111 +1,65 @@
 version: 2.1
 
 executors:
-  android-executor:
+  node-executor:
     docker:
       - image: cimg/node:18.20
     working_directory: ~/app
-
-  ios-executor:
-    macos:
-      xcode: "15.0.0"  # Requires CircleCI macOS plan
+  android-executor:
+    docker:
+      - image: cimg/android:2024.04-browsers
     working_directory: ~/app
 
 jobs:
   setup:
-    executor: android-executor
+    executor: node-executor
     steps:
       - checkout
-
       - run:
           name: Install Node Dependencies & Capacitor Platforms
           command: |
             npm ci
-            npm install @capacitor/core @capacitor/cli @capacitor/android @capacitor/ios --save-dev
-
+            npm install @capacitor/core
+            npm install @capacitor/cli @capacitor/android @capacitor/ios --save-dev
+      - run:
+          name: Initialize Capacitor
+          command: |
+            npx cap init ClashOfCipher app.clash-of-cipher --web-dir=dist
       - run:
           name: Add Capacitor Platforms (android/ios)
           command: |
             npx cap add android
             npx cap add ios
-
       - run:
           name: Build Web App
           command: npm run build
-
       - run:
           name: Capacitor Sync & Copy
           command: |
             npx cap sync
             npx cap copy
-
       - persist_to_workspace:
           root: .
           paths:
             - .
-
   android-build:
     executor: android-executor
     steps:
       - attach_workspace:
           at: .
-
       - run:
-          name: Android Release Build
+          name: Build Android APK (Gradle)
           command: |
             cd android
             ./gradlew assembleRelease
-
       - store_artifacts:
           path: android/app/build/outputs/apk/release/app-release.apk
           destination: android/app-release.apk
-
-  ios-build:
-    executor: ios-executor
-    steps:
-      - attach_workspace:
-          at: .
-
-      - run:
-          name: Install Node + CocoaPods + Capacitor CLI
-          command: |
-            brew install node
-            npm ci
-            npm install @capacitor/core @capacitor/cli @capacitor/android @capacitor/ios --save-dev
-            npx cap sync
-            cd ios && pod install
-
-      - run:
-          name: Build iOS Archive
-          command: |
-            cd ios
-            xcodebuild -workspace App.xcworkspace \
-                       -scheme App \
-                       -configuration Release \
-                       -sdk iphoneos \
-                       -archivePath build/App.xcarchive archive
-
-      - run:
-          name: Export IPA
-          command: |
-            cd ios
-            xcodebuild -exportArchive \
-                       -archivePath build/App.xcarchive \
-                       -exportOptionsPlist ExportOptions.plist \
-                       -exportPath build/ios
-
-      - store_artifacts:
-          path: ios/build/ios
-          destination: ios-output
-
 workflows:
   version: 2
   capacitor-build:
     jobs:
       - setup
       - android-build:
-          requires:
-            - setup
-      - ios-build:
           requires:
             - setup
