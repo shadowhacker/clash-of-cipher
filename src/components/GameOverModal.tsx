@@ -118,7 +118,20 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
   return (
     <>
       <Dialog open={open} onOpenChange={handleCloseModal}>
-        <DialogContent className="p-0 border-0 max-w-xl overflow-hidden bg-transparent">
+        <DialogContent
+          className="p-0 border-0 max-w-xl overflow-hidden bg-transparent h-[85vh] sm:h-auto sm:min-h-[600px] flex items-stretch"
+          style={{
+            minHeight: '100dvh', // Use dynamic viewport height for mobile
+            height: '100dvh',
+            maxHeight: '100dvh',
+            padding: 0,
+            border: 0,
+            background: 'transparent',
+            overflow: 'hidden',
+            display: 'flex',
+            alignItems: 'stretch',
+          }}
+        >
           <DialogTitle className="sr-only">
             {isSignificantMilestone ? 'Milestone Reached' : 'Game Over'}
           </DialogTitle>
@@ -133,8 +146,10 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
             className="w-full h-full flex flex-col items-center justify-between"
             style={{
               position: 'relative',
-              minHeight: '85vh',
-              padding: '0 0 2rem 0'
+              minHeight: '100dvh', // Fill viewport height on mobile
+              height: '100%',
+              padding: '0 0 2rem 0',
+              flex: 1,
             }}
           >
             {/* Background image with overlay */}
