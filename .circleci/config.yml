@@ -16,21 +16,10 @@ jobs:
           command: |
             rm package-lock.json
             npm i
-            npm install @capacitor/core
-            npm install @capacitor/cli @capacitor/android @capacitor/ios --save-dev
       - run:
-          name: Initialize Capacitor
-          command: |
-            npx cap init "Dhyanam" app.dhyanam --web-dir=dist
-      - run:
-          name: Overwrite capacitor.config.ts from env
-          command: |
-            echo "$CAPACITOR_CONFIG_B64" | base64 -d > capacitor.config.ts
-      - run:
-          name: Add Capacitor Platforms (android/ios)
+          name: Add Capacitor Platforms (android)
           command: |
             npx cap add android
-            npx cap add ios
       - run:
           name: Build Web App
           command: npm run build
