@@ -12,9 +12,36 @@ import AudioInitializer from "./components/AudioInitializer";
 import { preloadAllGameSymbols, loadingProgress } from "./hooks/useImageCache";
 import logger from './utils/logger';
 
+
 const queryClient = new QueryClient();
 
 const App = () => {
+  useEffect(() => {
+    // Only attach handler if running on a Capacitor platform
+    const cap = (window as typeof window & { Capacitor?: { isNativePlatform: boolean } }).Capacitor;
+    let removeListener: (() => void) | undefined;
+    (async () => {
+      if (cap && cap.isNativePlatform) {
+        // Dynamically import Capacitor App and soundManager only on native
+        const [{ App: CapacitorApp }, { stopBackgroundMusic }] = await Promise.all([
+          import('@capacitor/app'),
+          import('./utils/soundManager')
+        ]);
+        const handler = await CapacitorApp.addListener('backButton', (event: any) => {
+          if (event.canGoBack) {
+            window.history.back();
+          } else {
+            stopBackgroundMusic();
+            CapacitorApp.exitApp();
+          }
+        });
+        removeListener = handler.remove;
+      }
+    })();
+    return () => {
+      if (removeListener) removeListener();
+    };
+  }, []);
   const [appReady, setAppReady] = useState(false);
   const [symbolsPreloaded, setSymbolsPreloaded] = useState(false);
   const [loadingComplete, setLoadingComplete] = useState(false);
@@ -60,7 +87,7 @@ const App = () => {
           minHeight: '100vh'
         }}>
           {/* Audio initializer to handle browser autoplay policies */}
-          <AudioInitializer />
+          <AudioInitializer onSymbolClick={() => {}}>{null}</AudioInitializer>
           
           {/* Show loading screen on first load */}
           {!appReady && (
