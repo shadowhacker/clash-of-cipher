@@ -19,15 +19,19 @@ const App = () => {
   useEffect(() => {
     // Only attach handler if running on a Capacitor platform
     const cap = (window as typeof window & { Capacitor?: { isNativePlatform: boolean } }).Capacitor;
-    let removeListener: (() => void) | undefined;
+    let removeBackButtonListener: (() => void) | undefined;
+    let removeAppStateListener: (() => void) | undefined;
+    let wasMusicPlayingOnBackground = false;
     (async () => {
       if (cap && cap.isNativePlatform) {
         // Dynamically import Capacitor App and soundManager only on native
-        const [{ App: CapacitorApp }, { stopBackgroundMusic }] = await Promise.all([
+        const [{ App: CapacitorApp }, soundManager] = await Promise.all([
           import('@capacitor/app'),
           import('./utils/soundManager')
         ]);
-        const handler = await CapacitorApp.addListener('backButton', (event: any) => {
+        const { stopBackgroundMusic, isBackgroundMusicPlaying, playBackgroundMusic } = soundManager;
+        // Back button handler
+        const backHandler = await CapacitorApp.addListener('backButton', (event: any) => {
           if (event.canGoBack) {
             window.history.back();
           } else {
@@ -35,11 +39,27 @@ const App = () => {
             CapacitorApp.exitApp();
           }
         });
-        removeListener = handler.remove;
+        removeBackButtonListener = backHandler.remove;
+        // App state change handler
+        const appStateHandler = await CapacitorApp.addListener('appStateChange', async (state: { isActive: boolean }) => {
+          if (!state.isActive) {
+            // App moved to background
+            wasMusicPlayingOnBackground = isBackgroundMusicPlaying();
+            stopBackgroundMusic();
+          } else {
+            // App moved to foreground
+            if (wasMusicPlayingOnBackground) {
+              // You may want to store the last background music name if you support multiple tracks
+              await playBackgroundMusic('intro');
+            }
+          }
+        });
+        removeAppStateListener = appStateHandler.remove;
       }
     })();
     return () => {
-      if (removeListener) removeListener();
+      if (removeBackButtonListener) removeBackButtonListener();
+      if (removeAppStateListener) removeAppStateListener();
     };
   }, []);
   const [appReady, setAppReady] = useState(false);
