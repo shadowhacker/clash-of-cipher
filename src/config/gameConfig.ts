@@ -5,6 +5,14 @@
 import defaultConfig from './gameConfig.json';
 import { fetchGameConfig } from '../utils/supabaseConfig';
 
+// Define the interface for scoring configuration
+export interface ScoringConfig {
+  BASE_MULTIPLIER: number;
+  SPEED_BONUS_FACTOR: number;
+  JACKPOT_BONUS: number;
+  BASE_POINTS_PER_ROUND: number;
+}
+
 // Define the type for round logic brackets
 export interface RoundLogicBracket {
   level_start: number;

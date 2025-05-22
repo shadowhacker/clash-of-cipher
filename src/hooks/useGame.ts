@@ -59,6 +59,9 @@ export const useGame = () => {
   // New scoring system state
   const [totalScore, setTotalScore] = useState(0);
   const [currentStreak, setCurrentStreak] = useState(0);
+  const [streakPoints, setStreakPoints] = useState(0);
+  const [successfulRounds, setSuccessfulRounds] = useState(0);
+  const [totalTimeBonus, setTotalTimeBonus] = useState(0);
   const [gems, setGems] = useState(0);
   const [showWrongTaps, setShowWrongTaps] = useState(false);
 
@@ -135,6 +138,9 @@ export const useGame = () => {
       // Reset score system
       setTotalScore(0);
       setCurrentStreak(0);
+      setStreakPoints(0);
+      setSuccessfulRounds(0);
+      setTotalTimeBonus(0);
       setGems(0);
       setShowWrongTaps(false);
 
@@ -161,39 +167,39 @@ export const useGame = () => {
     ];
   }, []);
 
-  // Calculate round score based on new formula
+  // Calculate round score based on the new Dhyanam scoring logic
   const calculateRoundScore = useCallback(
     (
       round: number,
       codeLen: number,
       secondsRemaining: number,
-      streak: number
+      streak: number,
+      currentStreakPoints: number
     ) => {
       // Access scoring config from the dynamic getter
       const scoring = getScoring();
       const milestones = getMilestoneIntervals();
-
-      // Base points: (roundNumber ** 2) * codeLength
-      const basePts = Math.pow(round, 2) * codeLen;
-
-      // Speed multiplier: 1 + (secondsLeft / 10) - ranges from 1.0 to 2.0
-      const speedMult = 1 + secondsRemaining * scoring.SPEED_BONUS_FACTOR;
-
-      // Flawless multiplier: BASE_MULTIPLIER ** currentStreak
-      const flawlessMult = Math.pow(scoring.BASE_MULTIPLIER, streak);
-
-      // Calculate round score
-      let roundScore = Math.floor(basePts * speedMult * flawlessMult);
-
+      
+      // Base points per round: 11 points
+      const basePts = scoring.BASE_POINTS_PER_ROUND;
+      
+      // Calculate new streak points: previous SP + current streak count
+      const newStreakPoints = currentStreakPoints + streak;
+      
+      // Time bonus: add remaining seconds to score
+      const timeBonus = secondsRemaining;
+      
+      // Calculate round score (base points + time bonus)
+      const roundScore = basePts + timeBonus;
+      
       // Jackpot round: bonus points on milestone rounds
-      if (round % milestones.JACKPOT_BONUS === 0) {
-        roundScore += scoring.JACKPOT_BONUS;
-      }
-
+      const jackpotBonus = round % milestones.JACKPOT_BONUS === 0 ? scoring.JACKPOT_BONUS : 0;
+      
       return {
         roundScore,
-        speedMult,
-        flawlessMult,
+        streakPoints: newStreakPoints,
+        timeBonus,
+        jackpotBonus
       };
     },
     []
@@ -357,6 +363,7 @@ export const useGame = () => {
 
     // Reset streak when losing a life
     setCurrentStreak(0);
+    setStreakPoints(0);
     setShowWrongTaps(true);
 
     setLives((prevLives) => {
@@ -480,24 +487,38 @@ export const useGame = () => {
           // Increment streak
           const newStreak = currentStreak + 1;
           setCurrentStreak(newStreak);
+          
+          // Increment successful rounds
+          const newSuccessfulRounds = successfulRounds + 1;
+          setSuccessfulRounds(newSuccessfulRounds);
 
           // Calculate score for this round
           const secondsRemaining = timeLeft;
-          const { roundScore, speedMult } = calculateRoundScore(
+          const { 
+            roundScore, 
+            streakPoints: newStreakPoints, 
+            timeBonus,
+            jackpotBonus 
+          } = calculateRoundScore(
             level,
             code.length,
             secondsRemaining,
-            newStreak
+            newStreak,
+            streakPoints
           );
+          
+          // Update streak points
+          setStreakPoints(newStreakPoints);
+          
+          // Update time bonus
+          setTotalTimeBonus(prev => prev + timeBonus);
 
           // Update total score
           setTotalScore((prev) => prev + roundScore);
 
           // Show toast with score info
           toast(
-            `+${roundScore} pts • x${speedMult.toFixed(
-              1
-            )} Speed • Streak ${newStreak}`,
+            `+${roundScore} pts • Time Bonus: +${timeBonus} • Streak: ${newStreak}`,
             { duration: 1000 }
           );
 
@@ -526,6 +547,8 @@ export const useGame = () => {
       currentStreak,
       calculateRoundScore,
       startNextLevel,
+      streakPoints,
+      successfulRounds
     ]
   );
 
@@ -555,6 +578,9 @@ export const useGame = () => {
     setTimeLeft(getMaxRoundTime());
     setTotalScore(0);
     setCurrentStreak(0);
+    setStreakPoints(0);
+    setSuccessfulRounds(0);
+    setTotalTimeBonus(0);
     setShowWrongTaps(false);
   }, [clearGameTimer]);
 
@@ -592,6 +618,9 @@ export const useGame = () => {
     nextMilestone: getNextMilestone(level),
     totalScore,
     currentStreak,
+    streakPoints,
+    successfulRounds,
+    totalTimeBonus,
     gems,
     showWrongTaps,
     Overlay,
