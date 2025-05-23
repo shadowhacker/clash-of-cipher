@@ -73,11 +73,11 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
   );
 
   // Find user's entry in the leaderboard
-  const userEntry = leaderboard.find((entry) => entry.id === deviceId);
+  const userEntry = leaderboard.find((entry) => entry.user_id === deviceId);
 
   // Check if user is on the current page
   const userEntryIndex = leaderboard.findIndex(
-    (entry) => entry.id === deviceId
+    (entry) => entry.user_id === deviceId
   );
   const userEntryPage = Math.floor(userEntryIndex / ENTRIES_PER_PAGE);
   const isUserOnCurrentPage = userEntryPage === currentPage;
@@ -200,12 +200,12 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
                     currentEntries.map((entry, index) => {
                       const globalRank =
                         currentPage * ENTRIES_PER_PAGE + index + 1;
-                      const isCurrentPlayer = entry.id === deviceId;
+                      const isCurrentPlayer = entry.user_id === deviceId;
                       const isTopThree = globalRank <= 3;
 
                       return (
                         <div
-                          key={entry.id}
+                          key={entry.user_id}
                           className={`grid grid-cols-[auto_1fr_auto_auto] gap-2 items-center p-3 ${
                             isCurrentPlayer ? "bg-amber-100/70" : ""
                           } hover:bg-amber-50 transition-colors`}

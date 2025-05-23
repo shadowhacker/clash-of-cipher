@@ -9,40 +9,86 @@ const isProduction = process.env.NODE_ENV === 'production';
 // Define more specific type for console parameters
 type LogParams = unknown[];
 
+// Helper to get caller location from stack trace
+function getCallerLocation(): string | undefined {
+    const err = new Error();
+    if (err.stack) {
+        const stackLines = err.stack.split('\n');
+        // Find the first stack frame outside of logger.ts
+        const callerLine = stackLines.find(
+            (line) => !line.includes('logger.ts') && line.includes('at ')
+        );
+        if (callerLine) {
+            return callerLine.trim().replace(/^at /, '');
+        }
+    }
+    return undefined;
+}
+
 /**
  * Custom logger that disables debug logs in production
  */
 const logger = {
     log: (...args: LogParams): void => {
         if (!isProduction) {
-            console.log(...args);
+            const location = getCallerLocation();
+            if (location) {
+                console.log(`[Log at ${location}]`, ...args);
+            } else {
+                console.log(...args);
+            }
         }
     },
 
     warn: (...args: LogParams): void => {
-        console.warn(...args); // Always show warnings
+        const location = getCallerLocation();
+        if (location) {
+            console.warn(`[Warn at ${location}]`, ...args);
+        } else {
+            console.warn(...args);
+        }
     },
 
     error: (...args: LogParams): void => {
-        console.error(...args); // Always show errors
+        const location = getCallerLocation();
+        if (location) {
+            console.error(`[Error at ${location}]`, ...args);
+        } else {
+            console.error(...args);
+        }
     },
 
     info: (...args: LogParams): void => {
         if (!isProduction) {
-            console.info(...args);
+            const location = getCallerLocation();
+            if (location) {
+                console.info(`[Info at ${location}]`, ...args);
+            } else {
+                console.info(...args);
+            }
         }
     },
 
     debug: (...args: LogParams): void => {
         if (!isProduction) {
-            console.debug(...args);
+            const location = getCallerLocation();
+            if (location) {
+                console.debug(`[Debug at ${location}]`, ...args);
+            } else {
+                console.debug(...args);
+            }
         }
     },
 
     // Special case for verbose logs - only shown in development
     verbose: (...args: LogParams): void => {
         if (process.env.NODE_ENV === 'development') {
-            console.log('[VERBOSE]', ...args);
+            const location = getCallerLocation();
+            if (location) {
+                console.log(`[VERBOSE at ${location}]`, ...args);
+            } else {
+                console.log('[VERBOSE]', ...args);
+            }
         }
     }
 };

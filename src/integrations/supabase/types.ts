@@ -71,17 +71,17 @@ export type Database = {
       }
       leaderboard_v2: {
         Row: {
-          id: string;
+          user_id: string;
           nickname: string;
           best_score: number;
         };
         Insert: {
-          id?: string;
+          user_id?: string;
           nickname: string;
           best_score: number;
         };
         Update: {
-          id?: string;
+          user_id?: string;
           nickname?: string;
           best_score?: number;
         };
