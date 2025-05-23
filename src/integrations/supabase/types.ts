@@ -69,32 +69,23 @@ export type Database = {
         }
         Relationships: []
       }
-      leaderboard: {
+      leaderboard_v2: {
         Row: {
-          best: number
-          created_at: string | null
-          device_id: string
-          id: string
-          name: string
-          updated_at: string | null
-        }
+          id: string;
+          nickname: string;
+          best_score: number;
+        };
         Insert: {
-          best?: number
-          created_at?: string | null
-          device_id: string
-          id?: string
-          name: string
-          updated_at?: string | null
-        }
+          id?: string;
+          nickname: string;
+          best_score: number;
+        };
         Update: {
-          best?: number
-          created_at?: string | null
-          device_id?: string
-          id?: string
-          name?: string
-          updated_at?: string | null
-        }
-        Relationships: []
+          id?: string;
+          nickname?: string;
+          best_score?: number;
+        };
+        Relationships: [];
       },
       symbols: {
         Row: {

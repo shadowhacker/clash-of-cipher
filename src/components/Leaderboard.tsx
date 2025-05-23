@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -6,18 +6,26 @@ import {
   DialogTitle,
   DialogFooter,
   DialogDescription,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Share2, Trophy, User, ChevronLeft, ChevronRight, Medal, Crown } from 'lucide-react';
-import { toast } from '@/components/ui/sonner';
-import { useLeaderboard } from '@/hooks/useLeaderboard';
-import { getDeviceId } from '@/utils/deviceStorage';
-import PlayerNameDialog from './PlayerNameDialog';
-import { Separator } from '@/components/ui/separator';
-import GameButton from './GameButton';
-import { copyToClipboard } from '@/utils/clipboardUtils';
-import useBackButton from '../hooks/useBackButton';
-import { formatLargeNumber } from '@/utils/formatUtils';
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import {
+  Share2,
+  Trophy,
+  User,
+  ChevronLeft,
+  ChevronRight,
+  Medal,
+  Crown,
+} from "lucide-react";
+import { toast } from "@/components/ui/sonner";
+import { useLeaderboard } from "@/hooks/useLeaderboard";
+import { getUserId } from "@/utils/deviceStorage";
+import PlayerNameDialog from "./PlayerNameDialog";
+import { Separator } from "@/components/ui/separator";
+import GameButton from "./GameButton";
+import { copyToClipboard } from "@/utils/clipboardUtils";
+import useBackButton from "../hooks/useBackButton";
+import { formatLargeNumber } from "@/utils/formatUtils";
 
 interface LeaderboardProps {
   personalBest: number;
@@ -26,10 +34,13 @@ interface LeaderboardProps {
 
 const ENTRIES_PER_PAGE = 10;
 
-const Leaderboard: React.FC<LeaderboardProps> = ({ className = '', personalBest }) => {
+const Leaderboard: React.FC<LeaderboardProps> = ({
+  className = "",
+  personalBest,
+}) => {
   const [open, setOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
-  const deviceId = getDeviceId();
+  const deviceId = getUserId();
 
   // Use the back button hook to handle mobile back button presses
   useBackButton(open, () => setOpen(false));
@@ -42,7 +53,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ className = '', personalBest 
     setShowNamePrompt,
     submitPlayerName,
     playerRank,
-    totalPlayers
+    totalPlayers,
   } = useLeaderboard(personalBest);
 
   // Reset to first page when opening the leaderboard
@@ -62,10 +73,12 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ className = '', personalBest 
   );
 
   // Find user's entry in the leaderboard
-  const userEntry = leaderboard.find(entry => entry.device_id === deviceId);
+  const userEntry = leaderboard.find((entry) => entry.id === deviceId);
 
   // Check if user is on the current page
-  const userEntryIndex = leaderboard.findIndex(entry => entry.device_id === deviceId);
+  const userEntryIndex = leaderboard.findIndex(
+    (entry) => entry.id === deviceId
+  );
   const userEntryPage = Math.floor(userEntryIndex / ENTRIES_PER_PAGE);
   const isUserOnCurrentPage = userEntryPage === currentPage;
 
@@ -74,18 +87,17 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ className = '', personalBest 
     const { fullValue } = formatLargeNumber(best, { useAbbreviations: false });
     const shareText = `${name} is #${rank} on Dhyanam with a score of ${fullValue}! Try: https://clash-of-cipher.lovable.app/`;
 
-    copyToClipboard(shareText)
-      .then(success => {
-        if (success) {
-          toast("Copied to clipboard!", {
-            description: "Share this achievement!",
-          });
-        } else {
-          toast("Failed to copy", {
-            description: "Please try again or copy manually",
-          });
-        }
-      });
+    copyToClipboard(shareText).then((success) => {
+      if (success) {
+        toast("Copied to clipboard!", {
+          description: "Share this achievement!",
+        });
+      } else {
+        toast("Failed to copy", {
+          description: "Please try again or copy manually",
+        });
+      }
+    });
   };
 
   // Navigate to the page containing the user's entry
@@ -160,7 +172,9 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ className = '', personalBest 
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setCurrentPage(Math.min(totalPages - 1, currentPage + 1))}
+                    onClick={() =>
+                      setCurrentPage(Math.min(totalPages - 1, currentPage + 1))
+                    }
                     disabled={currentPage >= totalPages - 1}
                   >
                     <ChevronRight className="h-4 w-4" />
@@ -174,7 +188,9 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ className = '', personalBest 
                 <div className="grid grid-cols-[auto_1fr_auto_auto] gap-2 items-center bg-amber-100 p-3 border-b border-amber-200">
                   <div className="font-bold text-amber-900 text-sm">#</div>
                   <div className="font-bold text-amber-900 text-sm">Player</div>
-                  <div className="font-bold text-amber-900 text-sm text-right">Score</div>
+                  <div className="font-bold text-amber-900 text-sm text-right">
+                    Score
+                  </div>
                   <div></div>
                 </div>
 
@@ -182,25 +198,37 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ className = '', personalBest 
                 <div className="divide-y divide-amber-100">
                   {currentEntries.length > 0 ? (
                     currentEntries.map((entry, index) => {
-                      const globalRank = currentPage * ENTRIES_PER_PAGE + index + 1;
-                      const isCurrentPlayer = entry.device_id === deviceId;
+                      const globalRank =
+                        currentPage * ENTRIES_PER_PAGE + index + 1;
+                      const isCurrentPlayer = entry.id === deviceId;
                       const isTopThree = globalRank <= 3;
 
                       return (
                         <div
                           key={entry.id}
-                          className={`grid grid-cols-[auto_1fr_auto_auto] gap-2 items-center p-3 ${isCurrentPlayer ? 'bg-amber-100/70' : ''
-                            } hover:bg-amber-50 transition-colors`}
+                          className={`grid grid-cols-[auto_1fr_auto_auto] gap-2 items-center p-3 ${
+                            isCurrentPlayer ? "bg-amber-100/70" : ""
+                          } hover:bg-amber-50 transition-colors`}
                         >
                           <div className="font-medium flex items-center">
-                            <span className={`mr-1 ${isTopThree ? 'text-amber-700' : ''}`}>
+                            <span
+                              className={`mr-1 ${
+                                isTopThree ? "text-amber-700" : ""
+                              }`}
+                            >
                               {globalRank}
                             </span>
                             {isTopThree && getRankMedal(globalRank)}
                           </div>
 
-                          <div className={`${isCurrentPlayer ? 'font-medium text-amber-900' : ''} flex items-center`}>
-                            {entry.name}
+                          <div
+                            className={`${
+                              isCurrentPlayer
+                                ? "font-medium text-amber-900"
+                                : ""
+                            } flex items-center`}
+                          >
+                            {entry.nickname}
                             {isCurrentPlayer && (
                               <span className="ml-2 text-xs bg-amber-200 text-amber-800 px-1.5 py-0.5 rounded-full">
                                 You
@@ -208,9 +236,15 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ className = '', personalBest 
                             )}
                           </div>
 
-                          <div className={`${isCurrentPlayer ? 'font-medium text-amber-900' : ''} text-right`}
-                               title={entry.best.toLocaleString()}>
-                            {formatLargeNumber(entry.best).displayValue}
+                          <div
+                            className={`${
+                              isCurrentPlayer
+                                ? "font-medium text-amber-900"
+                                : ""
+                            } text-right`}
+                            title={entry.best_score.toLocaleString()}
+                          >
+                            {formatLargeNumber(entry.best_score).displayValue}
                           </div>
 
                           <div>
@@ -218,7 +252,13 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ className = '', personalBest 
                               variant="ghost"
                               size="sm"
                               className="h-7 w-7 p-0 text-amber-700 hover:text-amber-900 hover:bg-amber-200/50"
-                              onClick={() => sharePlayerScore(entry.name, globalRank, entry.best)}
+                              onClick={() =>
+                                sharePlayerScore(
+                                  entry.nickname,
+                                  globalRank,
+                                  entry.best_score
+                                )
+                              }
                               title="Share score"
                             >
                               <Share2 className="h-3.5 w-3.5" />

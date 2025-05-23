@@ -1,18 +1,25 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { getDeviceId, getPlayerName, savePlayerName } from '@/utils/deviceStorage';
+import { getUserId, getPlayerName, savePlayerName } from '@/utils/deviceStorage';
 import logger from '../utils/logger';
 
 interface LeaderboardEntry {
   id: string;
-  name: string;
-  best: number;
-  device_id: string;
-  created_at?: string;
-  updated_at?: string;
+  nickname: string;
+  best_score: number;
 }
 
 export const useLeaderboard = (personalBest: number) => {
+  // Helper: get leaderboard UUID from localStorage
+  const getUserId = (): string | null => {
+    return localStorage.getItem('cipher-clash-device-id');
+  };
+
+  // Helper: set leaderboard UUID in localStorage
+  const setUserId = (id: string) => {
+    localStorage.setItem('cipher-clash-device-id', id);
+  };
+
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [playerName, setPlayerName] = useState<string | null>(null);
@@ -45,14 +52,14 @@ export const useLeaderboard = (personalBest: number) => {
   // Fetch leaderboard data from Supabase
   const fetchLeaderboard = useCallback(async () => {
     setLoading(true);
-    const deviceId = getDeviceId();
+    const userId = getUserId();
 
     try {
       // Get top 100 scores instead of 10
       const { data: topScores, error } = await supabase
-        .from('leaderboard')
+        .from('leaderboard_v2')
         .select('*')
-        .order('best', { ascending: false })
+        .order('best_score', { ascending: false })
         .limit(100);
 
       if (error) {
@@ -64,29 +71,29 @@ export const useLeaderboard = (personalBest: number) => {
       setLeaderboard(topScores || []);
 
       // Check if player is in top 100
-      const playerInTopEntries = topScores?.some(entry => entry.device_id === deviceId);
+      const playerInTopEntries = topScores?.some(entry => entry.id === userId);
 
       if (!playerInTopEntries) {
         // Get player rank if not in top 100
         const { data: userEntry } = await supabase
-          .from('leaderboard')
+          .from('leaderboard_v2')
           .select('*')
-          .eq('device_id', deviceId)
+          .eq('id', userId)
           .limit(1);
 
         if (userEntry && userEntry.length > 0) {
           // Get player's rank
           const { count: playersAbove } = await supabase
-            .from('leaderboard')
+            .from('leaderboard_v2')
             .select('*', { count: 'exact', head: true })
-            .gt('best', userEntry[0].best);
+            .gt('best_score', userEntry[0].best_score);
 
           if (playersAbove !== null) {
             setPlayerRank(playersAbove + 1);
 
             // Get total player count
             const { count: total } = await supabase
-              .from('leaderboard')
+              .from('leaderboard_v2')
               .select('*', { count: 'exact', head: true });
 
             setTotalPlayers(total || 0);
@@ -94,14 +101,14 @@ export const useLeaderboard = (personalBest: number) => {
             // Add player entry to the leaderboard for display
             setLeaderboard(prev => {
               // Don't add if already in the list
-              if (prev.some(e => e.device_id === deviceId)) return prev;
+              if (prev.some(e => e.id === userId)) return prev;
               return [...prev, userEntry[0]];
             });
           }
         }
       } else {
         // Player is in top 100, find their rank
-        const playerRank = topScores.findIndex(entry => entry.device_id === deviceId) + 1;
+        const playerRank = topScores.findIndex(entry => entry.id === userId) + 1;
         setPlayerRank(playerRank);
       }
       setLoading(false);
@@ -113,92 +120,52 @@ export const useLeaderboard = (personalBest: number) => {
   }, []);
 
   // Update or create a leaderboard entry
-  const updateLeaderboardEntry = async (name: string, score: number) => {
-    const deviceId = getDeviceId();
+  const updateLeaderboardEntry = async (nickname: string, score: number) => {
     setUpdating(true);
     setError(null); // Clear any previous errors
 
     try {
-      logger.info(`Attempting to update leaderboard for ${name} with score ${score}`);
+      logger.info(`Attempting to update leaderboard for ${nickname} with score ${score}`);
       
-      // First, check if an entry already exists for this device
-      const { data: existingEntries, error: fetchError } = await supabase
-        .from('leaderboard')
-        .select('id, best')
-        .eq('device_id', deviceId)
-        .limit(1);
-
-      if (fetchError) {
-        logger.error('Error checking existing leaderboard entry:', fetchError);
-        setUpdating(false);
-        setError("Failed to check leaderboard records. Please try again later.");
-        return;
-      }
-
-      logger.debug('Existing entries found:', existingEntries);
+      // Check if we have a userId stored
+      let userId = getUserId();
       let updated = false;
 
-      if (existingEntries && existingEntries.length > 0) {
-        const currentEntry = existingEntries[0];
-        logger.debug(`Current best score: ${currentEntry.best}, New score: ${score}`);
-
-        // Only update if the new score is higher than the existing one
-        if (score > currentEntry.best) {
-          logger.info(`New high score detected! Updating from ${currentEntry.best} to ${score}`);
-          
-          const updateData = {
-            name,
-            best: score,
-            updated_at: new Date().toISOString()
-          };
-          
-          logger.debug('Update data:', updateData);
-          logger.debug('Updating entry ID:', currentEntry.id);
-          
-          const { data: updateResult, error: updateError } = await supabase
-            .from('leaderboard')
-            .update(updateData)
-            .eq('id', currentEntry.id)
-            .select();
-
-          if (updateError) {
-            logger.error('Error updating leaderboard entry:', updateError);
-            setUpdating(false);
-            setError("Failed to update your score. Please try again later.");
-            return;
-          }
-
-          logger.info('Update successful:', updateResult);
-          updated = true;
-        } else {
-          logger.info(`Score ${score} is not higher than current best ${currentEntry.best}. No update needed.`);
-        }
-      } else {
-        // No existing entry for this device, create a new one
-        logger.info(`No existing entry found for device ${deviceId}. Creating new entry.`);
-        
-        const newEntry = {
-          name,
-          best: score,
-          device_id: deviceId
-        };
-        
-        logger.debug('New entry data:', newEntry);
-        
-        const { data: insertResult, error: insertError } = await supabase
-          .from('leaderboard')
-          .insert([newEntry])
+      if (!userId) {
+        // No id, so create a new entry and store the returned id
+        const { data, error } = await supabase
+          .from('leaderboard_v2')
+          .insert([{ nickname, best_score: score }])
           .select();
-
-        if (insertError) {
-          logger.error('Error creating leaderboard entry:', insertError);
+        if (error) {
+          logger.error('Error creating leaderboard entry:', error);
           setUpdating(false);
           setError("Failed to create leaderboard entry. Please try again later.");
           return;
         }
-
-        logger.info('Insert successful:', insertResult);
-        updated = true;
+        if (data && data[0]?.id) {
+          userId = data[0].id;
+          setUserId(userId);
+          logger.info('Leaderboard entry created:', data[0]);
+          updated = true;
+        }
+      } else {
+        // We have an id, so update by nickname
+        const { data, error } = await supabase
+          .from('leaderboard_v2')
+          .update({ best_score: score })
+          .match({ nickname })
+          .select();
+        if (error) {
+          logger.error('Error updating leaderboard entry:', error);
+          setUpdating(false);
+          setError("Failed to update leaderboard entry. Please try again later.");
+          return;
+        }
+        if (data && data.length > 0) {
+          logger.info('Leaderboard entry updated:', data[0]);
+          updated = true;
+        }
       }
 
       // Only fetch leaderboard if we updated something
