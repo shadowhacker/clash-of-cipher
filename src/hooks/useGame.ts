@@ -31,7 +31,7 @@ import { useRemoteConfig } from "../hooks/useRemoteConfig";
 type GameState = "idle" | "showCode" | "input" | "result";
 
 // Hook for managing game state
-export const useGame = () => {
+export const useGame = (paused: boolean = false) => {
   // Remote config - loaded on the start screen before game begins
   const {
     roundLogic,
@@ -72,6 +72,9 @@ export const useGame = () => {
   const startInputPhaseRef = useRef<() => void>(() => {});
   const restartSameLevelRef = useRef<() => void>(() => {});
   const loseLifeRef = useRef<() => void>(() => {});
+
+  // Track if timer is running
+  const timerRunningRef = useRef(false);
 
   // Clear any existing timer
   const clearGameTimer = useCallback(() => {
@@ -242,19 +245,27 @@ export const useGame = () => {
     setTimeLeft(getMaxRoundTime());
     clearGameTimer();
 
-    timerRef.current = window.setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 0) {
-          clearGameTimer();
-          // Call loseLife via the reference to avoid circular dependency
-          if (typeof loseLifeRef.current === "function") {
-            loseLifeRef.current();
-          }
-          return 0;
+    // Only start the timer if not paused
+    if (!paused) {
+      timerRef.current = window.setInterval(() => {
+        // Only decrement if not paused
+        if (!paused) {
+          setTimeLeft((prev) => {
+            if (prev <= 0) {
+              clearGameTimer();
+              // Call loseLife via the reference to avoid circular dependency
+              if (typeof loseLifeRef.current === "function") {
+                loseLifeRef.current();
+              }
+              return 0;
+            }
+            return prev - 1;
+          });
         }
-        return prev - 1;
-      });
-    }, 1000);
+      }, 1000);
+      timerRunningRef.current = true;
+    }
+
   }, [clearGameTimer]);
 
   // Update startGame to use launchRun - but only if config is loaded
@@ -595,6 +606,37 @@ export const useGame = () => {
       clearGameTimer();
     };
   }, [clearGameTimer]);
+
+  // Pause/resume timer when paused changes
+  useEffect(() => {
+    if (paused) {
+      // Pause: clear timer if running
+      if (timerRef.current !== null) {
+        clearGameTimer();
+      }
+    } else {
+      // Resume: if gameState is 'input' and timer not running, resume timer
+      if (gameState === 'input' && timerRef.current === null && timeLeft > 0) {
+        timerRef.current = window.setInterval(() => {
+          if (!paused) {
+            setTimeLeft((prev) => {
+              if (prev <= 0) {
+                clearGameTimer();
+                if (typeof loseLifeRef.current === "function") {
+                  loseLifeRef.current();
+                }
+                return 0;
+              }
+              return prev - 1;
+            });
+          }
+        }, 1000);
+        timerRunningRef.current = true;
+      }
+    }
+    // Clean up on effect change
+    return () => {};
+  }, [paused, gameState, timeLeft, clearGameTimer]);
 
   return {
     gameState,

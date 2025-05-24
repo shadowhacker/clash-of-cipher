@@ -18,7 +18,11 @@ import logger from '../utils/logger';
 import HowToPlayGuide from '../components/HowToPlayGuide';
 import StartScreen from '../components/StartScreen';
 
-const Index = () => {
+interface IndexProps {
+  paused?: boolean;
+}
+
+const Index = ({ paused = false }: IndexProps) => {
   const [showGuide, setShowGuide] = useState(false);
   const [showHowToPlay, setShowHowToPlay] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
@@ -52,7 +56,7 @@ const Index = () => {
     showWrongTaps,
     Overlay,
     configReady
-  } = useGame();
+  } = useGame(paused);
 
   // Theme classes for buttons - update to prefer amber as the default
   const themeClasses = {
@@ -242,6 +246,7 @@ const Index = () => {
             isPlayerWinner={isPlayerWinner}
             gridSymbols={gridSymbols}
             showWrongTaps={showWrongTaps}
+            paused={paused}
           />
         </AudioInitializer>
 

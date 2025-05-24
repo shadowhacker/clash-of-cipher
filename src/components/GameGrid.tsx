@@ -16,7 +16,8 @@ interface GameGridProps {
   isPlayerWinner: boolean | null;
   gridSymbols: string[];
   showWrongTaps?: boolean;
-}
+  paused?: boolean; // NEW: pause all input and updates
+};
 
 const GameGrid: React.FC<GameGridProps> = ({
   onButtonClick,
@@ -26,6 +27,7 @@ const GameGrid: React.FC<GameGridProps> = ({
   isPlayerWinner,
   gridSymbols,
   showWrongTaps = false,
+  paused = false,
 }) => {
   const [highlightedIndex, setHighlightedIndex] = useState<number | null>(null);
   const [hasLoadedSymbols, setHasLoadedSymbols] = useState(false);
@@ -46,6 +48,7 @@ const GameGrid: React.FC<GameGridProps> = ({
 
   // Handle button click with visual feedback
   const handleButtonClick = (symbol: string, index: number): void => {
+    if (paused) return; // Disable input when paused
     setHighlightedIndex(index);
     setTimeout(() => {
       setHighlightedIndex(null);
