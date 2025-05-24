@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useState, useEffect, useCallback } from "react";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 import SymbolPreloader from "./components/SymbolPreloader";
 import InitialLoadingScreen from "./components/InitialLoadingScreen";
 import AudioInitializer from "./components/AudioInitializer";
@@ -141,6 +142,7 @@ const App = () => {
             >
               <Routes>
                 <Route path="/" element={<Index paused={paused} />} />
+                <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
