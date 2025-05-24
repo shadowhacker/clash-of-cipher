@@ -23,7 +23,7 @@ jobs:
             VERSION=$(cat version.txt)
             VERSION_NAME=$(echo $VERSION | cut -d'+' -f1)
             VERSION_CODE=$(echo $VERSION | cut -d'+' -f2)
-            
+
             # Increment version
             MAJOR=$(echo $VERSION_NAME | cut -d'.' -f1)
             MINOR=$(echo $VERSION_NAME | cut -d'.' -f2)
@@ -32,15 +32,15 @@ jobs:
             NEW_VERSION_NAME="$MAJOR.$MINOR.$NEW_PATCH"
             NEW_VERSION_CODE=$((VERSION_CODE + 1))
             NEW_VERSION="$NEW_VERSION_NAME+$NEW_VERSION_CODE"
-            
+
             echo "Updating version from $VERSION to $NEW_VERSION"
-            
+
             # Update version.txt
             echo $NEW_VERSION > version.txt
-            
+
             # Update package.json
             sed -i "s/\"version\": \"[^\"]*\"/\"version\": \"$NEW_VERSION_NAME\"/" package.json
-            
+
             # Export for later steps
             echo "export APP_VERSION=$NEW_VERSION" >> $BASH_ENV
             echo "export APP_VERSION_NAME=$NEW_VERSION_NAME" >> $BASH_ENV
@@ -66,7 +66,7 @@ jobs:
             npx cap sync
             npx cap copy
       - run:
-          name: Add icons and splashscreens
+          name: Generate icons and splashscreens
           command: |
             npx capacitor-assets generate
       - run:
@@ -103,23 +103,76 @@ jobs:
             
             # Create and push tag
             git tag v$APP_VERSION_NAME
-            
             # Push changes and tag
             git push origin HEAD
             git push origin v$APP_VERSION_NAME
+
+      - run:
+          name: Generate Release Notes
+          command: |
+            echo '#!/bin/bash
+
+            if [ -z "$GEMINI_API_KEY" ]; then
+              echo "Error: GEMINI_API_KEY not set"
+              exit 0
+            fi
+
+            prev_tag=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+            if [ -z "$prev_tag" ]; then
+              release_notes=$(git log --pretty=format:"- %s" HEAD~10..HEAD)
+            else
+              release_notes=$(git log --pretty=format:"- %s" "$prev_tag"..HEAD)
+            fi
+
+            request=$(echo "$release_notes" | tr "\n" " " | sed "s/[[:space:]]*$//")
+
+            response=$(curl -s \
+              -H "Content-Type: application/json" \
+              -d "{\"contents\":[{\"parts\":[{\"text\":\"Highlight top 10 features (max) only from the following release notes. Just numbered points, no descriptions:\n$request\"}]}]}" \
+              -X POST "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=$GEMINI_API_KEY")
+
+            echo "$response" | jq -r ".candidates[0].content.parts[0].text" > release_notes.txt
+            ' > generate-release-notes.sh
+
+            chmod +x generate-release-notes.sh
+            ./generate-release-notes.sh
+
       - run:
           name: Notify Discord (Success)
           when: on_success
           command: |
             ARTIFACT_URL="https://output.circle-artifacts.com/output/job/$CIRCLE_WORKFLOW_JOB_ID/artifacts/0/app-release-signed.apk"
-            PAYLOAD="{\"content\":\"✅ Android APK build v$APP_VERSION_NAME (build $APP_VERSION_CODE) succeeded! [Download Artifact]($ARTIFACT_URL)\"}"
+            NOTES=$(cat release_notes.txt | sed ':a;N;$!ba;s/\n/\\n/g')
+            PAYLOAD="{
+              \"embeds\": [{
+                \"title\": \"✅ Android APK Build Succeeded\",
+                \"color\": 65280,
+                \"fields\": [
+                  { \"name\": \"Version\", \"value\": \"$APP_VERSION_NAME ($APP_VERSION_CODE)\", \"inline\": true },
+                  { \"name\": \"Download\", \"value\": \"[Click to download]($ARTIFACT_URL)\", \"inline\": true },
+                  { \"name\": \"Release Notes\", \"value\": \"$NOTES\" }
+                ]
+              }]
+            }"
             curl -H "Content-Type: application/json" -X POST -d "$PAYLOAD" "$DISCORD_WEBHOOK_URL"
+
       - run:
           name: Notify Discord (Failure)
           when: on_fail
           command: |
-            PAYLOAD="{\"content\":\"❌ Android APK build v$APP_VERSION_NAME (build $APP_VERSION_CODE) failed for ${CIRCLE_PROJECT_REPONAME} in workflow ${CIRCLE_WORKFLOW_ID}. See details: ${CIRCLE_BUILD_URL}\"}"
+            PAYLOAD="{
+              \"embeds\": [{
+                \"title\": \"❌ Android APK Build Failed\",
+                \"color\": 16711680,
+                \"fields\": [
+                  { \"name\": \"Version\", \"value\": \"$APP_VERSION_NAME ($APP_VERSION_CODE)\" },
+                  { \"name\": \"Workflow\", \"value\": \"${CIRCLE_WORKFLOW_ID}\" },
+                  { \"name\": \"Details\", \"value\": \"[View Build](${CIRCLE_BUILD_URL})\" }
+                ]
+              }]
+            }"
             curl -H "Content-Type: application/json" -X POST -d "$PAYLOAD" "$DISCORD_WEBHOOK_URL"
+
 workflows:
   version: 2
   capacitor-build:
