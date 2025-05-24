@@ -17,9 +17,46 @@ jobs:
             rm package-lock.json
             npm i
       - run:
+          name: Update Version
+          command: |
+            # Read current version
+            VERSION=$(cat version.txt)
+            VERSION_NAME=$(echo $VERSION | cut -d'+' -f1)
+            VERSION_CODE=$(echo $VERSION | cut -d'+' -f2)
+            
+            # Increment version
+            MAJOR=$(echo $VERSION_NAME | cut -d'.' -f1)
+            MINOR=$(echo $VERSION_NAME | cut -d'.' -f2)
+            PATCH=$(echo $VERSION_NAME | cut -d'.' -f3)
+            NEW_PATCH=$((PATCH + 1))
+            NEW_VERSION_NAME="$MAJOR.$MINOR.$NEW_PATCH"
+            NEW_VERSION_CODE=$((VERSION_CODE + 1))
+            NEW_VERSION="$NEW_VERSION_NAME+$NEW_VERSION_CODE"
+            
+            echo "Updating version from $VERSION to $NEW_VERSION"
+            
+            # Update version.txt
+            echo $NEW_VERSION > version.txt
+            
+            # Update package.json
+            sed -i "s/\"version\": \"[^\"]*\"/\"version\": \"$NEW_VERSION_NAME\"/" package.json
+            
+            # Export for later steps
+            echo "export APP_VERSION=$NEW_VERSION" >> $BASH_ENV
+            echo "export APP_VERSION_NAME=$NEW_VERSION_NAME" >> $BASH_ENV
+            echo "export APP_VERSION_CODE=$NEW_VERSION_CODE" >> $BASH_ENV
+            source $BASH_ENV
+      - run:
           name: Add Capacitor Platforms (android)
           command: |
             npx cap add android
+      - run:
+          name: Update Android Version
+          command: |
+            # Update the Android version in build.gradle
+            sed -i "s/versionCode [0-9]*/versionCode $APP_VERSION_CODE/" android/app/build.gradle
+            sed -i "s/versionName \"[^\"]*\"/versionName \"$APP_VERSION_NAME\"/" android/app/build.gradle
+            cat android/app/build.gradle
       - run:
           name: Build Web App
           command: npm run build
@@ -54,17 +91,34 @@ jobs:
           path: android/app/build/outputs/apk/release/app-release-signed.apk
           destination: app-release-signed.apk
       - run:
+          name: Git Commit and Push Version Update
+          command: |
+            # Configure git
+            git config --global user.email "ci@circleci.com"
+            git config --global user.name "CircleCI"
+            
+            # Commit version changes
+            git add version.txt package.json
+            git commit -m "Bump version to $APP_VERSION"
+            
+            # Create and push tag
+            git tag v$APP_VERSION_NAME
+            
+            # Push changes and tag
+            git push origin HEAD
+            git push origin v$APP_VERSION_NAME
+      - run:
           name: Notify Discord (Success)
           when: on_success
           command: |
             ARTIFACT_URL="https://output.circle-artifacts.com/output/job/$CIRCLE_WORKFLOW_JOB_ID/artifacts/0/app-release-signed.apk"
-            PAYLOAD="{\"content\":\"✅ Android APK build succeeded! [Download Artifact]($ARTIFACT_URL)\"}"
+            PAYLOAD="{\"content\":\"✅ Android APK build v$APP_VERSION_NAME (build $APP_VERSION_CODE) succeeded! [Download Artifact]($ARTIFACT_URL)\"}"
             curl -H "Content-Type: application/json" -X POST -d "$PAYLOAD" "$DISCORD_WEBHOOK_URL"
       - run:
           name: Notify Discord (Failure)
           when: on_fail
           command: |
-            PAYLOAD="{\"content\":\"❌ Android APK build failed for ${CIRCLE_PROJECT_REPONAME} in workflow ${CIRCLE_WORKFLOW_ID}. See details: ${CIRCLE_BUILD_URL}\"}"
+            PAYLOAD="{\"content\":\"❌ Android APK build v$APP_VERSION_NAME (build $APP_VERSION_CODE) failed for ${CIRCLE_PROJECT_REPONAME} in workflow ${CIRCLE_WORKFLOW_ID}. See details: ${CIRCLE_BUILD_URL}\"}"
             curl -H "Content-Type: application/json" -X POST -d "$PAYLOAD" "$DISCORD_WEBHOOK_URL"
 workflows:
   version: 2
