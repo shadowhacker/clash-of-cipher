@@ -108,31 +108,31 @@ jobs:
             git push origin v$APP_VERSION_NAME
 
       - run:
-        name: Generate Release Notes
-        command: |
-          # Get previous tag (or fallback to last 10 commits)
-          prev_tag=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
-          if [ -z "$prev_tag" ]; then
-            release_notes=$(git log --pretty=format:"- %s" HEAD~10..HEAD)
-          else
-            release_notes=$(git log --pretty=format:"- %s" "$prev_tag"..HEAD)
-          fi
+          name: Generate Release Notes
+          command: |
+            # Get previous tag (or fallback to last 10 commits)
+            prev_tag=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+            if [ -z "$prev_tag" ]; then
+              release_notes=$(git log --pretty=format:"- %s" HEAD~10..HEAD)
+            else
+              release_notes=$(git log --pretty=format:"- %s" "$prev_tag"..HEAD)
+            fi
 
-          # Prepare request text for Gemini API
-          request=$(echo "$release_notes" | tr "\n" " " | sed "s/[[:space:]]*$//")
+            # Prepare request text for Gemini API
+            request=$(echo "$release_notes" | tr "\n" " " | sed "s/[[:space:]]*$//")
 
-          # Call Gemini API to summarize top 4-5 features as numbered points
-          response=$(curl -s \
-            -H "Content-Type: application/json" \
-            -d "{\"contents\":[{\"parts\":[{\"text\":\"Highlight top 4-5 features (max) only from the following release notes. Just numbered points, no descriptions:\n$request\"}]}]}" \
-            -X POST "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=$GEMINI_API_KEY")
+            # Call Gemini API to summarize top 4-5 features as numbered points
+            response=$(curl -s \
+              -H "Content-Type: application/json" \
+              -d "{\"contents\":[{\"parts\":[{\"text\":\"Highlight top 4-5 features (max) only from the following release notes. Just numbered points, no descriptions:\n$request\"}]}]}" \
+              -X POST "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=$GEMINI_API_KEY")
 
-          # Extract the summary text and save to file
-          echo "$response" | jq -r ".candidates[0].content.parts[0].text" > release_notes.txt
+            # Extract the summary text and save to file
+            echo "$response" | jq -r ".candidates[0].content.parts[0].text" > release_notes.txt
 
-          # Print the generated release notes
-          echo "### Generated Release Notes ###"
-          cat release_notes.txt
+            # Print the generated release notes
+            echo "### Generated Release Notes ###"
+            cat release_notes.txt
 
       - run:
           name: Notify Discord (Success)
