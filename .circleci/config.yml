@@ -99,7 +99,7 @@ jobs:
             
             # Commit version changes
             git add version.txt package.json
-            git commit -m "Bump version to $APP_VERSION"
+            git commit -m "Bump version to $APP_VERSION [skip ci]"
             
             # Create and push tag
             git tag v$APP_VERSION_NAME
