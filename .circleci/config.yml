@@ -124,7 +124,7 @@ jobs:
             # Call Gemini API to summarize top 4-5 features as numbered points
             response=$(curl -s \
               -H "Content-Type: application/json" \
-              -d "{\"contents\":[{\"parts\":[{\"text\":\"Highlight top 4-5 features (max) only from the following release notes. Just numbered points, no descriptions:\n$request\"}]}]}" \
+              -d "{\"contents\":[{\"parts\":[{\"text\":\"From the following release notes, highlight only the top 10 (MAX, can be less) user-facing features or meaningful changes. Ignore version bump or changelog housekeeping notes like 'Version bump to 1.0.2+3'. Output only numbered points:\n$request\"}]}]}" \
               -X POST "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=$GEMINI_API_KEY")
 
             # Extract the summary text and save to file
